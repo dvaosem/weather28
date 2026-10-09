@@ -43,10 +43,11 @@ class WeatherWidget : AppWidgetProvider() {
             val style = WidgetPrefs.getStyle(context, id)
             val mode = WidgetPrefs.getMode(context, id)
             val sizes = widgetSizes(mgr, id)
+            val days = DayBitmaps(context, data, style)
             val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                RemoteViews(sizes.associateWith { buildViews(context, id, data, style, mode, it) })
+                RemoteViews(sizes.associateWith { buildViews(context, id, days, data, style, mode, it) })
             } else {
-                buildViews(context, id, data, style, mode, sizes.first())
+                buildViews(context, id, days, data, style, mode, sizes.first())
             }
             mgr.updateAppWidget(id, views)
         }
@@ -57,49 +58,41 @@ class WeatherWidget : AppWidgetProvider() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 @Suppress("DEPRECATION")
                 val l = o.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
-                if (!l.isNullOrEmpty()) return l.distinct().take(8)
+                if (!l.isNullOrEmpty()) return l.distinct().take(4)
             }
             val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
             val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
             return if (w > 0 && h > 0) listOf(SizeF(w.toFloat(), h.toFloat())) else listOf(SizeF(170f, 80f))
         }
 
-        private fun getLayout(style: String, duo: Boolean): Int = when (style) {
-            "light" -> if (duo) R.layout.widget_light_duo else R.layout.widget_light_single
-            "transparent" -> if (duo) R.layout.widget_transparent_duo else R.layout.widget_transparent_single
-            else -> if (duo) R.layout.widget_dark_duo else R.layout.widget_dark_single
-        }
+        /** Both compositions (icon beside / icon above) for today and tomorrow, rendered lazily once. */
+        private class DayBitmaps(val ctx: Context, val data: WeatherData?, style: String) {
+            val light = style == "light"
+            val shadow = style == "transparent"
+            private val cache = HashMap<String, android.graphics.Bitmap>()
 
-        // ---- sizing: fit the biggest possible text into the real widget size ----
-        private const val LINE = 1.2f      // line height / text size (no font padding)
-        private const val MM_RATIO = 0.42f // min/max size relative to temperature
+            fun get(tomorrow: Boolean, stack: Boolean): android.graphics.Bitmap = cache.getOrPut("$tomorrow$stack") {
+                val d = data
+                val temp = if (d == null) null else if (tomorrow) d.tomorrowTemp else d.todayTemp
+                val icon = WeatherFetcher.iconRes(
+                    if (d == null) -1 else if (tomorrow) d.tomorrowCode else d.todayCode,
+                    if (d == null || tomorrow) true else d.todayIsDay, light)
+                WidgetRenderer.renderDay(
+                    ctx, icon,
+                    temp?.let { "$it°" } ?: "--°",
+                    if (light) 0xFF16202C.toInt() else if (temp != null) WeatherFetcher.tempColor(temp) else 0xFFFFFFFF.toInt(),
+                    d?.let { "${if (tomorrow) it.tomorrowMax else it.todayMax}°" },
+                    d?.let { "${if (tomorrow) it.tomorrowMin else it.todayMin}°" },
+                    light, shadow, stack)
+            }
 
-        private data class Spec(val temp: Float, val mm: Float, val icon: Float, val stacked: Boolean, val gap: Float)
-
-        private fun tempEm(t: String) = t.fold(0f) { a, c -> a + when { c.isDigit() -> 0.55f; c == '°' -> 0.36f; c == '-' -> 0.36f; else -> 0.5f } }
-        private fun mmEm(t: String) = t.fold(0f) { a, c -> a + when { c.isDigit() -> 0.6f; c == '°' -> 0.4f; c == ' ' -> 0.28f; c == '-' -> 0.4f; else -> 0.55f } }
-
-        private fun spec(cw: Float, ch: Float, temps: List<String>, mms: List<String>, canStack: Boolean): Spec {
-            val te = maxOf(temps.maxOf { tempEm(it) }, 1.3f)
-            val me = maxOf(mms.maxOf { mmEm(it) }, 3.2f)
-            val mmH = MM_RATIO * LINE
-            // icon beside the number
-            val side = minOf(cw / (0.9f + 0.08f + te), (ch - 3f) / (LINE + mmH))
-            // icon above the number
-            val stack = if (canStack) minOf(cw / te, (ch - 5f) / (0.85f + LINE + mmH)) else 0f
-            val stacked = stack > side * 1.08f
-            val t = (if (stacked) stack else side).coerceIn(10f, 120f) * 0.96f
-            val mm = minOf((t * MM_RATIO).coerceIn(9f, 28f), cw * 0.95f / me)
-            return Spec(t, mm, if (stacked) t * 0.85f else t * 0.9f, stacked, t * 0.08f)
-        }
-
-        /** "18°  10°" — max bright, min dimmed. */
-        private fun minMaxText(max: Int, min: Int, light: Boolean): CharSequence {
-            val maxStr = "$max°"
-            val sb = android.text.SpannableStringBuilder(maxStr).append("  $min°")
-            val dim = if (light) 0xFF6B7A8C.toInt() else 0xB3FFFFFF.toInt()
-            sb.setSpan(android.text.style.ForegroundColorSpan(dim), maxStr.length, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            return sb
+            /** Pick the composition whose temperature ends up larger in a cw x ch box. */
+            fun best(tomorrow: Boolean, cw: Float, ch: Float): android.graphics.Bitmap {
+                val side = get(tomorrow, false); val stack = get(tomorrow, true)
+                fun scale(b: android.graphics.Bitmap) = minOf(cw / b.width, ch / b.height)
+                // stacked icon is drawn a bit smaller relative to the number, so it needs a clear win
+                return if (scale(stack) > scale(side) * 1.1f) stack else side
+            }
         }
 
         private fun opacityBg(opacity: Int): Int = when (opacity) {
@@ -127,9 +120,10 @@ class WeatherWidget : AppWidgetProvider() {
             else -> R.drawable.widget_bg_glass80
         }
 
-        private fun buildViews(context: Context, appWidgetId: Int, data: WeatherData?, style: String, mode: String, size: SizeF): RemoteViews {
+        private fun buildViews(context: Context, appWidgetId: Int, days: DayBitmaps, data: WeatherData?,
+                               style: String, mode: String, size: SizeF): RemoteViews {
             val duo = mode != "single" && size.width >= 120f
-            val views = RemoteViews(context.packageName, getLayout(style, duo))
+            val views = RemoteViews(context.packageName, if (duo) R.layout.widget_two else R.layout.widget_one)
             val light = style == "light"
 
             // Background: opacity (dark/light) or liquid-glass intensity (transparent)
@@ -149,45 +143,19 @@ class WeatherWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             ))
 
-            val todayTemp = data?.let { "${it.todayTemp}°" } ?: "--°"
-            val tomTemp = data?.let { "${it.tomorrowTemp}°" } ?: "--°"
-            val todayMm = data?.let { "${it.todayMax}°  ${it.todayMin}°" } ?: "--°  --°"
-            val tomMm = data?.let { "${it.tomorrowMax}°  ${it.tomorrowMin}°" } ?: "--°  --°"
-
-            // Content box in dp (root padding 6dp each side; duo also has a 7dp divider)
-            val cw = if (duo) (size.width - 12f - 7f) / 2f - 2f else size.width - 16f
+            // Content box per day in dp (root padding 6dp each side; duo divider ~7dp)
+            val cw = if (duo) (size.width - 12f - 7f) / 2f else size.width - 12f
             val ch = size.height - 12f
-            val canStack = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-            val sp = spec(cw, ch, if (duo) listOf(todayTemp, tomTemp) else listOf(todayTemp),
-                if (duo) listOf(todayMm, tomMm) else listOf(todayMm), canStack)
 
-            fun fill(temp: Int, iconTop: Int, icon: Int, mm: Int, tempText: String, tempValue: Int?, iconRes: Int, mmText: CharSequence) {
-                val u = android.util.TypedValue.COMPLEX_UNIT_DIP
-                views.setTextViewText(temp, tempText)
-                if (!light && tempValue != null) views.setTextColor(temp, WeatherFetcher.tempColor(tempValue))
-                views.setTextViewTextSize(temp, u, sp.temp)
-                views.setTextViewText(mm, mmText)
-                views.setTextViewTextSize(mm, u, sp.mm)
-                views.setImageViewResource(icon, iconRes)
-                views.setImageViewResource(iconTop, iconRes)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val shown = if (sp.stacked) iconTop else icon
-                    views.setViewVisibility(iconTop, if (sp.stacked) android.view.View.VISIBLE else android.view.View.GONE)
-                    views.setViewVisibility(icon, if (sp.stacked) android.view.View.GONE else android.view.View.VISIBLE)
-                    views.setViewLayoutWidth(shown, sp.icon, u)
-                    views.setViewLayoutHeight(shown, sp.icon, u)
-                    views.setViewLayoutMargin(temp, RemoteViews.MARGIN_START, if (sp.stacked) 0f else sp.gap, u)
-                }
+            views.setImageViewBitmap(R.id.today_img, days.best(false, cw, ch))
+            views.setContentDescription(R.id.today_img,
+                data?.let { "Dnes ${it.todayTemp}°, max ${it.todayMax}°, min ${it.todayMin}°" } ?: "Weather28")
+            if (duo) {
+                views.setImageViewBitmap(R.id.tomorrow_img, days.best(true, cw, ch))
+                views.setContentDescription(R.id.tomorrow_img,
+                    data?.let { "Zajtra max ${it.tomorrowMax}°, min ${it.tomorrowMin}°" } ?: "")
+                views.setInt(R.id.widget_divider, "setBackgroundColor", if (light) 0x1F16202C else 0x2EFFFFFF)
             }
-
-            fill(R.id.today_temp, R.id.today_icon_top, R.id.today_icon, R.id.today_minmax,
-                todayTemp, data?.todayTemp,
-                WeatherFetcher.iconRes(data?.todayCode ?: -1, data?.todayIsDay ?: true, light),
-                if (data != null) minMaxText(data.todayMax, data.todayMin, light) else "")
-            if (duo) fill(R.id.tomorrow_temp, R.id.tomorrow_icon_top, R.id.tomorrow_icon, R.id.tomorrow_minmax,
-                tomTemp, data?.tomorrowTemp,
-                WeatherFetcher.iconRes(data?.tomorrowCode ?: -1, true, light),
-                if (data != null) minMaxText(data.tomorrowMax, data.tomorrowMin, light) else "")
             return views
         }
     }

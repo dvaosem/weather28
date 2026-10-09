@@ -1,156 +1,131 @@
 package com.dvaosem.weather28.widget
 
 import android.content.Context
-import android.graphics.*
-import android.util.TypedValue
-import kotlin.math.min
+import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import com.dvaosem.weather28.R
 
 /**
- * Vykreslí transparentný widget Weather28 ako Bitmap (Canvas -> ImageView).
- * Pozadie ostáva číre; čitateľnosť drží jemný gradient pod textom + tieň.
+ * Draws one day of the widget (icon + temperature + min/max) into a bitmap.
+ * Launchers often ignore custom fonts and text autosizing inside RemoteViews,
+ * so the widget shows these bitmaps in fitCenter ImageViews instead: the real
+ * app fonts are always used and the content always scales to the widget size.
  */
 object WidgetRenderer {
 
-    data class Day(
-        val temp: Double,   // veľké číslo (dnes = aktuálna, zajtra = max)
-        val max: Double,
-        val min: Double,
-        val code: Int       // WMO weathercode -> ghost ikona
-    )
+    private const val U = 220f // base temperature text size in px (bitmap resolution)
 
-    data class WidgetData(
-        val location: String,
-        val today: Day,
-        val tomorrow: Day
-    )
+    private var bebas: Typeface? = null
+    private var inter: Typeface? = null
 
-    // ---- teplota -> farba (1:1 s weather28.html, °C) ----
-    private fun tempColor(t: Double): Int = when {
-        t <= -10 -> 0xFF4D9FFF.toInt()
-        t <= 0   -> 0xFFA0D4FF.toInt()
-        t <= 5   -> 0xFFE0F0FF.toInt()
-        t <= 15  -> 0xFFFFFFFF.toInt()
-        t <= 20  -> 0xFFFFE066.toInt()
-        t <= 28  -> 0xFFFFAA00.toInt()
-        else     -> 0xFFFF4D6D.toInt()
-    }
+    private fun bebas(ctx: Context): Typeface = bebas ?: (try {
+        ResourcesCompat.getFont(ctx, R.font.bebas_neue)
+    } catch (e: Exception) { null } ?: Typeface.create("sans-serif-condensed", Typeface.BOLD)).also { bebas = it }
 
-    private const val DNES   = 0xFF7DF2C0.toInt()
-    private const val ZAJTRA = 0xFFC9A6FF.toInt()
-    private const val WHITE  = 0xFFFFFFFF.toInt()
+    private fun inter(ctx: Context): Typeface = inter ?: (try {
+        ResourcesCompat.getFont(ctx, R.font.inter_semibold)
+    } catch (e: Exception) { null } ?: Typeface.DEFAULT_BOLD).also { inter = it }
 
-    fun render(ctx: Context, w: Int, h: Int, d: WidgetData): Bitmap {
-        val bmp = Bitmap.createBitmap(max(w, 1), max(h, 1), Bitmap.Config.ARGB_8888) // číry
+    /**
+     * @param stack true = icon above temperature (tall/square spaces),
+     *              false = icon left of temperature (wide spaces).
+     */
+    fun renderDay(
+        ctx: Context,
+        iconRes: Int,
+        temp: String,
+        tempColor: Int,
+        max: String?,
+        min: String?,
+        light: Boolean,
+        shadow: Boolean,
+        stack: Boolean
+    ): Bitmap {
+        val pad = U * 0.08f
+
+        val tempPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = bebas(ctx); textSize = U; color = tempColor
+            if (shadow) setShadowLayer(U * 0.05f, 0f, U * 0.015f, 0x8C000000.toInt())
+        }
+        val tb = Rect(); tempPaint.getTextBounds(temp, 0, temp.length, tb)
+        val tempW = tb.width().toFloat(); val tempH = tb.height().toFloat()
+
+        val hasMm = !max.isNullOrEmpty() && !min.isNullOrEmpty()
+        val mmPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = inter(ctx); textSize = U * 0.38f
+            if (shadow) setShadowLayer(U * 0.035f, 0f, U * 0.01f, 0x8C000000.toInt())
+        }
+        val mmGap = U * 0.14f
+        var mmW = 0f; var mmH = 0f; val mb = Rect()
+        if (hasMm) {
+            mmW = mmPaint.measureText(max) + mmGap + mmPaint.measureText(min)
+            val s = "$max$min"; mmPaint.getTextBounds(s, 0, s.length, mb); mmH = mb.height().toFloat()
+        }
+
+        val iconSize = if (stack) tempH * 1.2f else tempH * 1.35f
+        val iconGap = U * 0.05f
+        val mmTopGap = if (hasMm) U * 0.18f else 0f
+
+        val w: Float; val h: Float
+        if (stack) {
+            w = maxOf(iconSize, tempW, mmW) + 2 * pad
+            h = iconSize + U * 0.10f + tempH + mmTopGap + mmH + 2 * pad
+        } else {
+            val rowW = iconSize + iconGap + tempW
+            w = maxOf(rowW, mmW) + 2 * pad
+            h = maxOf(iconSize, tempH) + mmTopGap + mmH + 2 * pad
+        }
+
+        val bmp = Bitmap.createBitmap(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
-        val dp = { v: Float -> v * ctx.resources.displayMetrics.density }
 
-        // škálovací faktor podľa výšky (aby to sedelo pri rôznych veľkostiach widgetu)
-        val k = h / dp(120f)               // 120dp = referenčná výška návrhu
-        fun s(v: Float) = dp(v) * k
-
-        val colW = w / 2f
-        val padX = s(16f)
-
-        // ---- lokálny gradient pod každým stĺpcom ----
-        for (i in 0..1) {
-            val cx = if (i == 0) colW * 0.34f else colW + colW * 0.34f
-            val cy = h - s(20f)
-            val r  = min(w, h) * 0.8f
-            val g = RadialGradient(
-                cx, cy, r,
-                intArrayOf(0x8C06080E.toInt(), 0x4D06080E.toInt(), 0x0006080E),
-                floatArrayOf(0f, 0.45f, 0.8f),
-                Shader.TileMode.CLAMP
-            )
-            c.drawRect(i * colW, 0f, (i + 1) * colW, h.toFloat(), Paint().apply { shader = g })
+        var y = pad
+        if (stack) {
+            drawIcon(ctx, c, iconRes, (w - iconSize) / 2f, y, iconSize, shadow)
+            y += iconSize + U * 0.10f
+            c.drawText(temp, (w - tempW) / 2f - tb.left, y - tb.top, tempPaint)
+            y += tempH
+        } else {
+            val rowH = maxOf(iconSize, tempH)
+            val x0 = (w - (iconSize + iconGap + tempW)) / 2f
+            drawIcon(ctx, c, iconRes, x0, y + (rowH - iconSize) / 2f, iconSize, shadow)
+            c.drawText(temp, x0 + iconSize + iconGap - tb.left, y + (rowH - tempH) / 2f - tb.top, tempPaint)
+            y += rowH
         }
 
-        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        if (hasMm) {
+            y += mmTopGap
+            val baseline = y - mb.top
+            var x = (w - mmW) / 2f
+            mmPaint.color = if (light) 0xFF16202C.toInt() else 0xFFFFFFFF.toInt()
+            c.drawText(max!!, x, baseline, mmPaint)
+            x += mmPaint.measureText(max) + mmGap
+            mmPaint.color = if (light) 0xFF6B7A8C.toInt() else 0xB3FFFFFF.toInt()
+            c.drawText(min!!, x, baseline, mmPaint)
         }
-        fun shadow(p: Paint) = p.setShadowLayer(s(5f), 0f, s(2f), 0xD9000000.toInt())
-
-        // ---- lokalita (hore stred) ----
-        text.apply {
-            color = WHITE; textSize = s(12f); letterSpacing = 0.22f
-            textAlign = Paint.Align.CENTER; shadow(this)
-        }
-        c.drawText(d.location.uppercase(), w / 2f, s(16f), text)
-
-        drawCol(c, d.today,   "DNES",   DNES,   0f,    colW, h, padX, ::s, text)
-        drawCol(c, d.tomorrow, "ZAJTRA", ZAJTRA, colW, colW, h, padX, ::s, text)
         return bmp
     }
 
-    private fun drawCol(
-        c: Canvas, day: Day, label: String, labelColor: Int,
-        x0: Float, colW: Float, h: Int, padX: Float,
-        s: (Float) -> Float, text: Paint
-    ) {
-        val left = x0 + padX
-        val baseY = h - s(14f)
-
-        // min / max (dole)
-        text.apply { textAlign = Paint.Align.LEFT; letterSpacing = 0f; textSize = s(19f)
-            setShadowLayer(s(4f), 0f, s(1f), 0xCC000000.toInt()) }
-        val hi = "${day.max.toInt()}°"
-        val sep = " / "
-        text.color = tempColor(day.max); c.drawText(hi, left, baseY, text)
-        var adv = text.measureText(hi)
-        text.color = 0x66FFFFFF; c.drawText(sep, left + adv, baseY, text)
-        adv += text.measureText(sep)
-        text.color = tempColor(day.min); c.drawText("${day.min.toInt()}°", left + adv, baseY, text)
-
-        // veľká teplota + ghost ikona za ňou
-        val tempY = baseY - s(30f)
-        val ghostCx = x0 + colW - s(26f)
-        drawGhostIcon(c, day.code, ghostCx, tempY - s(22f), s(40f))
-
-        text.apply { color = tempColor(day.temp); textSize = s(66f); letterSpacing = -0.03f
-            setShadowLayer(s(8f), 0f, s(2f), 0xD9000000.toInt()) }
-        val big = "${day.temp.toInt()}"
-        c.drawText(big, left, tempY, text)
-        val bigW = text.measureText(big)
-        text.textSize = s(28f)
-        c.drawText("°", left + bigW + s(2f), tempY - s(34f), text)
-
-        // label (dnes/zajtra) nad teplotou
-        text.apply { color = labelColor; textSize = s(11f); letterSpacing = 0.16f
-            setShadowLayer(s(3f), 0f, s(1f), 0xCC000000.toInt()) }
-        c.drawText(label, left, tempY - s(48f), text)
-    }
-
-    // jednoduchá biela ghost ikona podľa WMO kódu
-    private fun drawGhostIcon(c: Canvas, code: Int, cx: Float, cy: Float, r: Float) {
-        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x57FFFFFF; style = Paint.Style.FILL }
-        when {
-            code <= 1 -> c.drawCircle(cx, cy, r * 0.55f, p) // jasno – slnko
-            code == 2 -> { c.drawCircle(cx + r*0.2f, cy - r*0.1f, r*0.4f, p); cloud(c, cx, cy + r*0.15f, r*0.9f, p) }
-            code in 95..99 -> { cloud(c, cx, cy, r, p); bolt(c, cx, cy + r*0.5f, r, p) }
-            code in 71..77 || code in 85..86 -> { cloud(c, cx, cy, r, p); dots(c, cx, cy + r*0.6f, r, p) }
-            code in 51..67 || code in 80..82 -> { cloud(c, cx, cy, r, p); rain(c, cx, cy + r*0.6f, r, p) }
-            else -> cloud(c, cx, cy, r, p) // oblačno / hmla
+    private fun drawIcon(ctx: Context, c: Canvas, res: Int, x: Float, y: Float, size: Float, shadow: Boolean) {
+        val d = ContextCompat.getDrawable(ctx, res) ?: return
+        val s = size.toInt().coerceAtLeast(1)
+        val iconBmp = Bitmap.createBitmap(s, s, Bitmap.Config.ARGB_8888)
+        d.setBounds(0, 0, s, s); d.draw(Canvas(iconBmp))
+        if (shadow) {
+            val blur = Paint().apply { maskFilter = BlurMaskFilter(size * 0.05f, BlurMaskFilter.Blur.NORMAL) }
+            val off = IntArray(2)
+            val alpha = iconBmp.extractAlpha(blur, off)
+            val sp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x66000000 }
+            c.drawBitmap(alpha, x + off[0], y + off[1] + size * 0.02f, sp)
+            alpha.recycle()
         }
+        c.drawBitmap(iconBmp, x, y, null)
+        iconBmp.recycle()
     }
-    private fun cloud(c: Canvas, cx: Float, cy: Float, r: Float, p: Paint) {
-        c.drawCircle(cx - r*0.35f, cy, r*0.42f, p)
-        c.drawCircle(cx + r*0.05f, cy - r*0.18f, r*0.5f, p)
-        c.drawCircle(cx + r*0.4f, cy, r*0.4f, p)
-        c.drawRoundRect(cx - r*0.55f, cy, cx + r*0.55f, cy + r*0.35f, r*0.2f, r*0.2f, p)
-    }
-    private fun rain(c: Canvas, cx: Float, cy: Float, r: Float, p: Paint) {
-        for (i in -1..1) c.drawRoundRect(cx + i*r*0.3f, cy, cx + i*r*0.3f + r*0.08f, cy + r*0.3f, r*.05f, r*.05f, p)
-    }
-    private fun dots(c: Canvas, cx: Float, cy: Float, r: Float, p: Paint) {
-        for (i in -1..1) c.drawCircle(cx + i*r*0.3f, cy + r*0.1f, r*0.07f, p)
-    }
-    private fun bolt(c: Canvas, cx: Float, cy: Float, r: Float, p: Paint) {
-        val path = Path().apply {
-            moveTo(cx + r*0.05f, cy); lineTo(cx - r*0.15f, cy + r*0.25f)
-            lineTo(cx, cy + r*0.25f); lineTo(cx - r*0.1f, cy + r*0.5f)
-            lineTo(cx + r*0.2f, cy + r*0.15f); lineTo(cx + r*0.03f, cy + r*0.15f); close()
-        }
-        c.drawPath(path, p)
-    }
-    private fun max(a: Int, b: Int) = if (a > b) a else b
 }
