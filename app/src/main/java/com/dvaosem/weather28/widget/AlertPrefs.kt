@@ -21,6 +21,18 @@ object AlertPrefs {
     fun morningHour(c: Context) = p(c).getInt("morning_hour", 7)
     fun setMorningHour(c: Context, h: Int) = p(c).edit().putInt("morning_hour", h).apply()
 
+    /** Remembers which alerts were already shown (keys like "20261008-wind" or "ma-<id>"), keeps the last 60. */
+    fun wasAlerted(c: Context, key: String) = (p(c).getString("alerted", "") ?: "").split("|").contains(key)
+    fun markAlerted(c: Context, key: String) {
+        val list = (p(c).getString("alerted", "") ?: "").split("|").filter { it.isNotEmpty() && it != key } + key
+        p(c).edit().putString("alerted", list.takeLast(60).joinToString("|")).apply()
+    }
+
+    fun cachedDistrict(c: Context, key: String): String? =
+        if (p(c).getString("district_key", null) == key) p(c).getString("district", null) else null
+    fun cacheDistrict(c: Context, key: String, d: String) =
+        p(c).edit().putString("district_key", key).putString("district", d).apply()
+
     fun lastStormDay(c: Context) = p(c).getString("last_storm", "") ?: ""
     fun setLastStormDay(c: Context, d: String) = p(c).edit().putString("last_storm", d).apply()
 }

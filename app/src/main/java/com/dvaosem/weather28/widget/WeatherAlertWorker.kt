@@ -16,8 +16,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
+
+    companion object { const val GUST_ALERT = 55.0 }
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -59,8 +62,8 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
                 "&timezone=auto&forecast_days=1"
         val body = client.newCall(Request.Builder().url(url).build()).execute().body?.string() ?: return
         val daily = JSONObject(body).getJSONObject("daily")
-        val max = daily.getJSONArray("temperature_2m_max").getDouble(0).toInt()
-        val min = daily.getJSONArray("temperature_2m_min").getDouble(0).toInt()
+        val max = Math.floor(daily.getJSONArray("temperature_2m_max").getDouble(0) + 0.5).toInt()
+        val min = Math.floor(daily.getJSONArray("temperature_2m_min").getDouble(0) + 0.5).toInt()
         val code = daily.getJSONArray("weather_code").getInt(0)
         val rain = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
         val desc = codeDesc(code)
@@ -71,16 +74,37 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         notify(ctx, 1001, title, text, "morning")
     }
 
+    // ------------------------------------------------------------------
+    // Storm check = (1) official SHMÚ warnings for the user's district via MeteoAlarm
+    //             + (2) forecast signals for the next 6 h (thunder, heavy rain, gusts, snow).
+    // Models often show a storm only as showers + strong gusts (e.g. 8.10.: code 80,
+    // gusts 59 km/h, no thunder code), so gusts and lightning potential count too.
+    // ------------------------------------------------------------------
     private fun doStormCheck(ctx: Context, lat: Double, lon: Double, city: String) {
+        try { checkOfficialWarnings(ctx, lat, lon, city) } catch (e: Exception) {}
+        checkForecast(ctx, lat, lon, city)
+    }
+
+    private fun get(url: String): String? = try {
+        client.newCall(Request.Builder().url(url).header("User-Agent", "Weather28/1.0 (+https://dvaosem.com)").build())
+            .execute().use { r -> if (r.isSuccessful) r.body?.string() else null }
+    } catch (e: Exception) { null }
+
+    private fun checkForecast(ctx: Context, lat: Double, lon: Double, city: String) {
         val url = "https://api.open-meteo.com/v1/forecast?" +
                 "latitude=$lat&longitude=$lon" +
-                "&hourly=weather_code&timezone=auto&forecast_days=2"
-        val body = client.newCall(Request.Builder().url(url).build()).execute().body?.string() ?: return
-        val hourly = JSONObject(body).getJSONObject("hourly")
-        val codes = hourly.getJSONArray("weather_code")
-        val times = hourly.getJSONArray("time")
+                "&hourly=weather_code,precipitation,wind_gusts_10m,cape,lightning_potential" +
+                "&timezone=auto&forecast_days=2"
+        val body = get(url) ?: throw Exception("forecast unavailable")
+        val h = JSONObject(body).getJSONObject("hourly")
+        val times = h.getJSONArray("time")
+        val codes = h.getJSONArray("weather_code")
+        val precip = h.optJSONArray("precipitation")
+        val gusts = h.optJSONArray("wind_gusts_10m")
+        val cape = h.optJSONArray("cape")
+        val lpi = h.optJSONArray("lightning_potential")
 
-        // nájdi index aktuálnej hodiny (Open-Meteo hodiny začínajú o 00:00, nie od teraz)
+        // index of the current hour (Open-Meteo hours start at 00:00, not now)
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", java.util.Locale.US)
         val now = System.currentTimeMillis()
         var start = 0
@@ -88,35 +112,96 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             val t = try { sdf.parse(times.getString(i))?.time ?: continue } catch (e: Exception) { continue }
             if (t >= now - 30 * 60 * 1000) { start = i; break }
         }
-
-        // skontroluj najbližších 6 hodín: búrka / silný dážď / husté sneženie
         val end = minOf(start + 6, codes.length())
-        var hitHour = -1
-        var kind = ""
+
+        data class Hit(val kind: String, val hour: Int, val detail: String)
+        val hits = LinkedHashMap<String, Hit>()
         for (i in start until end) {
-            val c = codes.getInt(i)
-            val k = when (c) {
-                95, 96, 99 -> "storm"
-                65, 67, 81, 82 -> "rain"   // silný dážď / prudké prehánky
-                75, 86 -> "snow"           // husté sneženie
-                else -> null
+            val c = codes.optInt(i, 0)
+            val p = precip?.optDouble(i, 0.0) ?: 0.0
+            val g = gusts?.optDouble(i, 0.0) ?: 0.0
+            val cp = cape?.optDouble(i, 0.0) ?: 0.0
+            val lp = lpi?.optDouble(i, 0.0) ?: 0.0
+            val rel = i - start
+            if ((c in 95..99 || lp >= 1.0 || (cp >= 800 && p >= 1.0)) && "storm" !in hits)
+                hits["storm"] = Hit("storm", rel, if (g >= 40) "nárazy do ${g.roundToInt()} km/h" else "")
+            if ((c in listOf(65, 67, 81, 82) || p >= 4.0) && "rain" !in hits)
+                hits["rain"] = Hit("rain", rel, if (p >= 1) "${"%.0f".format(p)} mm/h" else "")
+            if (g >= GUST_ALERT && "wind" !in hits) {
+                // report the strongest gust in the window
+                var mx = g; for (j in i until end) mx = maxOf(mx, gusts?.optDouble(j, 0.0) ?: 0.0)
+                hits["wind"] = Hit("wind", rel, "nárazy do ${mx.roundToInt()} km/h")
             }
-            if (k != null) { hitHour = i - start; kind = k; break }
+            if ((c == 75 || c == 86) && "snow" !in hits) hits["snow"] = Hit("snow", rel, "")
         }
-        if (hitHour < 0) return
+        if (hits.isEmpty()) return
 
-        // jedna výstraha denne na daný typ
+        // one alert per day per type; storm wins, others are listed in the same notification
         val today = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date())
-        if (AlertPrefs.lastStormDay(ctx) == "$today-$kind") return
-        AlertPrefs.setLastStormDay(ctx, "$today-$kind")
+        val fresh = hits.values.filter { !AlertPrefs.wasAlerted(ctx, "$today-${it.kind}") }
+        if (fresh.isEmpty()) return
+        fresh.forEach { AlertPrefs.markAlerted(ctx, "$today-${it.kind}") }
 
-        val whenTxt = if (hitHour == 0) "teraz" else "o ~$hitHour h"
-        val (icon, what) = when (kind) {
-            "rain" -> "🌧️" to "Silný dážď"
-            "snow" -> "❄️" to "Husté sneženie"
-            else   -> "⛈️" to "Búrka"
+        val main = fresh.minByOrNull { listOf("storm", "wind", "rain", "snow").indexOf(it.kind) }!!
+        val (icon, what) = label(main.kind)
+        fun whenTxt(hh: Int) = if (hh == 0) "teraz" else "o ~$hh h"
+        val lines = fresh.map { val (_, w) = label(it.kind); listOf(w, whenTxt(it.hour), it.detail).filter { s -> s.isNotEmpty() }.joinToString(" · ") }
+        notify(ctx, 1002, "$icon $what ${whenTxt(main.hour)} · $city", lines.joinToString("\n"), "storm")
+    }
+
+    private fun label(kind: String) = when (kind) {
+        "rain" -> "🌧️" to "Silný dážď"
+        "snow" -> "❄️" to "Husté sneženie"
+        "wind" -> "💨" to "Silný vietor"
+        else   -> "⛈️" to "Búrka"
+    }
+
+    /** Official SHMÚ warnings (MeteoAlarm feed) for the district of the alert location. */
+    private fun checkOfficialWarnings(ctx: Context, lat: Double, lon: Double, city: String) {
+        val district = districtFor(ctx, lat, lon) ?: return
+        val body = get("https://feeds.meteoalarm.org/api/v1/warnings/feeds-slovakia") ?: return
+        val warnings = JSONObject(body).optJSONArray("warnings") ?: return
+        val now = System.currentTimeMillis()
+        val iso = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", java.util.Locale.US)
+        for (i in 0 until warnings.length()) {
+            val alert = warnings.getJSONObject(i).optJSONObject("alert") ?: continue
+            val id = alert.optString("identifier")
+            val infos = alert.optJSONArray("info") ?: continue
+            var info: JSONObject? = null
+            for (k in 0 until infos.length()) if (infos.getJSONObject(k).optString("language") == "sk") info = infos.getJSONObject(k)
+            info = info ?: infos.optJSONObject(0) ?: continue
+            val areas = info.optJSONArray("area") ?: continue
+            var match = false
+            for (a in 0 until areas.length()) if (areas.getJSONObject(a).optString("areaDesc").equals(district, true)) match = true
+            if (!match) continue
+            val expires = try { iso.parse(info.optString("expires"))?.time ?: 0L } catch (e: Exception) { 0L }
+            val onset = try { iso.parse(info.optString("onset"))?.time ?: now } catch (e: Exception) { now }
+            if (expires in 1..now || onset > now + 12 * 3600_000L) continue
+            if (AlertPrefs.wasAlerted(ctx, "ma-$id")) continue
+            AlertPrefs.markAlerted(ctx, "ma-$id")
+
+            val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val level = info.optJSONArray("parameter")?.let { ps ->
+                (0 until ps.length()).map { ps.getJSONObject(it) }.firstOrNull { it.optString("valueName") == "awareness_level" }
+                    ?.optString("value")?.substringAfter(";")?.substringBefore(";")?.trim()
+            } ?: ""
+            val badge = when (level) { "red" -> "🔴"; "orange" -> "🟠"; else -> "🟡" }
+            val title = "$badge ${info.optString("event")} · $city"
+            val text = info.optString("headline") + "\n" +
+                    "Platí ${hm.format(java.util.Date(onset))}–${hm.format(java.util.Date(expires))} · SHMÚ"
+            notify(ctx, 1100 + (id.hashCode() and 0xff), title, text, "storm")
         }
-        notify(ctx, 1002, "$icon Výstraha · $city", "$what $whenTxt", "storm")
+    }
+
+    /** "Pezinok" for a point in okres Pezinok — reverse geocoded once per location and cached. */
+    private fun districtFor(ctx: Context, lat: Double, lon: Double): String? {
+        val key = "%.2f,%.2f".format(java.util.Locale.US, lat, lon)
+        AlertPrefs.cachedDistrict(ctx, key)?.let { return it }
+        val body = get("https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json&zoom=10&accept-language=sk") ?: return null
+        val d = JSONObject(body).optJSONObject("address")?.optString("district")?.removePrefix("okres ")?.trim()
+        if (d.isNullOrEmpty()) return null
+        AlertPrefs.cacheDistrict(ctx, key, d)
+        return d
     }
 
     private fun notify(ctx: Context, nid: Int, title: String, text: String, channel: String) {

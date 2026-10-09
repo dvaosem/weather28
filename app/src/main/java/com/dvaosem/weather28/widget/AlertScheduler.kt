@@ -20,10 +20,10 @@ object AlertScheduler {
             cancelMorningAlarm(ctx)
         }
 
-        // Búrky – kontrola každé 2 hodiny, presnosť na minútu tu nie je kritická
+        // Búrky / výstrahy SHMÚ – kontrola každú hodinu
         val wm = WorkManager.getInstance(ctx)
         if (AlertPrefs.stormEnabled(ctx)) {
-            val storm = PeriodicWorkRequestBuilder<WeatherAlertWorker>(2, TimeUnit.HOURS)
+            val storm = PeriodicWorkRequestBuilder<WeatherAlertWorker>(1, TimeUnit.HOURS)
                 .setInputData(workDataOf("type" to "storm"))
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
