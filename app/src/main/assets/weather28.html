@@ -467,6 +467,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="sr" id="mtime-row"><div><div class="sl2">Čas ranného</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">05:00 – 11:00</div></div><input type="time" id="mtime" min="05:00" max="11:00" onchange="setMorningTime(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:0.82rem;"/></div>
       <div class="sr"><div><div class="sl2">Búrky a dážď</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Výstraha pri zrážkach</div></div><div class="tog"><button class="to on" id="sta" onclick="setStormAlert(true)">Zap</button><button class="to" id="stb" onclick="setStormAlert(false)">Vyp</button></div></div>
       <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
+      <div class="sr" id="upd-row" style="display:none;"><div><div class="sl2">Aktualizácia</div><div id="upd-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Verzia –</div></div><div class="tog"><button class="to" id="upd-btn" onclick="w28CheckUpdate()">Skontrolovať</button></div></div>
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
@@ -515,7 +516,7 @@ function syncSrcButtons(){
   const map={srom:'openmeteo',srmet:'metno',srecm:'ecmwf',srbest:'best'};
   for(const id in map){const el=document.getElementById(id);if(el)el.classList.toggle('on',s===map[id]);}
 }
-function setSrc(s){S.src=s;saveS();syncSrcButtons();if(typeof clat!=='undefined')loadW(clat,clon,ln,lc);}
+function setSrc(s){S.src=s;saveS();syncSrcButtons();w28SyncSource();if(typeof clat!=='undefined')loadW(clat,clon,ln,lc);}
 function srcLabel(s){return {openmeteo:'Open-Meteo',metno:'Met.no',ecmwf:'ECMWF',best:'Best of'}[s]||s;}
 
 // ---------- WEATHER DATA LAYER ----------
@@ -2331,10 +2332,59 @@ renderFavbar();
   }
   if(!showWidgetRow()){ setTimeout(showWidgetRow,300); setTimeout(showWidgetRow,1000); }
 })();
+/* APK: widget uses the same data source as the app */
+function w28SyncSource(){
+  if(!(window.AndroidBridge&&typeof AndroidBridge.setSource==='function'))return;
+  var order=[0,1,2];try{if(typeof accSrcOrder==='function')order=accSrcOrder();}catch(e){}
+  try{AndroidBridge.setSource(S.src||'openmeteo',order.join(','));}catch(e){}
+}
+/* APK: in-app updates (GitHub Releases) */
+function w28CheckUpdate(){
+  if(!(window.AndroidBridge&&typeof AndroidBridge.checkUpdate==='function'))return;
+  var sub=document.getElementById('upd-sub');if(sub)sub.textContent='Overujem…';
+  AndroidBridge.checkUpdate(true);
+}
+window.w28OnUpdate=function(u){
+  var sub=document.getElementById('upd-sub');
+  if(u.error){if(sub)sub.textContent='Verzia '+u.current+' · nepodarilo sa overiť';return;}
+  var newer=u.latest>u.current;
+  if(sub)sub.textContent='Verzia '+u.current+(newer?' · k dispozícii '+u.latest:' · najnovšia');
+  var bar=document.getElementById('upd-bar');
+  if(newer&&bar){document.getElementById('upd-txt').textContent='Nová verzia '+u.latest;bar.style.display='flex';}
+};
+function w28InstallUpdate(){
+  var b=document.getElementById('upd-go');if(b){b.disabled=true;b.textContent='Sťahujem…';}
+  AndroidBridge.installUpdate();
+}
+window.w28OnUpdateProgress=function(p){
+  var b=document.getElementById('upd-go'),t=document.getElementById('upd-txt');if(!b)return;
+  if(p>=0&&p<=100){b.textContent=p+' %';}
+  else if(p===101){b.disabled=false;b.textContent='Inštalovať';document.getElementById('upd-bar').style.display='none';}
+  else if(p===-2){b.disabled=false;b.textContent='Skúsiť znova';t.textContent='Povoľ inštaláciu pre Weather28';}
+  else{b.disabled=false;b.textContent='Skúsiť znova';t.textContent='Sťahovanie zlyhalo';}
+};
+(function(){
+  function boot(){
+    if(!window.AndroidBridge)return false;
+    w28SyncSource();
+    var r=document.getElementById('upd-row');if(r)r.style.display='';
+    try{var sub=document.getElementById('upd-sub');if(sub&&AndroidBridge.getAppBuild)sub.textContent='Verzia '+AndroidBridge.getAppBuild();}catch(e){}
+    if(typeof AndroidBridge.checkUpdate==='function')setTimeout(function(){AndroidBridge.checkUpdate(false);},2500);
+    return true;
+  }
+  if(!boot()){setTimeout(boot,500);}
+})();
 function openWidgetCfg(){
   if(window.AndroidBridge && typeof AndroidBridge.openWidgetSettings==='function')
     AndroidBridge.openWidgetSettings();
 }
 </script>
+<div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.35);font-family:'Inter',sans-serif;">
+  <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span id="upd-txt" style="font-size:0.85rem;font-weight:700;color:var(--text);">Nová verzia</span><span style="font-size:0.66rem;color:var(--text2);">Weather28 pre Android</span></div>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="document.getElementById('upd-bar').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:8px 12px;font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;">Neskôr</button>
+    <button id="upd-go" onclick="w28InstallUpdate()" style="background:linear-gradient(135deg,var(--green),var(--blue));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Aktualizovať</button>
+  </div>
+</div>
 </body>
 </html>

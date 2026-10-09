@@ -11,8 +11,9 @@ android {
         applicationId = "com.dvaosem.weather28"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // CI run number = build number; the in-app updater compares it with GitHub Releases "build-N"
+        versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+        versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
     }
 
     signingConfigs {

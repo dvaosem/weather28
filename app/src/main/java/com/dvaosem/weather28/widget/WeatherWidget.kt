@@ -26,7 +26,8 @@ class WeatherWidget : AppWidgetProvider() {
             render(context, appWidgetManager, appWidgetId, cached)
 
             CoroutineScope(Dispatchers.IO).launch {
-                val data = WeatherFetcher.fetch(lat, lon, city)
+                val data = WeatherFetcher.fetch(lat, lon, city,
+                    WidgetPrefs.getSource(context), WidgetPrefs.getSourceOrder(context))
                 withContext(Dispatchers.Main) {
                     if (data != null) WidgetPrefs.saveCache(context, appWidgetId, WeatherFetcher.serialize(data))
                     render(context, appWidgetManager, appWidgetId, data ?: cached)
@@ -143,9 +144,21 @@ class WeatherWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             ))
 
-            // Content box per day in dp (root padding 6dp each side; duo divider ~7dp)
+            // Rain note under the days, only when the widget is tall enough
+            val note = data?.let { WeatherFetcher.rainNote(it.rain) }
+            val showRain = note != null && size.height >= 100f
+            if (showRain) {
+                views.setViewVisibility(R.id.rain_img, android.view.View.VISIBLE)
+                views.setImageViewBitmap(R.id.rain_img, WidgetRenderer.renderRain(context, note!!.first, note.second,
+                    light, style == "transparent"))
+                views.setContentDescription(R.id.rain_img, note.first)
+            } else {
+                views.setViewVisibility(R.id.rain_img, android.view.View.GONE)
+            }
+
+            // Content box per day in dp (root padding 6dp each side; duo divider ~7dp; rain row ~22%)
             val cw = if (duo) (size.width - 12f - 7f) / 2f else size.width - 12f
-            val ch = size.height - 12f
+            val ch = (size.height - 12f) * (if (showRain) 0.78f else 1f)
 
             views.setImageViewBitmap(R.id.today_img, days.best(false, cw, ch))
             views.setContentDescription(R.id.today_img,

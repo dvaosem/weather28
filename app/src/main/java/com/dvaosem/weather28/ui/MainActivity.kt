@@ -23,6 +23,13 @@ import android.webkit.JavascriptInterface
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    @Volatile private var pendingUpdateUrl: String? = null
+
+    private fun jsCall(fn: String, arg: String) {
+        runOnUiThread {
+            if (::webView.isInitialized) webView.evaluateJavascript("window.$fn&&window.$fn($arg)", null)
+        }
+    }
     private val locationPermissionRequest = 1001
 
     inner class AndroidBridge {
@@ -129,6 +136,48 @@ class MainActivity : AppCompatActivity() {
             AlertPrefs.setStorm(this@MainActivity, on)
             if (on) runOnUiThread { maybeAskNotifPerm() }
             AlertScheduler.reschedule(this@MainActivity)
+        }
+
+        /** Data source chosen in the app — the widget uses the same one. order = accuracy ranking "0,2,1". */
+        @JavascriptInterface
+        fun setSource(src: String, order: String) {
+            val changed = com.dvaosem.weather28.widget.WidgetPrefs.saveSource(this@MainActivity, src, order)
+            if (changed) refreshAllWidgets()
+        }
+
+        @JavascriptInterface
+        fun getAppBuild(): Int = UpdateManager.currentBuild(this@MainActivity)
+
+        /** Checks GitHub Releases; answers via window.w28OnUpdate({current, latest, notes, manual, error}). */
+        @JavascriptInterface
+        fun checkUpdate(manual: Boolean) {
+            Thread {
+                val cur = UpdateManager.currentBuild(this@MainActivity)
+                val rel = UpdateManager.latest()
+                pendingUpdateUrl = rel?.apkUrl
+                val json = org.json.JSONObject().apply {
+                    put("current", cur); put("latest", rel?.build ?: 0)
+                    put("notes", rel?.notes ?: ""); put("manual", manual); put("error", rel == null)
+                }
+                jsCall("w28OnUpdate", json.toString())
+            }.start()
+        }
+
+        /** Downloads the newest APK and opens the system installer. Progress via window.w28OnUpdateProgress(p):
+         *  0..100 download, 101 = installer opened, -1 = failed, -2 = needs "install unknown apps" permission. */
+        @JavascriptInterface
+        fun installUpdate() {
+            val url = pendingUpdateUrl ?: return jsCall("w28OnUpdateProgress", "-1")
+            if (!UpdateManager.canInstall(this@MainActivity)) {
+                runOnUiThread { UpdateManager.openInstallPermissionSettings(this@MainActivity) }
+                return jsCall("w28OnUpdateProgress", "-2")
+            }
+            Thread {
+                val apk = UpdateManager.download(this@MainActivity, url) { p -> jsCall("w28OnUpdateProgress", p.toString()) }
+                if (apk == null) { jsCall("w28OnUpdateProgress", "-1"); return@Thread }
+                runOnUiThread { UpdateManager.install(this@MainActivity, apk) }
+                jsCall("w28OnUpdateProgress", "101")
+            }.start()
         }
 
         @JavascriptInterface

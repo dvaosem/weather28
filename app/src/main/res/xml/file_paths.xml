@@ -2,4 +2,5 @@
 <!-- res/xml/file_paths.xml -->
 <paths>
     <cache-path name="shared" path="shared/" />
+    <cache-path name="updates" path="updates/" />
 </paths>

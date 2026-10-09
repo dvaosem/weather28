@@ -44,6 +44,18 @@ object WidgetPrefs {
     fun getMode(ctx: Context, id: Int) = prefs(ctx).getString("mode_$id", "duo") ?: "duo"
     fun saveMode(ctx: Context, id: Int, mode: String) = prefs(ctx).edit().putString("mode_$id", mode).apply()
 
+    // data source chosen in the app (shared by all widgets): openmeteo | metno | ecmwf | best
+    fun getSource(ctx: Context) = prefs(ctx).getString("app_source", "openmeteo") ?: "openmeteo"
+    fun getSourceOrder(ctx: Context): List<Int> =
+        (prefs(ctx).getString("app_source_order", "0,1,2") ?: "0,1,2").split(",").mapNotNull { it.trim().toIntOrNull() }
+            .ifEmpty { listOf(0, 1, 2) }
+    /** @return true when the stored value changed */
+    fun saveSource(ctx: Context, src: String, order: String): Boolean {
+        val changed = getSource(ctx) != src
+        prefs(ctx).edit().putString("app_source", src).putString("app_source_order", order).apply()
+        return changed
+    }
+
     fun saveCache(ctx: Context, id: Int, data: String) = prefs(ctx).edit().putString("cache_$id", data).apply()
 
     fun remove(ctx: Context, id: Int) {

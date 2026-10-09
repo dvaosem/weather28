@@ -112,6 +112,41 @@ object WidgetRenderer {
         return bmp
     }
 
+    /** One line like "💧 Dážď o 15:00" — droplet drawn as a path, text in Inter. */
+    fun renderRain(ctx: Context, text: String, wet: Boolean, light: Boolean, shadow: Boolean): Bitmap {
+        val ts = U * 0.42f
+        val color = when {
+            wet && light -> 0xFF2E86E8.toInt()
+            wet -> 0xFF7CC4FF.toInt()
+            light -> 0xFF6B7A8C.toInt()
+            else -> 0xCCFFFFFF.toInt()
+        }
+        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = inter(ctx); textSize = ts; this.color = color
+            if (shadow) setShadowLayer(U * 0.035f, 0f, U * 0.01f, 0x8C000000.toInt())
+        }
+        val b = Rect(); p.getTextBounds(text, 0, text.length, b)
+        val capH = b.height().toFloat()
+        val dropH = capH * 1.05f; val dropW = dropH * 0.72f; val gap = ts * 0.35f
+        val pad = U * 0.06f
+        val w = dropW + gap + p.measureText(text) + 2 * pad
+        val h = maxOf(dropH, capH) + 2 * pad
+        val bmp = Bitmap.createBitmap(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        // droplet: pointed top, round bottom
+        val cx = pad + dropW / 2f; val top = (h - dropH) / 2f; val r = dropW / 2f
+        val path = android.graphics.Path().apply {
+            moveTo(cx, top)
+            cubicTo(cx + r * 0.35f, top + dropH * 0.32f, cx + r, top + dropH * 0.48f, cx + r, top + dropH - r)
+            arcTo(cx - r, top + dropH - 2 * r, cx + r, top + dropH, 0f, 180f, false)
+            cubicTo(cx - r, top + dropH * 0.48f, cx - r * 0.35f, top + dropH * 0.32f, cx, top)
+            close()
+        }
+        c.drawPath(path, p)
+        c.drawText(text, pad + dropW + gap - b.left, (h - capH) / 2f - b.top, p)
+        return bmp
+    }
+
     private fun drawIcon(ctx: Context, c: Canvas, res: Int, x: Float, y: Float, size: Float, shadow: Boolean) {
         val d = ContextCompat.getDrawable(ctx, res) ?: return
         val s = size.toInt().coerceAtLeast(1)
