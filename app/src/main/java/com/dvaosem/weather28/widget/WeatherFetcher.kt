@@ -51,7 +51,7 @@ object WeatherFetcher {
 
     fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2)): WeatherData? {
         val om = fetchOpenMeteo(lat, lon, null) // always: base + rain forecast
-        val chosen: Src? = when (source) {
+        val chosen: Src = when (source) {
             "ecmwf" -> fetchOpenMeteo(lat, lon, "ecmwf_ifs025")?.src
             "metno" -> fetchMetNo(lat, lon)
             "best" -> bestOf(listOf(om?.src, fetchMetNo(lat, lon), fetchOpenMeteo(lat, lon, "ecmwf_ifs025")?.src), order)
