@@ -466,6 +466,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="sr"><div><div class="sl2">Ranné zhrnutie</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Predpoveď na deň ráno</div></div><div class="tog"><button class="to on" id="mna" onclick="setMorningAlert(true)">Zap</button><button class="to" id="mnb" onclick="setMorningAlert(false)">Vyp</button></div></div>
       <div class="sr" id="mtime-row"><div><div class="sl2">Čas ranného</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">05:00 – 11:00</div></div><input type="time" id="mtime" min="05:00" max="11:00" onchange="setMorningTime(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:0.82rem;"/></div>
       <div class="sr"><div><div class="sl2">Búrky a dážď</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Výstraha pri zrážkach</div></div><div class="tog"><button class="to on" id="sta" onclick="setStormAlert(true)">Zap</button><button class="to" id="stb" onclick="setStormAlert(false)">Vyp</button></div></div>
+      <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
@@ -1115,9 +1116,15 @@ function syncAlertUI(){
   const row=document.getElementById('mtime-row');if(row)row.style.opacity=S.morningAlert?'1':'0.45';
   const na=document.getElementById('notif-na');if(na)na.style.display=window.AndroidBridge?'none':'block';
 }
+function pushAlertLoc(){
+  if(window.AndroidBridge && typeof AndroidBridge.setAlertLocation==='function' && typeof clat!=='undefined'){
+    try{ AndroidBridge.setAlertLocation(clat, clon, ln||''); }catch(e){}
+  }
+}
 function pushAlerts(){
   if(!window.AndroidBridge)return;
   try{
+    pushAlertLoc();
     const [h,m]=(S.morningTime||'07:00').split(':').map(Number);
     if(typeof AndroidBridge.setMorningAlert==='function')AndroidBridge.setMorningAlert(!!S.morningAlert,h,m||0);
     if(typeof AndroidBridge.setStormAlert==='function')AndroidBridge.setStormAlert(!!S.stormAlert);
@@ -1198,6 +1205,7 @@ function updateWindy(lat,lon){
 let ld=null,ln='',lc='',clat=48.2086,clon=17.2736;
 async function loadW(lat,lon,name,country){
   clat=lat;clon=lon;ln=name;lc=country;
+  pushAlertLoc();
   const si=document.getElementById('si');if(si&&name)si.value=name;
   renderFavbar();
   document.getElementById('cur').innerHTML='<div class="ld"><div class="sp"></div>Načítavam…</div>';
@@ -2313,6 +2321,20 @@ renderFavbar();
     loadW(48.2086,17.2736,'Viničné','SK');
   }
 })();
+</script>
+<script>
+/* APK: zobraz riadok "Widget" v nastaveniach */
+(function(){
+  function showWidgetRow(){
+    if(window.AndroidBridge){var r=document.getElementById('widget-cfg-row');if(r)r.style.display='';return true;}
+    return false;
+  }
+  if(!showWidgetRow()){ setTimeout(showWidgetRow,300); setTimeout(showWidgetRow,1000); }
+})();
+function openWidgetCfg(){
+  if(window.AndroidBridge && typeof AndroidBridge.openWidgetSettings==='function')
+    AndroidBridge.openWidgetSettings();
+}
 </script>
 </body>
 </html>
