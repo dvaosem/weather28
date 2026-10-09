@@ -1,6 +1,7 @@
 package com.dvaosem.weather28.widget
 
 import android.util.Log
+import com.dvaosem.weather28.R
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -21,7 +22,10 @@ data class WeatherData(
     val tomorrowIcon: String,
     val tomorrowDesc: String,
     val tomorrowRain: Int,
-    val tomorrowWind: Int
+    val tomorrowWind: Int,
+    val todayCode: Int = -1,
+    val todayIsDay: Boolean = true,
+    val tomorrowCode: Int = -1
 )
 
 object WeatherFetcher {
@@ -35,7 +39,7 @@ object WeatherFetcher {
         return try {
             val url = "https://api.open-meteo.com/v1/forecast?" +
                     "latitude=$lat&longitude=$lon" +
-                    "&current=temperature_2m,weather_code" +
+                    "&current=temperature_2m,weather_code,is_day" +
                     "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max" +
                     "&timezone=auto" +
                     "&forecast_days=2"
@@ -49,6 +53,7 @@ object WeatherFetcher {
             val current = json.getJSONObject("current")
             val currentTemp = current.getDouble("temperature_2m").toInt()
             val currentCode = current.getInt("weather_code")
+            val isDay = current.optInt("is_day", 1) == 1
 
             val daily = json.getJSONObject("daily")
             val maxTemps = daily.getJSONArray("temperature_2m_max")
@@ -72,7 +77,10 @@ object WeatherFetcher {
                 tomorrowIcon = wmoToEmoji(codes.getInt(1)),
                 tomorrowDesc = wmoToDesc(codes.getInt(1)),
                 tomorrowRain = if (rains.isNull(1)) 0 else rains.getInt(1),
-                tomorrowWind = winds.getDouble(1).toInt()
+                tomorrowWind = winds.getDouble(1).toInt(),
+                todayCode = currentCode,
+                todayIsDay = isDay,
+                tomorrowCode = codes.getInt(1)
             )
         } catch (e: Exception) {
             Log.e("WeatherFetcher", "Error: ${e.message}", e)
@@ -90,6 +98,7 @@ object WeatherFetcher {
             put("tomorrowTemp", d.tomorrowTemp); put("tomorrowMax", d.tomorrowMax); put("tomorrowMin", d.tomorrowMin)
             put("tomorrowIcon", d.tomorrowIcon); put("tomorrowDesc", d.tomorrowDesc)
             put("tomorrowRain", d.tomorrowRain); put("tomorrowWind", d.tomorrowWind)
+            put("todayCode", d.todayCode); put("todayIsDay", d.todayIsDay); put("tomorrowCode", d.tomorrowCode)
         }.toString()
     }
 
@@ -103,7 +112,9 @@ object WeatherFetcher {
                 todayRain = j.getInt("todayRain"), todayWind = j.getInt("todayWind"),
                 tomorrowTemp = j.getInt("tomorrowTemp"), tomorrowMax = j.getInt("tomorrowMax"), tomorrowMin = j.getInt("tomorrowMin"),
                 tomorrowIcon = j.getString("tomorrowIcon"), tomorrowDesc = j.getString("tomorrowDesc"),
-                tomorrowRain = j.getInt("tomorrowRain"), tomorrowWind = j.getInt("tomorrowWind")
+                tomorrowRain = j.getInt("tomorrowRain"), tomorrowWind = j.getInt("tomorrowWind"),
+                todayCode = j.optInt("todayCode", -1), todayIsDay = j.optBoolean("todayIsDay", true),
+                tomorrowCode = j.optInt("tomorrowCode", -1)
             )
         } catch (e: Exception) { null }
     }
@@ -117,6 +128,23 @@ object WeatherFetcher {
             t <= 20  -> 0xFFffe066.toInt()
             t <= 28  -> 0xFFffaa00.toInt()
             else     -> 0xFFff4d6d.toInt()
+        }
+    }
+
+    /** Vector icon for a WMO weather code. light = icon variant for light widget background. */
+    fun iconRes(code: Int, isDay: Boolean, light: Boolean): Int {
+        return when (code) {
+            0 -> if (isDay) (if (light) R.drawable.wi_clear_day_l else R.drawable.wi_clear_day)
+                 else (if (light) R.drawable.wi_clear_night_l else R.drawable.wi_clear_night)
+            1, 2 -> if (isDay) (if (light) R.drawable.wi_partly_day_l else R.drawable.wi_partly_day)
+                    else (if (light) R.drawable.wi_partly_night_l else R.drawable.wi_partly_night)
+            45, 48 -> if (light) R.drawable.wi_fog_l else R.drawable.wi_fog
+            51, 53, 55, 56, 57 -> if (light) R.drawable.wi_drizzle_l else R.drawable.wi_drizzle
+            61, 63, 65, 80, 81, 82 -> if (light) R.drawable.wi_rain_l else R.drawable.wi_rain
+            66, 67 -> if (light) R.drawable.wi_sleet_l else R.drawable.wi_sleet
+            71, 73, 75, 77, 85, 86 -> if (light) R.drawable.wi_snow_l else R.drawable.wi_snow
+            95, 96, 99 -> if (light) R.drawable.wi_thunder_l else R.drawable.wi_thunder
+            else -> if (light) R.drawable.wi_cloudy_l else R.drawable.wi_cloudy
         }
     }
 

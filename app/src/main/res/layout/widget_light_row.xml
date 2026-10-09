@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:background="@drawable/widget_bg_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <ImageView
+                android:id="@+id/today_icon"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:src="@drawable/wi_cloudy"
+                android:scaleType="fitEnd"
+                android:adjustViewBounds="false"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:paddingEnd="4dp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="5"
+            android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/today_temp"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="3"
+                    android:text="--°"
+                    android:textColor="#16202C"
+                    android:fontFamily="@font/bebas_neue"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:gravity="center_vertical|start"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="72sp"
+                    android:autoSizeStepGranularity="1sp"/>
+
+            <TextView
+                    android:id="@+id/today_minmax"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1.15"
+                    android:text=""
+                    android:textColor="#16202C"
+                    android:fontFamily="@font/inter_semibold"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:gravity="center_vertical|start"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="7sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

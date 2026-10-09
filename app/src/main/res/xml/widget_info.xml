@@ -4,10 +4,11 @@
     android:minHeight="40dp"
     android:minResizeWidth="40dp"
     android:minResizeHeight="40dp"
-    android:targetCellWidth="1"
+    android:targetCellWidth="2"
     android:targetCellHeight="1"
     android:updatePeriodMillis="900000"
-    android:initialLayout="@layout/widget_dark"
+    android:initialLayout="@layout/widget_dark_duo"
+    android:previewLayout="@layout/widget_dark_duo"
     android:configure="com.dvaosem.weather28.widget.WidgetConfigActivity"
     android:widgetCategory="home_screen"
     android:resizeMode="horizontal|vertical">
