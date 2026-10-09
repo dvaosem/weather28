@@ -153,13 +153,13 @@ class WeatherWidget : AppWidgetProvider() {
                 views.setTextColor(R.id.today_temp, WeatherFetcher.tempColor(data.todayTemp))
                 views.setTextViewText(R.id.today_icon, data.todayIcon)
                 try { views.setTextViewText(R.id.today_icon_bg, data.todayIcon) } catch (e: Exception) {}
-                views.setTextViewText(R.id.today_minmax, "${data.todayMax}° / ${data.todayMin}°")
+                views.setTextViewText(R.id.today_minmax, "${data.todayMax}°/${data.todayMin}°")
                 views.setTextColor(R.id.today_minmax, 0xFF00e5a0.toInt())
                 try { views.setTextViewText(R.id.tomorrow_temp, "${data.tomorrowTemp}°") } catch (e: Exception) {}
                 try { views.setTextColor(R.id.tomorrow_temp, WeatherFetcher.tempColor(data.tomorrowTemp)) } catch (e: Exception) {}
                 try { views.setTextViewText(R.id.tomorrow_icon, data.tomorrowIcon) } catch (e: Exception) {}
                 try { views.setTextViewText(R.id.tomorrow_icon_bg, data.tomorrowIcon) } catch (e: Exception) {}
-                try { views.setTextViewText(R.id.tomorrow_minmax, "${data.tomorrowMax}° / ${data.tomorrowMin}°") } catch (e: Exception) {}
+                try { views.setTextViewText(R.id.tomorrow_minmax, "${data.tomorrowMax}°/${data.tomorrowMin}°") } catch (e: Exception) {}
                 try { views.setTextColor(R.id.tomorrow_minmax, 0xFFff4d6d.toInt()) } catch (e: Exception) {}
             }
             return views

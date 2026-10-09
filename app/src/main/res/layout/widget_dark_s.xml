@@ -6,141 +6,142 @@
     android:orientation="vertical"
     android:background="@drawable/widget_bg_dark">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <!-- TODAY -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="8dp">
+            android:gravity="center"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <TextView
-                    android:id="@+id/today_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="18°"
-                    android:textColor="#ffaa00"
-                    android:textSize="54sp"
-                    android:fontFamily="sans-serif-black"
-                    android:includeFontPadding="false"
-                    android:gravity="center"
-                    android:shadowColor="#e6000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="7"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/today_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top|end"
-                    android:layout_marginTop="-5dp"
-                    android:layout_marginEnd="-7dp"
                     android:text="☁️"
-                    android:textSize="22sp"
+                    android:textSize="19sp"
                     android:includeFontPadding="false"
                     android:gravity="center"
+                    android:layout_marginEnd="3dp"
                     android:shadowColor="#cc000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="4"/>
-            </FrameLayout>
+
+                <TextView
+                    android:id="@+id/today_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="18°"
+                    android:textColor="#ffaa00"
+                    android:textSize="44sp"
+                    android:fontFamily="sans-serif-black"
+                    android:includeFontPadding="false"
+                    android:gravity="center"
+                    android:shadowColor="#e6000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="6"/>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/today_minmax"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="21° / 15°"
-                android:textColor="#00e5a0"
-                android:textSize="24sp"
+                android:text="21°/15°"
+                android:textColor="#f2f5f8"
+                android:textSize="13sp"
                 android:fontFamily="sans-serif-medium"
-                android:textStyle="bold"
-                android:layout_marginTop="2dp"
-                android:shadowColor="#cc000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="4"/>
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:background="@drawable/widget_pill_green"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:layout_marginTop="3dp"/>
         </LinearLayout>
 
         <TextView
             android:layout_width="1dp"
-            android:layout_height="match_parent"
+            android:layout_height="56dp"
             android:background="#22888888"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
             android:text=""/>
 
-        <!-- TOMORROW -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="8dp">
+            android:gravity="center"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <TextView
-                    android:id="@+id/tomorrow_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="25°"
-                    android:textColor="#c97fff"
-                    android:textSize="54sp"
-                    android:fontFamily="sans-serif-black"
-                    android:includeFontPadding="false"
-                    android:gravity="center"
-                    android:shadowColor="#e6000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="7"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/tomorrow_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top|end"
-                    android:layout_marginTop="-5dp"
-                    android:layout_marginEnd="-7dp"
-                    android:text="🌤️"
-                    android:textSize="22sp"
+                    android:text="☁️"
+                    android:textSize="19sp"
                     android:includeFontPadding="false"
                     android:gravity="center"
+                    android:layout_marginEnd="3dp"
                     android:shadowColor="#cc000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="4"/>
-            </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tomorrow_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="18°"
+                    android:textColor="#c97fff"
+                    android:textSize="44sp"
+                    android:fontFamily="sans-serif-black"
+                    android:includeFontPadding="false"
+                    android:gravity="center"
+                    android:shadowColor="#e6000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="6"/>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tomorrow_minmax"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="25° / 14°"
-                android:textColor="#ff4d6d"
-                android:textSize="24sp"
+                android:text="21°/15°"
+                android:textColor="#f2f5f8"
+                android:textSize="13sp"
                 android:fontFamily="sans-serif-medium"
-                android:textStyle="bold"
-                android:layout_marginTop="2dp"
-                android:shadowColor="#cc000000" android:shadowDx="0" android:shadowDy="1" android:shadowRadius="4"/>
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:background="@drawable/widget_pill_pink"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:layout_marginTop="3dp"/>
         </LinearLayout>
+
     </LinearLayout>
 
     <TextView android:id="@+id/widget_refresh" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/today_desc"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_desc" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
     <TextView android:id="@+id/tomorrow_desc" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
     <TextView android:id="@+id/today_icon_bg" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
     <TextView android:id="@+id/tomorrow_icon_bg" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/today_rain"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/today_wind"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_rain" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_wind" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
     <TextView android:id="@+id/tomorrow_rain" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
     <TextView android:id="@+id/tomorrow_wind" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
 
