@@ -2349,19 +2349,24 @@ window.w28OnUpdate=function(u){
   if(u.error){if(sub)sub.textContent='Verzia '+u.current+' · nepodarilo sa overiť';return;}
   var newer=u.latest>u.current;
   if(sub)sub.textContent='Verzia '+u.current+(newer?' · k dispozícii '+u.latest:' · najnovšia');
+  var rb=document.getElementById('upd-btn');
+  if(rb){rb.textContent=newer?'Aktualizovať':'Skontrolovať';rb.onclick=newer?w28InstallUpdate:w28CheckUpdate;rb.classList.toggle('on',newer);}
   var bar=document.getElementById('upd-bar');
   if(newer&&bar){document.getElementById('upd-txt').textContent='Nová verzia '+u.latest;bar.style.display='flex';}
 };
 function w28InstallUpdate(){
-  var b=document.getElementById('upd-go');if(b){b.disabled=true;b.textContent='Sťahujem…';}
+  ['upd-go','upd-btn'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=true;b.textContent='Sťahujem…';}});
   AndroidBridge.installUpdate();
 }
 window.w28OnUpdateProgress=function(p){
-  var b=document.getElementById('upd-go'),t=document.getElementById('upd-txt');if(!b)return;
-  if(p>=0&&p<=100){b.textContent=p+' %';}
-  else if(p===101){b.disabled=false;b.textContent='Inštalovať';document.getElementById('upd-bar').style.display='none';}
-  else if(p===-2){b.disabled=false;b.textContent='Skúsiť znova';t.textContent='Povoľ inštaláciu pre Weather28';}
-  else{b.disabled=false;b.textContent='Skúsiť znova';t.textContent='Sťahovanie zlyhalo';}
+  var bs=['upd-go','upd-btn'].map(function(id){return document.getElementById(id);}).filter(Boolean);
+  var t=document.getElementById('upd-txt'),sub=document.getElementById('upd-sub');
+  function set(txt,dis){bs.forEach(function(b){b.textContent=txt;b.disabled=dis;});}
+  if(p>=0&&p<=100){set(p+' %',true);if(sub)sub.textContent='Sťahujem novú verziu…';}
+  else if(p===101){set('Aktualizovať',false);if(sub)sub.textContent='Potvrď inštaláciu v okne Androidu';}
+  else if(p===-2){set('Aktualizovať',false);var m='Povoľ „Inštalovať neznáme aplikácie“ pre Weather28 a ťukni znova';if(t)t.textContent=m;if(sub)sub.textContent=m;}
+  else{set('Aktualizovať',false);var m2='Sťahovanie zlyhalo – otváram stránku na stiahnutie';if(t)t.textContent=m2;if(sub)sub.textContent=m2;
+    try{if(AndroidBridge.openUpdatePage)AndroidBridge.openUpdatePage();}catch(e){}}
 };
 (function(){
   function boot(){
@@ -2379,7 +2384,7 @@ function openWidgetCfg(){
     AndroidBridge.openWidgetSettings();
 }
 </script>
-<div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.35);font-family:'Inter',sans-serif;">
+<div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:20001;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.35);font-family:'Inter',sans-serif;">
   <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span id="upd-txt" style="font-size:0.85rem;font-weight:700;color:var(--text);">Nová verzia</span><span style="font-size:0.66rem;color:var(--text2);">Weather28 pre Android</span></div>
   <div style="display:flex;gap:8px;flex-shrink:0;">
     <button onclick="document.getElementById('upd-bar').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:8px 12px;font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;">Neskôr</button>

@@ -180,6 +180,15 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
+        /** Fallback: open the latest release page in the browser to download the APK manually. */
+        @JavascriptInterface
+        fun openUpdatePage() {
+            runOnUiThread {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://github.com/dvaosem/weather28/releases/latest")))
+            }
+        }
+
         @JavascriptInterface
         fun setAlertLocation(lat: Double, lon: Double, city: String) {
             if (lat != 0.0 && lon != 0.0)
