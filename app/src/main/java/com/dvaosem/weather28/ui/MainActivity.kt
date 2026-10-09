@@ -7,12 +7,13 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.WindowManager
 import android.webkit.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.dvaosem.weather28.R
 import com.dvaosem.weather28.widget.WidgetConfigActivity
 import com.dvaosem.weather28.widget.AlertPrefs
@@ -140,12 +141,14 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webview)
+        // Keep content below the status bar and above the nav bar instead of drawing under them
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         setupWebView()
         checkLocationPermission()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
