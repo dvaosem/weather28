@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Weather28" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#00e5a0</item>
+        <item name="colorPrimaryVariant">#4d9fff</item>
+        <item name="colorOnPrimary">#0d1117</item>
+        <item name="android:windowBackground">#0d1117</item>
+        <item name="android:statusBarColor">#0d1117</item>
+        <item name="android:navigationBarColor">#0d1117</item>
+    </style>
+
+    <style name="Theme.Weather28.Config" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#00e5a0</item>
+        <item name="android:windowBackground">#0d1117</item>
+        <item name="android:statusBarColor">#0d1117</item>
+        <item name="android:navigationBarColor">#0d1117</item>
+    </style>
+</resources>

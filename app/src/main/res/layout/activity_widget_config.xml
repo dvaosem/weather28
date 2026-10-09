@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0d1117"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WEATHER28 WIDGET"
+            android:textColor="#00e5a0"
+            android:textSize="18sp"
+            android:fontFamily="sans-serif-condensed"
+            android:textAllCaps="true"
+            android:letterSpacing="0.2"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- City search -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MESTO"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/et_city"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Hľadaj mesto…"
+                android:textColor="#e6edf3"
+                android:textColorHint="#7d8fa8"
+                android:background="@drawable/config_input_bg"
+                android:padding="12dp"
+                android:textSize="14sp"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btn_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hľadaj"
+                android:background="@drawable/config_btn_bg"
+                android:textColor="#0d1117"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="13sp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"/>
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progress_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:indeterminateTint="#00e5a0"/>
+
+        <!-- GPS button - compact, left aligned -->
+        <Button
+            android:id="@+id/btn_gps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📍 Moja poloha"
+            android:background="@drawable/config_input_bg"
+            android:textColor="#7d8fa8"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="12sp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="9dp"
+            android:paddingBottom="9dp"
+            android:layout_marginTop="8dp"
+            android:textAllCaps="false"/>
+
+        <TextView
+            android:id="@+id/tv_search_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📍 Bratislava"
+            android:textColor="#00e5a0"
+            android:textSize="11sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Units -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="JEDNOTKY"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rg_unit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rb_celsius"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="°C Celsius"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rb_fahrenheit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="°F Fahrenheit"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+        </RadioGroup>
+
+        <!-- Style -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ŠTÝL WIDGETU"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rg_style"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="32dp">
+
+            <RadioButton
+                android:id="@+id/rb_dark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🌙  Tmavý"
+                android:textColor="#e6edf3"
+                android:textSize="14sp"
+                android:buttonTint="#00e5a0"
+                android:padding="8dp"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rb_light"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="☀️  Svetlý"
+                android:textColor="#e6edf3"
+                android:textSize="14sp"
+                android:buttonTint="#00e5a0"
+                android:padding="8dp"/>
+
+            <RadioButton
+                android:id="@+id/rb_transparent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="○  Žiadne"
+                android:textColor="#e6edf3"
+                android:textSize="14sp"
+                android:buttonTint="#00e5a0"
+                android:padding="8dp"/>
+        </RadioGroup>
+
+        <!-- Opacity (len pre tmavý/svetlý) -->
+        <TextView
+            android:id="@+id/tv_opacity_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PRIEHĽADNOSŤ POZADIA"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="4dp"/>
+
+        <SeekBar
+            android:id="@+id/sb_opacity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="5"
+            android:progress="4"
+            android:progressTint="#00e5a0"
+            android:thumbTint="#00e5a0"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/tv_opacity_val"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="80%"
+            android:textColor="#7d8fa8"
+            android:textSize="11sp"
+            android:gravity="end"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Intenzita liquid glass (len pre priehľadný štýl) -->
+        <TextView
+            android:id="@+id/tv_glass_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="INTENZITA LIQUID GLASS"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone"/>
+
+        <SeekBar
+            android:id="@+id/sb_glass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="5"
+            android:progress="1"
+            android:progressTint="#00e5a0"
+            android:thumbTint="#00e5a0"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tv_glass_val"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="20%"
+            android:textColor="#7d8fa8"
+            android:textSize="11sp"
+            android:gravity="end"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone"/>
+
+
+
+
+        <!-- Zobrazenie -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ZOBRAZENIE"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rg_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rb_mode_duo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dnes + Zajtra"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rb_mode_single"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Len Dnes"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+        </RadioGroup>
+
+        <!-- Interval -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="INTERVAL OBNOVY"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rg_interval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rb_15min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="15 min"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+
+            <RadioButton
+                android:id="@+id/rb_30min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="30 min"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rb_60min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="60 min"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+        </RadioGroup>
+
+        <!-- Save button -->
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Pridať widget"
+            android:background="@drawable/config_btn_bg"
+            android:textColor="#0d1117"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="15sp"
+            android:textAllCaps="false"/>
+
+    </LinearLayout>
+</ScrollView>

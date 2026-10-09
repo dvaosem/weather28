@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_light">
+
+    <TextView
+        android:id="@+id/widget_city"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="VINIČNÉ"
+        android:textColor="#444444"
+        android:textSize="11sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.15"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center_horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="2dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <!-- TODAY -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DNES"
+                android:textColor="#007a50"
+                android:textSize="11sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.1"
+                android:fontFamily="sans-serif-medium"/>
+
+            <TextView
+                android:id="@+id/today_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="18°"
+                android:textColor="#e07a00"
+                android:textSize="66sp"
+                android:fontFamily="sans-serif-condensed"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/today_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☁️"
+                android:textSize="34sp"
+                android:includeFontPadding="false"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/today_minmax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21° / 15°"
+                android:textColor="#007a50"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#22888888"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:text=""/>
+
+        <!-- TOMORROW -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ZAJTRA"
+                android:textColor="#8a30cc"
+                android:textSize="11sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.1"
+                android:fontFamily="sans-serif-medium"/>
+
+            <TextView
+                android:id="@+id/tomorrow_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="25°"
+                android:textColor="#8a30cc"
+                android:textSize="66sp"
+                android:fontFamily="sans-serif-condensed"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/tomorrow_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌤️"
+                android:textSize="34sp"
+                android:includeFontPadding="false"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/tomorrow_minmax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="25° / 14°"
+                android:textColor="#cc1a3a"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView android:id="@+id/widget_refresh" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_desc"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/tomorrow_desc" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_icon_bg" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/tomorrow_icon_bg" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_rain"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/today_wind"    android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/tomorrow_rain" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/tomorrow_wind" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+
+</LinearLayout>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_transparent"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical|end"
+        android:layout_marginBottom="4dp">
+
+
+        <TextView
+            android:id="@+id/widget_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="↻"
+            android:textColor="#55aabbcc"
+            android:textSize="12sp"
+            android:padding="2dp"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/today_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="22°"
+            android:textColor="#ffaa00"
+            android:textSize="28sp"
+            android:fontFamily="sans-serif-black"
+            android:includeFontPadding="false"
+            android:lineSpacingMultiplier="0.85"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/today_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⛅"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/today_desc"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Polojasno"
+                    android:textColor="#7d8fa8"
+                    android:textSize="6sp"
+                    android:layout_marginStart="6dp"
+                    android:maxLines="2"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/today_minmax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="25° / 11°"
+                android:textColor="#00e5a0"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold"
+                android:layout_marginTop="3dp"/>
+
+            <TextView
+                android:id="@+id/today_rain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💧 20%"
+                android:textColor="#4d9fff"
+                android:textSize="6sp"
+                android:layout_marginTop="2dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView android:id="@+id/today_wind" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_temp" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_icon" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_desc" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_minmax" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_rain" android:layout_width="0dp" android:layout_height="0dp"/>
+    <TextView android:id="@+id/tomorrow_wind" android:layout_width="0dp" android:layout_height="0dp"/>
+</LinearLayout>
