@@ -186,6 +186,15 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
+        /** Share plain text (e.g. the APK download link) via the system share sheet. */
+        @JavascriptInterface
+        fun shareText(text: String) {
+            runOnUiThread {
+                val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
+                startActivity(Intent.createChooser(send, "Weather28"))
+            }
+        }
+
         /** Fallback: open the latest release page in the browser to download the APK manually. */
         @JavascriptInterface
         fun openUpdatePage() {

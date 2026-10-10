@@ -468,6 +468,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="sr"><div><div class="sl2">Búrky a dážď</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Výstraha pri zrážkach</div></div><div class="tog"><button class="to on" id="sta" onclick="setStormAlert(true)">Zap</button><button class="to" id="stb" onclick="setStormAlert(false)">Vyp</button></div></div>
       <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
       <div class="sr" id="upd-row" style="display:none;"><div><div class="sl2">Aktualizácia</div><div id="upd-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Verzia –</div></div><div class="tog"><button class="to" id="upd-btn" onclick="w28CheckUpdate()">Skontrolovať</button></div></div>
+      <div class="sr" id="apk-row"><div><div class="sl2" id="apk-ttl">Android appka</div><div id="apk-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Widget, upozornenia a aktualizácie</div></div><div class="tog"><button class="to" id="apk-btn" onclick="w28ApkAction()">Stiahnuť</button></div></div>
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
@@ -1074,7 +1075,7 @@ const STATIC_EN={
  'Čas ranného':'Morning time','Búrky a dážď':'Storms & rain','Výstraha pri zrážkach':'Alerts for storms, heavy rain and wind',
  'Nastavenie home-screen widgetu':'Home-screen widget settings','Nastaviť':'Set up',
  'Aktualizácia':'Updates','Skontrolovať':'Check','Weather28 pre Android':'Weather28 for Android','Neskôr':'Later',
- 'Radar · Mapa':'Radar · Map','AI Predpoveď':'AI Forecast','Aktualizovať':'Update','Nová verzia':'New version','Zdieľať predpoveď':'Share forecast','Zdieľať':'Share','Moja poloha':'My location'
+ 'Radar · Mapa':'Radar · Map','AI Predpoveď':'AI Forecast','Android appka':'Android app','Widget, upozornenia a aktualizácie':'Widget, notifications and updates','Stiahnuť':'Download','Aktualizovať':'Update','Nová verzia':'New version','Zdieľať predpoveď':'Share forecast','Zdieľať':'Share','Moja poloha':'My location'
 };
 const _i18nOrig=new WeakMap();
 function i18nStatic(lang){
@@ -1135,7 +1136,7 @@ function toggleLang(){
   syncLangButtons();
   w28SyncLang();
 }
-function setLang(l){S.lang=l;saveS();applyLang(l);syncLangButtons();w28SyncLang();}
+function setLang(l){S.lang=l;saveS();applyLang(l);syncLangButtons();w28SyncLang();try{w28ApkRowInApp();}catch(e){}}
 function syncLangButtons(){
   const sk=document.getElementById('lsk'),en=document.getElementById('len');
   if(sk)sk.classList.toggle('on',S.lang==='sk');
@@ -2412,7 +2413,7 @@ window.w28OnUpdateProgress=function(p){
 (function(){
   function boot(){
     if(!window.AndroidBridge)return false;
-    w28SyncSource();w28SyncLang();
+    w28SyncSource();w28SyncLang();w28ApkRowInApp();
     var r=document.getElementById('upd-row');if(r)r.style.display='';
     try{var sub=document.getElementById('upd-sub');if(sub&&AndroidBridge.getAppBuild)sub.textContent=tx('Verzia ','Version ')+AndroidBridge.getAppBuild();}catch(e){}
     if(typeof AndroidBridge.checkUpdate==='function')setTimeout(function(){AndroidBridge.checkUpdate(false);},2500);
@@ -2420,6 +2421,20 @@ window.w28OnUpdateProgress=function(p){
   }
   if(!boot()){setTimeout(boot,500);}
 })();
+/* Android app: download link on the web, "send to someone" inside the app */
+const W28_APK_URL='https://github.com/dvaosem/weather28/releases/latest/download/weather28.apk';
+function w28ApkAction(){
+  if(window.AndroidBridge&&typeof AndroidBridge.shareText==='function'){
+    AndroidBridge.shareText(tx('Weather28 – počasie pre Android: ','Weather28 – weather for Android: ')+W28_APK_URL);
+  } else { window.location.href=W28_APK_URL; }
+}
+function w28ApkRowInApp(){
+  if(!(window.AndroidBridge&&typeof AndroidBridge.shareText==='function'))return;
+  var t=document.getElementById('apk-ttl'),s=document.getElementById('apk-sub'),b=document.getElementById('apk-btn');
+  if(t)t.textContent=tx('Poslať appku','Send the app');
+  if(s)s.textContent=tx('Pošli odkaz na stiahnutie','Send a download link');
+  if(b)b.textContent=tx('Zdieľať','Share');
+}
 function openWidgetCfg(){
   if(window.AndroidBridge && typeof AndroidBridge.openWidgetSettings==='function')
     AndroidBridge.openWidgetSettings();
