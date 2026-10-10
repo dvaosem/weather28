@@ -241,7 +241,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .co-btn:disabled{opacity:.2;cursor:default;}
 .co-item.co-hidden{opacity:.45;}
 .co-vis{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;width:30px;height:28px;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;}
-.co-vis.co-vis-off{opacity:.35;}
+.co-vis.co-vis-off{opacity:.45;color:var(--text2);}
 
 /* INFO MODAL */
 .info-modal{display:none;position:fixed;inset:0;z-index:20000;align-items:flex-end;}
@@ -1696,7 +1696,7 @@ function renderCardOrderUI(){
     <div class="co-item${hidden?' co-hidden':''}">
       <span class="co-label">${names[id]||id}</span>
       <div class="co-btns">
-        <button class="co-vis${hidden?' co-vis-off':''}" onclick="toggleCardVisibility('${id}')" title="${hidden?(sk?'Zobraziť':'Show'):(sk?'Skryť':'Hide')}">${hidden?'🙈':'👁'}</button>
+        <button class="co-vis${hidden?' co-vis-off':''}" onclick="toggleCardVisibility('${id}')" title="${hidden?(sk?'Zobraziť':'Show'):(sk?'Skryť':'Hide')}">${hidden?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.6 3.6M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.9 0 3.6-.6 5-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M3 3l18 18"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'}</button>
         <button class="co-btn" onclick="moveCard('${id}',-1)" ${i===0?'disabled':''}>↑</button>
         <button class="co-btn" onclick="moveCard('${id}',1)" ${i===S.cardOrder.length-1?'disabled':''}>↓</button>
       </div>
