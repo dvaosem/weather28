@@ -95,5 +95,5 @@ settings stay on the device (localStorage / SharedPreferences).
 
 ## License
 
-Code: [MIT](LICENSE) © Michal Pohrebovič ([dvaosem](https://dvaosem.com)).
+Code: [MIT](LICENSE) © [dvaosem](https://dvaosem.com).
 Fonts and data keep their own licenses listed above.
