@@ -70,8 +70,8 @@ class WidgetConfigActivity : AppCompatActivity() {
         val tvGlassVal = findViewById<TextView>(R.id.tv_glass_val)
         val tvGlassLabel = findViewById<TextView>(R.id.tv_glass_label)
 
-        // Change button text when editing from app
-        if (fromApp) btnSave.text = "Uložiť"
+        // Editing an existing widget (from the app or long-press → Settings on the home screen)
+        if (fromApp || WidgetPrefs.prefs(this).contains("style_$appWidgetId")) btnSave.text = "Uložiť"
 
         // Pre-fill saved values
         etCity.setText(WidgetPrefs.getCity(this, appWidgetId))
