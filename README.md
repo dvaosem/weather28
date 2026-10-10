@@ -10,7 +10,7 @@ A fast, no-nonsense weather app for Slovakia, made by [dvaosem](https://dvaosem.
 Runs as a single-file web app at **[dvaosem.com/weather28.html](https://dvaosem.com/weather28.html)**
 and as an Android app with a home-screen widget, weather alerts and in-app updates.
 
-The interface is in Slovak (English can be switched on in settings).
+The interface is in Slovak or English (Settings → Language).
 
 ## Features
 
