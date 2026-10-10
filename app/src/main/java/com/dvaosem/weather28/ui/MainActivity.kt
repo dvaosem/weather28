@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    startActivity(Intent.createChooser(send, "Zdieľať počasie"))
+                    startActivity(Intent.createChooser(send, com.dvaosem.weather28.widget.WidgetPrefs.localized(this@MainActivity).getString(R.string.share_title)))
                 } catch (e: Exception) { e.printStackTrace() }
             }
         }
@@ -143,6 +143,12 @@ class MainActivity : AppCompatActivity() {
         fun setSource(src: String, order: String) {
             val changed = com.dvaosem.weather28.widget.WidgetPrefs.saveSource(this@MainActivity, src, order)
             if (changed) refreshAllWidgets()
+        }
+
+        /** App language (sk/en) for widget texts, widget settings and notifications. */
+        @JavascriptInterface
+        fun setLang(lang: String) {
+            if (com.dvaosem.weather28.widget.WidgetPrefs.saveLang(this@MainActivity, lang)) refreshAllWidgets()
         }
 
         @JavascriptInterface

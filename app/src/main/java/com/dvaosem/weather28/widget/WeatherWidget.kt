@@ -145,7 +145,8 @@ class WeatherWidget : AppWidgetProvider() {
             ))
 
             // Rain note under the days, only when the widget is tall enough
-            val note = data?.let { WeatherFetcher.rainNote(it.rain) }
+            val en = WidgetPrefs.isEn(context)
+            val note = data?.let { WeatherFetcher.rainNote(it.rain, en) }
             val showRain = note != null && size.height >= 100f
             if (showRain) {
                 views.setViewVisibility(R.id.rain_img, android.view.View.VISIBLE)
@@ -162,11 +163,11 @@ class WeatherWidget : AppWidgetProvider() {
 
             views.setImageViewBitmap(R.id.today_img, days.best(false, cw, ch))
             views.setContentDescription(R.id.today_img,
-                data?.let { "Dnes ${it.todayTemp}°, max ${it.todayMax}°, min ${it.todayMin}°" } ?: "Weather28")
+                data?.let { "${if (en) "Today" else "Dnes"} ${it.todayTemp}°, max ${it.todayMax}°, min ${it.todayMin}°" } ?: "Weather28")
             if (duo) {
                 views.setImageViewBitmap(R.id.tomorrow_img, days.best(true, cw, ch))
                 views.setContentDescription(R.id.tomorrow_img,
-                    data?.let { "Zajtra max ${it.tomorrowMax}°, min ${it.tomorrowMin}°" } ?: "")
+                    data?.let { "${if (en) "Tomorrow" else "Zajtra"} max ${it.tomorrowMax}°, min ${it.tomorrowMin}°" } ?: "")
                 views.setInt(R.id.widget_divider, "setBackgroundColor", if (light) 0x1F16202C else 0x2EFFFFFF)
             }
             return views

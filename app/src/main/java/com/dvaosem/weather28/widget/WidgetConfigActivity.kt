@@ -1,5 +1,6 @@
 package com.dvaosem.weather28.widget
 
+import android.content.Context
 import android.Manifest
 import android.appwidget.AppWidgetManager
 import android.content.Intent
@@ -32,6 +33,10 @@ class WidgetConfigActivity : AppCompatActivity() {
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(8, TimeUnit.SECONDS)
         .build()
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(WidgetPrefs.localized(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +76,7 @@ class WidgetConfigActivity : AppCompatActivity() {
         val tvGlassLabel = findViewById<TextView>(R.id.tv_glass_label)
 
         // Editing an existing widget (from the app or long-press → Settings on the home screen)
-        if (fromApp || WidgetPrefs.prefs(this).contains("style_$appWidgetId")) btnSave.text = "Uložiť"
+        if (fromApp || WidgetPrefs.prefs(this).contains("style_$appWidgetId")) btnSave.text = getString(R.string.cfg_save)
 
         // Pre-fill saved values
         etCity.setText(WidgetPrefs.getCity(this, appWidgetId))
@@ -144,7 +149,7 @@ class WidgetConfigActivity : AppCompatActivity() {
             if (q.isEmpty()) return@setOnClickListener
             progress.visibility = View.VISIBLE
             btnSearch.isEnabled = false
-            tvResult.text = "Hľadám…"
+            tvResult.text = getString(R.string.cfg_searching)
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val url = "https://geocoding-api.open-meteo.com/v1/search?name=${java.net.URLEncoder.encode(q, "UTF-8")}&count=1&language=sk&format=json"
@@ -160,13 +165,13 @@ class WidgetConfigActivity : AppCompatActivity() {
                             selectedLon = r.getDouble("longitude")
                             selectedCity = r.getString("name")
                             tvResult.text = "✅ $selectedCity, ${r.optString("country_code", "")}"
-                        } else tvResult.text = "❌ Mesto nenájdené"
+                        } else tvResult.text = getString(R.string.cfg_not_found)
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         progress.visibility = View.GONE
                         btnSearch.isEnabled = true
-                        tvResult.text = "❌ Chyba: ${e.message}"
+                        tvResult.text = getString(R.string.cfg_error, e.message ?: "")
                     }
                 }
             }
@@ -210,7 +215,7 @@ class WidgetConfigActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), GPS_PERM)
             return
         }
-        tvResult.text = "📡 Získavam polohu…"
+        tvResult.text = getString(R.string.cfg_locating)
         val fusedClient = LocationServices.getFusedLocationProviderClient(this)
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED) {
@@ -219,7 +224,7 @@ class WidgetConfigActivity : AppCompatActivity() {
                     selectedLat = loc.latitude
                     selectedLon = loc.longitude
                     reverseGeocode(loc.latitude, loc.longitude, tvResult)
-                } else tvResult.text = "❌ Poloha nedostupná"
+                } else tvResult.text = getString(R.string.cfg_no_location)
             }
         }
     }

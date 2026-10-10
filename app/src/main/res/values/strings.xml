@@ -2,4 +2,27 @@
 <resources>
     <string name="app_name">Weather28</string>
     <string name="widget_name">Weather28 Widget</string>
+    <string name="cfg_city">MESTO</string>
+    <string name="cfg_search_hint">Hľadaj mesto…</string>
+    <string name="cfg_search">Hľadaj</string>
+    <string name="cfg_my_location">📍 Moja poloha</string>
+    <string name="cfg_units">JEDNOTKY</string>
+    <string name="cfg_style">ŠTÝL WIDGETU</string>
+    <string name="cfg_style_dark">🌙  Tmavý</string>
+    <string name="cfg_style_light">☀️  Svetlý</string>
+    <string name="cfg_style_none">○  Žiadne</string>
+    <string name="cfg_opacity">PRIEHĽADNOSŤ POZADIA</string>
+    <string name="cfg_glass">INTENZITA LIQUID GLASS</string>
+    <string name="cfg_display">ZOBRAZENIE</string>
+    <string name="cfg_mode_duo">Dnes + Zajtra</string>
+    <string name="cfg_mode_single">Len Dnes</string>
+    <string name="cfg_interval">INTERVAL OBNOVY</string>
+    <string name="cfg_add">Pridať widget</string>
+    <string name="cfg_save">Uložiť</string>
+    <string name="cfg_searching">Hľadám…</string>
+    <string name="cfg_not_found">❌ Mesto nenájdené</string>
+    <string name="cfg_error">❌ Chyba: %1$s</string>
+    <string name="cfg_locating">📡 Získavam polohu…</string>
+    <string name="cfg_no_location">❌ Poloha nedostupná</string>
+    <string name="share_title">Zdieľať počasie</string>
 </resources>

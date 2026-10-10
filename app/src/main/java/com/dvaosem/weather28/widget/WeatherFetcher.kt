@@ -235,7 +235,7 @@ object WeatherFetcher {
 
     // ---------------- rain note ----------------
     /** Short Slovak note about rain for the next hours, or null when there is no data. */
-    fun rainNote(rain: List<RainSlot>, now: Long = System.currentTimeMillis()): Pair<String, Boolean>? {
+    fun rainNote(rain: List<RainSlot>, en: Boolean = false, now: Long = System.currentTimeMillis()): Pair<String, Boolean>? {
         val slots = rain.filter { it.start + it.minutes * 60_000L > now }
         if (slots.isEmpty()) return null
         val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
@@ -243,15 +243,17 @@ object WeatherFetcher {
         val first = slots[0]
         if (first.wet && first.start <= now) {
             val dry = slots.firstOrNull { !it.wet }
-            return (if (dry != null) "Prší · do ${hm(dry.start)}" else "Prší") to true
+            return (if (en) (if (dry != null) "Raining · until ${hm(dry.start)}" else "Raining")
+                    else (if (dry != null) "Prší · do ${hm(dry.start)}" else "Prší")) to true
         }
         val wet = slots.firstOrNull { it.wet }
         if (wet != null) {
             val mins = ((wet.start - now) / 60_000L).toInt()
-            return (if (mins in 1..59) "Dážď o $mins min" else "Dážď o ${hm(wet.start)}") to true
+            return (if (en) (if (mins in 1..59) "Rain in $mins min" else "Rain at ${hm(wet.start)}")
+                    else (if (mins in 1..59) "Dážď o $mins min" else "Dážď o ${hm(wet.start)}")) to true
         }
         val last = slots.last()
-        return "Bez dažďa do ${hm(last.start + last.minutes * 60_000L)}" to false
+        return (if (en) "No rain until " else "Bez dažďa do ") + hm(last.start + last.minutes * 60_000L) to false
     }
 
     // ---------------- cache ----------------

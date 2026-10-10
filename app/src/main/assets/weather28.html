@@ -1133,8 +1133,9 @@ function toggleLang(){
   saveS();
   applyLang(S.lang);
   syncLangButtons();
+  w28SyncLang();
 }
-function setLang(l){S.lang=l;saveS();applyLang(l);syncLangButtons();}
+function setLang(l){S.lang=l;saveS();applyLang(l);syncLangButtons();w28SyncLang();}
 function syncLangButtons(){
   const sk=document.getElementById('lsk'),en=document.getElementById('len');
   if(sk)sk.classList.toggle('on',S.lang==='sk');
@@ -2370,6 +2371,8 @@ renderFavbar();
   }
   if(!showWidgetRow()){ setTimeout(showWidgetRow,300); setTimeout(showWidgetRow,1000); }
 })();
+/* APK: widget, widget settings and notifications follow the app language */
+function w28SyncLang(){try{if(window.AndroidBridge&&typeof AndroidBridge.setLang==='function')AndroidBridge.setLang(S.lang||'sk');}catch(e){}}
 /* APK: widget uses the same data source as the app */
 function w28SyncSource(){
   if(!(window.AndroidBridge&&typeof AndroidBridge.setSource==='function'))return;
@@ -2409,7 +2412,7 @@ window.w28OnUpdateProgress=function(p){
 (function(){
   function boot(){
     if(!window.AndroidBridge)return false;
-    w28SyncSource();
+    w28SyncSource();w28SyncLang();
     var r=document.getElementById('upd-row');if(r)r.style.display='';
     try{var sub=document.getElementById('upd-sub');if(sub&&AndroidBridge.getAppBuild)sub.textContent=tx('Verzia ','Version ')+AndroidBridge.getAppBuild();}catch(e){}
     if(typeof AndroidBridge.checkUpdate==='function')setTimeout(function(){AndroidBridge.checkUpdate(false);},2500);

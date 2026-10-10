@@ -66,11 +66,12 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         val min = Math.floor(daily.getJSONArray("temperature_2m_min").getDouble(0) + 0.5).toInt()
         val code = daily.getJSONArray("weather_code").getInt(0)
         val rain = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
-        val desc = codeDesc(code)
+        val desc = codeDesc(code, WidgetPrefs.isEn(ctx))
         val icon = codeIcon(code)
 
-        val title = "$icon $city · dnes $max° / $min°"
-        val text = "$desc · zrážky $rain%"
+        val en = WidgetPrefs.isEn(ctx)
+        val title = "$icon $city · ${if (en) "today" else "dnes"} $max° / $min°"
+        val text = "$desc · ${if (en) "rain" else "zrážky"} $rain%"
         notify(ctx, 1001, title, text, "morning")
     }
 
@@ -124,13 +125,13 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             val lp = lpi?.optDouble(i, 0.0) ?: 0.0
             val rel = i - start
             if ((c in 95..99 || lp >= 1.0 || (cp >= 800 && p >= 1.0)) && "storm" !in hits)
-                hits["storm"] = Hit("storm", rel, if (g >= 40) "nárazy do ${g.roundToInt()} km/h" else "")
+                hits["storm"] = Hit("storm", rel, if (g >= 40) gustTxt(ctx, g) else "")
             if ((c in listOf(65, 67, 81, 82) || p >= 4.0) && "rain" !in hits)
                 hits["rain"] = Hit("rain", rel, if (p >= 1) "${"%.0f".format(p)} mm/h" else "")
             if (g >= GUST_ALERT && "wind" !in hits) {
                 // report the strongest gust in the window
                 var mx = g; for (j in i until end) mx = maxOf(mx, gusts?.optDouble(j, 0.0) ?: 0.0)
-                hits["wind"] = Hit("wind", rel, "nárazy do ${mx.roundToInt()} km/h")
+                hits["wind"] = Hit("wind", rel, gustTxt(ctx, mx))
             }
             if ((c == 75 || c == 86) && "snow" !in hits) hits["snow"] = Hit("snow", rel, "")
         }
@@ -143,17 +144,21 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         fresh.forEach { AlertPrefs.markAlerted(ctx, "$today-${it.kind}") }
 
         val main = fresh.minByOrNull { listOf("storm", "wind", "rain", "snow").indexOf(it.kind) }!!
-        val (icon, what) = label(main.kind)
-        fun whenTxt(hh: Int) = if (hh == 0) "teraz" else "o ~$hh h"
-        val lines = fresh.map { val (_, w) = label(it.kind); listOf(w, whenTxt(it.hour), it.detail).filter { s -> s.isNotEmpty() }.joinToString(" · ") }
+        val en = WidgetPrefs.isEn(ctx)
+        val (icon, what) = label(main.kind, en)
+        fun whenTxt(hh: Int) = if (en) (if (hh == 0) "now" else "in ~$hh h") else (if (hh == 0) "teraz" else "o ~$hh h")
+        val lines = fresh.map { val (_, w) = label(it.kind, en); listOf(w, whenTxt(it.hour), it.detail).filter { s -> s.isNotEmpty() }.joinToString(" · ") }
         notify(ctx, 1002, "$icon $what ${whenTxt(main.hour)} · $city", lines.joinToString("\n"), "storm")
     }
 
-    private fun label(kind: String) = when (kind) {
-        "rain" -> "🌧️" to "Silný dážď"
-        "snow" -> "❄️" to "Husté sneženie"
-        "wind" -> "💨" to "Silný vietor"
-        else   -> "⛈️" to "Búrka"
+    private fun gustTxt(ctx: Context, g: Double) =
+        (if (WidgetPrefs.isEn(ctx)) "gusts up to " else "nárazy do ") + "${g.roundToInt()} km/h"
+
+    private fun label(kind: String, en: Boolean) = when (kind) {
+        "rain" -> "🌧️" to (if (en) "Heavy rain" else "Silný dážď")
+        "snow" -> "❄️" to (if (en) "Heavy snow" else "Husté sneženie")
+        "wind" -> "💨" to (if (en) "Strong wind" else "Silný vietor")
+        else   -> "⛈️" to (if (en) "Thunderstorm" else "Búrka")
     }
 
     /** Official SHMÚ warnings (MeteoAlarm feed) for the district of the alert location. */
@@ -168,7 +173,8 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             val id = alert.optString("identifier")
             val infos = alert.optJSONArray("info") ?: continue
             var info: JSONObject? = null
-            for (k in 0 until infos.length()) if (infos.getJSONObject(k).optString("language") == "sk") info = infos.getJSONObject(k)
+            val want = if (WidgetPrefs.isEn(ctx)) "en" else "sk"
+            for (k in 0 until infos.length()) if (infos.getJSONObject(k).optString("language").startsWith(want)) info = infos.getJSONObject(k)
             info = info ?: infos.optJSONObject(0) ?: continue
             val areas = info.optJSONArray("area") ?: continue
             var match = false
@@ -188,7 +194,8 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             val badge = when (level) { "red" -> "🔴"; "orange" -> "🟠"; else -> "🟡" }
             val title = "$badge ${info.optString("event")} · $city"
             val text = info.optString("headline") + "\n" +
-                    "Platí ${hm.format(java.util.Date(onset))}–${hm.format(java.util.Date(expires))} · SHMÚ"
+                    (if (WidgetPrefs.isEn(ctx)) "Valid " else "Platí ") +
+                    "${hm.format(java.util.Date(onset))}–${hm.format(java.util.Date(expires))} · SHMÚ"
             notify(ctx, 1100 + (id.hashCode() and 0xff), title, text, "storm")
         }
     }
@@ -208,7 +215,9 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         val chId = if (channel == "storm") "w28_storm" else "w28_morning"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val name = if (channel == "storm") "Výstrahy počasia" else "Ranný súhrn"
+            val en = WidgetPrefs.isEn(ctx)
+            val name = if (channel == "storm") (if (en) "Weather alerts" else "Výstrahy počasia")
+                       else (if (en) "Morning summary" else "Ranný súhrn")
             val imp = if (channel == "storm") NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
             nm.createNotificationChannel(NotificationChannel(chId, name, imp))
         }
@@ -230,7 +239,12 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         try { NotificationManagerCompat.from(ctx).notify(nid, notif) } catch (e: SecurityException) {}
     }
 
-    private fun codeDesc(c: Int): String = when (c) {
+    private fun codeDesc(c: Int, en: Boolean): String = if (en) when (c) {
+        0 -> "Clear"; 1, 2 -> "Partly cloudy"; 3 -> "Overcast"
+        45, 48 -> "Fog"; in 51..57 -> "Drizzle"; in 61..67 -> "Rain"
+        in 71..77 -> "Snow"; in 80..82 -> "Showers"; in 95..99 -> "Thunderstorm"
+        else -> "Weather"
+    } else when (c) {
         0 -> "Jasno"; 1, 2 -> "Polojasno"; 3 -> "Zamračené"
         45, 48 -> "Hmla"; in 51..57 -> "Mrholenie"; in 61..67 -> "Dážď"
         in 71..77 -> "Sneženie"; in 80..82 -> "Prehánky"; in 95..99 -> "Búrka"

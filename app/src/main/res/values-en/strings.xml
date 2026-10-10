@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cfg_city">CITY</string>
+    <string name="cfg_search_hint">Search city…</string>
+    <string name="cfg_search">Search</string>
+    <string name="cfg_my_location">📍 My location</string>
+    <string name="cfg_units">UNITS</string>
+    <string name="cfg_style">WIDGET STYLE</string>
+    <string name="cfg_style_dark">🌙  Dark</string>
+    <string name="cfg_style_light">☀️  Light</string>
+    <string name="cfg_style_none">○  None (transparent)</string>
+    <string name="cfg_opacity">BACKGROUND OPACITY</string>
+    <string name="cfg_glass">LIQUID GLASS INTENSITY</string>
+    <string name="cfg_display">DISPLAY</string>
+    <string name="cfg_mode_duo">Today + Tomorrow</string>
+    <string name="cfg_mode_single">Today only</string>
+    <string name="cfg_interval">REFRESH INTERVAL</string>
+    <string name="cfg_add">Add widget</string>
+    <string name="cfg_save">Save</string>
+    <string name="cfg_searching">Searching…</string>
+    <string name="cfg_not_found">❌ City not found</string>
+    <string name="cfg_error">❌ Error: %1$s</string>
+    <string name="cfg_locating">📡 Getting location…</string>
+    <string name="cfg_no_location">❌ Location unavailable</string>
+    <string name="share_title">Share weather</string>
+</resources>

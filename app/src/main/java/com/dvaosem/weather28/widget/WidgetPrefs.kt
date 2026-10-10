@@ -56,6 +56,23 @@ object WidgetPrefs {
         return changed
     }
 
+    // app language chosen in the app (SK/EN): widget texts, widget settings, notifications
+    fun getLang(ctx: Context) = prefs(ctx).getString("app_lang", "sk") ?: "sk"
+    fun isEn(ctx: Context) = getLang(ctx) == "en"
+    /** @return true when the stored value changed */
+    fun saveLang(ctx: Context, lang: String): Boolean {
+        val l = if (lang == "en") "en" else "sk"
+        val changed = getLang(ctx) != l
+        prefs(ctx).edit().putString("app_lang", l).apply()
+        return changed
+    }
+    /** Context whose resources use the app language instead of the phone language. */
+    fun localized(ctx: Context): Context {
+        val cfg = android.content.res.Configuration(ctx.resources.configuration)
+        cfg.setLocale(java.util.Locale(getLang(ctx)))
+        return ctx.createConfigurationContext(cfg)
+    }
+
     fun saveCache(ctx: Context, id: Int, data: String) = prefs(ctx).edit().putString("cache_$id", data).apply()
 
     fun remove(ctx: Context, id: Int) {
