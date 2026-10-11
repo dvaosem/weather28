@@ -146,12 +146,12 @@ class WeatherWidget : AppWidgetProvider() {
 
             // Rain note under the days, only when the widget is tall enough
             val en = WidgetPrefs.isEn(context)
-            val note = data?.let { WeatherFetcher.rainNote(it.rain, en) }
+            val note = if (WidgetPrefs.getShowText(context, appWidgetId)) data?.let { WeatherFetcher.rainNote(it.rain, en) } else null
             val showRain = note != null && size.height >= 100f
             if (showRain) {
                 views.setViewVisibility(R.id.rain_img, android.view.View.VISIBLE)
                 views.setImageViewBitmap(R.id.rain_img, WidgetRenderer.renderRain(context, note!!.first, note.second,
-                    light, style == "transparent"))
+                    light, style == "transparent", WidgetPrefs.getTextFont(context, appWidgetId)))
                 views.setContentDescription(R.id.rain_img, note.first)
             } else {
                 views.setViewVisibility(R.id.rain_img, android.view.View.GONE)

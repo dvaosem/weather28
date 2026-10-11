@@ -140,7 +140,7 @@ object WeatherFetcher {
             val pr = h.optJSONArray("precipitation_probability")
             for (i in 0 until t.length()) {
                 val s = epoch(t.getString(i))
-                if (s + 3600_000 <= minutelyEnd || s > now + 12 * 3600_000) continue
+                if (s + 3600_000 <= minutelyEnd || s > now + 24 * 3600_000) continue
                 val mm = p.optDouble(i, 0.0); val prob = pr?.optInt(i, 0) ?: 0
                 out += RainSlot(maxOf(s, minutelyEnd), 60, mm >= 0.2 || (prob >= 70 && mm >= 0.1))
             }
@@ -252,8 +252,8 @@ object WeatherFetcher {
             return (if (en) (if (mins in 1..59) "Rain in $mins min" else "Rain at ${hm(wet.start)}")
                     else (if (mins in 1..59) "Dážď o $mins min" else "Dážď o ${hm(wet.start)}")) to true
         }
-        val last = slots.last()
-        return (if (en) "No rain until " else "Bez dažďa do ") + hm(last.start + last.minutes * 60_000L) to false
+        // Dry for the whole checked horizon (24 h). Say so, instead of a clock time that only marks the horizon end.
+        return (if (en) "No rain next 24 h" else "Bez dažďa 24 h") to false
     }
 
     // ---------------- cache ----------------

@@ -309,6 +309,79 @@
                 android:buttonTint="#00e5a0"/>
         </RadioGroup>
 
+        <!-- Text forecast line -->
+        <CheckBox
+            android:id="@+id/cb_show_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cfg_show_text"
+            android:textColor="#e6edf3"
+            android:textSize="14sp"
+            android:buttonTint="#00e5a0"
+            android:checked="true"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView
+            android:id="@+id/tv_font_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cfg_text_font"
+            android:textColor="#7d8fa8"
+            android:textSize="9sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/rg_font"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rb_font_inter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Inter"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rb_font_bebas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Bebas Neue"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+
+            <RadioButton
+                android:id="@+id/rb_font_condensed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Condensed"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+
+            <RadioButton
+                android:id="@+id/rb_font_serif"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Serif"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+
+            <RadioButton
+                android:id="@+id/rb_font_mono"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mono"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"/>
+        </RadioGroup>
+
         <!-- Interval -->
         <TextView
             android:layout_width="match_parent"

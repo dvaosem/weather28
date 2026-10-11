@@ -113,8 +113,16 @@ object WidgetRenderer {
     }
 
     /** One line like "💧 Dážď o 15:00" — droplet drawn as a path, text in Inter. */
-    fun renderRain(ctx: Context, text: String, wet: Boolean, light: Boolean, shadow: Boolean): Bitmap {
-        val ts = U * 0.42f
+    fun renderRain(ctx: Context, text: String, wet: Boolean, light: Boolean, shadow: Boolean, font: String = "inter"): Bitmap {
+        val face = when (font) {
+            "bebas" -> bebas(ctx)
+            "condensed" -> Typeface.create("sans-serif-condensed", Typeface.BOLD)
+            "serif" -> Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            "mono" -> Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            else -> inter(ctx)
+        }
+        // Bebas Neue is much smaller optically than the other fonts
+        val ts = U * (if (font == "bebas") 0.55f else 0.42f)
         val color = when {
             wet && light -> 0xFF2E86E8.toInt()
             wet -> 0xFF7CC4FF.toInt()
@@ -122,7 +130,7 @@ object WidgetRenderer {
             else -> 0xCCFFFFFF.toInt()
         }
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = inter(ctx); textSize = ts; this.color = color
+            typeface = face; textSize = ts; this.color = color
             if (shadow) setShadowLayer(U * 0.035f, 0f, U * 0.01f, 0x8C000000.toInt())
         }
         val b = Rect(); p.getTextBounds(text, 0, text.length, b)

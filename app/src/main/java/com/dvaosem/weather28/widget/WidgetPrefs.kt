@@ -41,6 +41,12 @@ object WidgetPrefs {
     fun getGlass(ctx: Context, id: Int) = prefs(ctx).getInt("glass_$id", 20)
     fun saveGlass(ctx: Context, id: Int, v: Int) = prefs(ctx).edit().putInt("glass_$id", v).apply()
 
+    // rain text line under the days: on/off + font (inter | bebas | condensed | serif | mono)
+    fun getShowText(ctx: Context, id: Int) = prefs(ctx).getBoolean("showtext_$id", true)
+    fun saveShowText(ctx: Context, id: Int, v: Boolean) = prefs(ctx).edit().putBoolean("showtext_$id", v).apply()
+    fun getTextFont(ctx: Context, id: Int) = prefs(ctx).getString("textfont_$id", "inter") ?: "inter"
+    fun saveTextFont(ctx: Context, id: Int, v: String) = prefs(ctx).edit().putString("textfont_$id", v).apply()
+
     fun getMode(ctx: Context, id: Int) = prefs(ctx).getString("mode_$id", "duo") ?: "duo"
     fun saveMode(ctx: Context, id: Int, mode: String) = prefs(ctx).edit().putString("mode_$id", mode).apply()
 
@@ -80,6 +86,7 @@ object WidgetPrefs {
             remove("city_$id"); remove("lat_$id"); remove("lon_$id")
             remove("unit_$id"); remove("style_$id"); remove("size_$id")
             remove("interval_$id"); remove("gps_$id"); remove("cache_$id")
+            remove("showtext_$id"); remove("textfont_$id")
             apply()
         }
     }
