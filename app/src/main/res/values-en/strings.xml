@@ -13,7 +13,8 @@
     <string name="cfg_glass">LIQUID GLASS INTENSITY</string>
     <string name="cfg_display">DISPLAY</string>
     <string name="cfg_show_text">Text forecast (rain)</string>
-    <string name="cfg_text_font">TEXT FONT</string>
+    <string name="cfg_font_default">Original (Bebas + Inter)</string>
+    <string name="cfg_text_font">WIDGET FONT</string>
     <string name="cfg_mode_duo">Today + Tomorrow</string>
     <string name="cfg_mode_single">Today only</string>
     <string name="cfg_interval">REFRESH INTERVAL</string>

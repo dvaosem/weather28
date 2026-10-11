@@ -106,21 +106,15 @@ class WidgetConfigActivity : AppCompatActivity() {
 
         val cbShowText = findViewById<CheckBox>(R.id.cb_show_text)
         val rgFont = findViewById<RadioGroup>(R.id.rg_font)
-        val tvFontLabel = findViewById<TextView>(R.id.tv_font_label)
         cbShowText.isChecked = WidgetPrefs.getShowText(this, appWidgetId)
         when (WidgetPrefs.getTextFont(this, appWidgetId)) {
+            "inter" -> rgFont.check(R.id.rb_font_inter)
             "bebas" -> rgFont.check(R.id.rb_font_bebas)
             "condensed" -> rgFont.check(R.id.rb_font_condensed)
             "serif" -> rgFont.check(R.id.rb_font_serif)
             "mono" -> rgFont.check(R.id.rb_font_mono)
-            else -> rgFont.check(R.id.rb_font_inter)
+            else -> rgFont.check(R.id.rb_font_default)
         }
-        fun updateFontVisibility() {
-            val v = if (cbShowText.isChecked) View.VISIBLE else View.GONE
-            rgFont.visibility = v; tvFontLabel.visibility = v
-        }
-        updateFontVisibility()
-        cbShowText.setOnCheckedChangeListener { _, _ -> updateFontVisibility() }
 
         // Opacity setup (dark/light)
         val opSteps = intArrayOf(0, 20, 40, 60, 80, 95)
@@ -215,8 +209,8 @@ class WidgetConfigActivity : AppCompatActivity() {
             WidgetPrefs.saveMode(this, appWidgetId, mode)
             WidgetPrefs.saveShowText(this, appWidgetId, cbShowText.isChecked)
             WidgetPrefs.saveTextFont(this, appWidgetId, when (rgFont.checkedRadioButtonId) {
-                R.id.rb_font_bebas -> "bebas"; R.id.rb_font_condensed -> "condensed"
-                R.id.rb_font_serif -> "serif"; R.id.rb_font_mono -> "mono"; else -> "inter"
+                R.id.rb_font_inter -> "inter"; R.id.rb_font_bebas -> "bebas"; R.id.rb_font_condensed -> "condensed"
+                R.id.rb_font_serif -> "serif"; R.id.rb_font_mono -> "mono"; else -> "default"
             })
             val opSteps2 = intArrayOf(0, 20, 40, 60, 80, 95)
             WidgetPrefs.saveOpacity(this, appWidgetId, opSteps2[sbOpacity.progress])

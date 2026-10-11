@@ -15,7 +15,8 @@
     <string name="cfg_glass">INTENZITA LIQUID GLASS</string>
     <string name="cfg_display">ZOBRAZENIE</string>
     <string name="cfg_show_text">Textová predpoveď (dážď)</string>
-    <string name="cfg_text_font">PÍSMO TEXTU</string>
+    <string name="cfg_font_default">Pôvodné (Bebas + Inter)</string>
+    <string name="cfg_text_font">PÍSMO WIDGETU</string>
     <string name="cfg_mode_duo">Dnes + Zajtra</string>
     <string name="cfg_mode_single">Len Dnes</string>
     <string name="cfg_interval">INTERVAL OBNOVY</string>

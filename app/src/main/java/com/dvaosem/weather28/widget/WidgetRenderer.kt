@@ -32,6 +32,16 @@ object WidgetRenderer {
         ResourcesCompat.getFont(ctx, R.font.inter_semibold)
     } catch (e: Exception) { null } ?: Typeface.DEFAULT_BOLD).also { inter = it }
 
+    /** "default" keeps the original look: Bebas Neue for the number, Inter for the small texts. */
+    private fun face(ctx: Context, font: String, number: Boolean): Typeface = when (font) {
+        "bebas" -> bebas(ctx)
+        "inter" -> inter(ctx)
+        "condensed" -> Typeface.create("sans-serif-condensed", Typeface.BOLD)
+        "serif" -> Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        "mono" -> Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        else -> if (number) bebas(ctx) else inter(ctx)
+    }
+
     /**
      * @param stack true = icon above temperature (tall/square spaces),
      *              false = icon left of temperature (wide spaces).
@@ -45,12 +55,13 @@ object WidgetRenderer {
         min: String?,
         light: Boolean,
         shadow: Boolean,
-        stack: Boolean
+        stack: Boolean,
+        font: String = "default"
     ): Bitmap {
         val pad = U * 0.08f
 
         val tempPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = bebas(ctx); textSize = U; color = tempColor
+            typeface = face(ctx, font, true); textSize = U; color = tempColor
             if (shadow) setShadowLayer(U * 0.05f, 0f, U * 0.015f, 0x8C000000.toInt())
         }
         val tb = Rect(); tempPaint.getTextBounds(temp, 0, temp.length, tb)
@@ -58,7 +69,7 @@ object WidgetRenderer {
 
         val hasMm = !max.isNullOrEmpty() && !min.isNullOrEmpty()
         val mmPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = inter(ctx); textSize = U * 0.38f
+            typeface = face(ctx, font, false); textSize = U * (if (font == "bebas") 0.5f else 0.38f)
             if (shadow) setShadowLayer(U * 0.035f, 0f, U * 0.01f, 0x8C000000.toInt())
         }
         val mmGap = U * 0.14f
@@ -113,14 +124,8 @@ object WidgetRenderer {
     }
 
     /** One line like "💧 Dážď o 15:00" — droplet drawn as a path, text in Inter. */
-    fun renderRain(ctx: Context, text: String, wet: Boolean, light: Boolean, shadow: Boolean, font: String = "inter"): Bitmap {
-        val face = when (font) {
-            "bebas" -> bebas(ctx)
-            "condensed" -> Typeface.create("sans-serif-condensed", Typeface.BOLD)
-            "serif" -> Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            "mono" -> Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            else -> inter(ctx)
-        }
+    fun renderRain(ctx: Context, text: String, wet: Boolean, light: Boolean, shadow: Boolean, font: String = "default"): Bitmap {
+        val tf = face(ctx, font, false)
         // Bebas Neue is much smaller optically than the other fonts
         val ts = U * (if (font == "bebas") 0.55f else 0.42f)
         val color = when {
@@ -130,7 +135,7 @@ object WidgetRenderer {
             else -> 0xCCFFFFFF.toInt()
         }
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = face; textSize = ts; this.color = color
+            typeface = tf; textSize = ts; this.color = color
             if (shadow) setShadowLayer(U * 0.035f, 0f, U * 0.01f, 0x8C000000.toInt())
         }
         val b = Rect(); p.getTextBounds(text, 0, text.length, b)

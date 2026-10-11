@@ -44,7 +44,7 @@ class WeatherWidget : AppWidgetProvider() {
             val style = WidgetPrefs.getStyle(context, id)
             val mode = WidgetPrefs.getMode(context, id)
             val sizes = widgetSizes(mgr, id)
-            val days = DayBitmaps(context, data, style)
+            val days = DayBitmaps(context, data, style, WidgetPrefs.getTextFont(context, id))
             val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 RemoteViews(sizes.associateWith { buildViews(context, id, days, data, style, mode, it) })
             } else {
@@ -67,7 +67,7 @@ class WeatherWidget : AppWidgetProvider() {
         }
 
         /** Both compositions (icon beside / icon above) for today and tomorrow, rendered lazily once. */
-        private class DayBitmaps(val ctx: Context, val data: WeatherData?, style: String) {
+        private class DayBitmaps(val ctx: Context, val data: WeatherData?, style: String, val font: String) {
             val light = style == "light"
             val shadow = style == "transparent"
             private val cache = HashMap<String, android.graphics.Bitmap>()
@@ -84,7 +84,7 @@ class WeatherWidget : AppWidgetProvider() {
                     if (light) 0xFF16202C.toInt() else if (temp != null) WeatherFetcher.tempColor(temp) else 0xFFFFFFFF.toInt(),
                     d?.let { "${if (tomorrow) it.tomorrowMax else it.todayMax}°" },
                     d?.let { "${if (tomorrow) it.tomorrowMin else it.todayMin}°" },
-                    light, shadow, stack)
+                    light, shadow, stack, font)
             }
 
             /** Pick the composition whose temperature ends up larger in a cw x ch box. */

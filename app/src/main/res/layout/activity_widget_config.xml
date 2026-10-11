@@ -341,13 +341,21 @@
             android:layout_marginBottom="24dp">
 
             <RadioButton
+                android:id="@+id/rb_font_default"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cfg_font_default"
+                android:textColor="#e6edf3"
+                android:buttonTint="#00e5a0"
+                android:checked="true"/>
+
+            <RadioButton
                 android:id="@+id/rb_font_inter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Inter"
                 android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"
-                android:checked="true"/>
+                android:buttonTint="#00e5a0"/>
 
             <RadioButton
                 android:id="@+id/rb_font_bebas"
