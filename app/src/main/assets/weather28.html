@@ -1173,7 +1173,11 @@ function pushAlerts(){
 // UNITS
 function fT(c){return S.tu==='F'?Math.round(c*9/5+32)+'°F':Math.round(c)+'°C';}
 function fW(k){return S.wu==='mph'?Math.round(k*.621)+' mph':Math.round(k)+' km/h';}
-function fP(m){return S.pu==='in'?(m*.0394).toFixed(2)+'"':parseFloat(m).toFixed(1)+'mm';}
+function fP(m,prob){
+  // šanca > 0 %, ale množstvo sa zaokrúhli na 0.0 → radšej "<0.1mm" ako "0.0mm"
+  if((prob||0)>0 && parseFloat(m)<0.05) return S.pu==='in'?'<0.01"':'<0.1mm';
+  return S.pu==='in'?(m*.0394).toFixed(2)+'"':parseFloat(m).toFixed(1)+'mm';
+}
 
 // WMO
 const WD={0:'Jasno',1:'Prevažne jasno',2:'Čiastočne oblačno',3:'Zamračené',45:'Hmla',48:'Námraza',51:'Sl. mrholenie',53:'Mrholenie',55:'Husté mrholenie',61:'Sl. dážď',63:'Dážď',65:'Silný dážď',71:'Sl. sneh',73:'Sneženie',75:'Silné sneženie',80:'Prehánky',81:'Silné prehánky',82:'Búrkové prehánky',95:'Búrka',96:'Búrka+krúpy',99:'Silná búrka'};
@@ -1417,7 +1421,7 @@ function renderCur(d,name,country){
       </div>
       <div class="dstats">
         ${row('💧 '+t('humidity'),c.relativehumidity_2m+'%','var(--cyan)',`openInfoModal('humidity',${c.relativehumidity_2m},${c.apparent_temperature})`)}
-        ${row('🌧 '+t('precip'),fP(dy.precipitation_sum?.[0]||0)+'<br><span style="font-size:0.6rem;opacity:0.8">'+(dy.precipitation_probability_max?.[0]||0)+'%</span>','var(--blue)',`openInfoModal('precip',${dy.precipitation_sum?.[0]||0},${dy.precipitation_probability_max?.[0]||0})`)}
+        ${row('🌧 '+t('precip'),fP(dy.precipitation_sum?.[0]||0,dy.precipitation_probability_max?.[0]||0)+'<br><span style="font-size:0.6rem;opacity:0.8">'+(dy.precipitation_probability_max?.[0]||0)+'%</span>','var(--blue)',`openInfoModal('precip',${dy.precipitation_sum?.[0]||0},${dy.precipitation_probability_max?.[0]||0})`)}
         ${row('☀️ '+t('uv'),c.uv_index,'var(--orange)',`openInfoModal('uv',${c.uv_index},0)`)}
         ${row(warr(wd0)+' '+t('wind'),fW(c.windspeed_10m)+' '+wdir(wd0),'var(--purple)',`openInfoModal('wind',${c.windspeed_10m},${wd0})`)}
         ${row('🌅 '+t('sunrise'),sr0,'var(--orange)',`openInfoModal('sunrise','${sr0}',0)`)}
@@ -1438,7 +1442,7 @@ function renderCur(d,name,country){
       </div>
       <div class="dstats">
         ${row('💧 '+t('humidity'),tmrHum+'%','var(--cyan)',`openInfoModal('humidity',${tmrHum},0)`)}
-        ${row('🌧 '+t('precip'),fP(tmrPrecSum)+'<br><span style="font-size:0.6rem;opacity:0.8">'+tmrPrec+'%</span>','var(--blue)',`openInfoModal('precip',${tmrPrecSum},${tmrPrec})`)}
+        ${row('🌧 '+t('precip'),fP(tmrPrecSum,tmrPrec)+'<br><span style="font-size:0.6rem;opacity:0.8">'+tmrPrec+'%</span>','var(--blue)',`openInfoModal('precip',${tmrPrecSum},${tmrPrec})`)}
         ${row('☀️ '+t('uv'),tmrUV,'var(--orange)',`openInfoModal('uv',${tmrUV==='–'?0:tmrUV},0)`)}
         ${row(warr(wd1)+' '+t('wind'),fW(tmrWind)+' '+wdir(wd1),'var(--purple)',`openInfoModal('wind',${tmrWind},${wd1})`)}
         ${row('🌅 '+t('sunrise'),sr1,'var(--orange)',`openInfoModal('sunrise','${sr1}',0)`)}
@@ -1615,7 +1619,7 @@ function renderF(d){
     return`<div class="fcr" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <div class="fday">${dn}<br><span>${dt.getDate()}.${dt.getMonth()+1}.</span></div>
       <div class="fic">${wico(d.daily.weathercode[i])}</div>
-      <div class="fmeta"><div class="fra">🌧 ${prob}% · ${fP(prec)}</div><div class="fwi">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div>
+      <div class="fmeta"><div class="fra">🌧 ${prob}% · ${fP(prec,prob)}</div><div class="fwi">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div>
       <div class="fts"><span class="fmx">${fT(d.daily.temperature_2m_max[i])}</span><span class="fmn">${fT(d.daily.temperature_2m_min[i])}</span>${fm!==null?`<span class="ffl">${sk?'pocit':'feels'} ${fT(fm)}</span>`:''}</div>
     </div>`;
   }).join('');
@@ -1902,7 +1906,7 @@ function openDayModal(date,dayIdx){
     <span class="hour-time">${hh.time.getHours().toString().padStart(2,'0')}:00</span>
     <span class="hour-ico">${wico(hh.code)}</span>
     <div class="hour-meta">
-      <span class="hour-rain">🌧 ${hh.prob}% · ${fP(hh.prec)}</span>
+      <span class="hour-rain">🌧 ${hh.prob}% · ${fP(hh.prec,hh.prob)}</span>
       <span class="hour-wind">${warr(hh.wdeg)} ${fW(hh.wind)} ${wdir(hh.wdeg)}</span>
     </div>
     <div style="text-align:right;">
@@ -1919,7 +1923,7 @@ function openDayModal(date,dayIdx){
       </div>
     </div>
     <div class="day-stats">
-      <div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2">🌧 ${prob}% · ${prec}mm</div></div>
+      <div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2">🌧 ${prob}% · ${fP(prec,prob)}</div></div>
       <div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div>
     </div>
     <div class="hour-title">${tx('Hodinový priebeh','Hour by hour')}</div>
@@ -2151,12 +2155,12 @@ function openDayModal(date,dayIdx){
   const hourRows=hours.map(hh=>`<div class="hour-row">
     <span class="hour-time">${hh.time.getHours().toString().padStart(2,'0')}:00</span>
     <span class="hour-ico">${wico(hh.code)}</span>
-    <div class="hour-meta"><span class="hour-rain">🌧 ${hh.prob}% · ${fP(hh.prec)}</span><span class="hour-wind">${warr(hh.wdeg)} ${fW(hh.wind)} ${wdir(hh.wdeg)}</span></div>
+    <div class="hour-meta"><span class="hour-rain">🌧 ${hh.prob}% · ${fP(hh.prec,hh.prob)}</span><span class="hour-wind">${warr(hh.wdeg)} ${fW(hh.wind)} ${wdir(hh.wdeg)}</span></div>
     <div style="text-align:right;"><div class="hour-temp" style="color:${tempColor(hh.temp)}">${fT(hh.temp)}</div>${hh.feel!=null?`<div class="hour-feel">${tx("pocit","feels")} ${fT(hh.feel)}</div>`:''}</div>
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
     <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
-    <div class="day-stats"><div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2">🌧 ${prob}% · ${prec}mm</div></div><div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div></div>
+    <div class="day-stats"><div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2">🌧 ${prob}% · ${fP(prec,prob)}</div></div><div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div></div>
     <div class="hour-title">${tx('Hodinový priebeh','Hour by hour')}</div>
     ${hourRows||'<div style="color:var(--text2);text-align:center;padding:20px;">'+tx('Dáta nedostupné','No data available')+'</div>'}`;
   document.getElementById('day-modal').classList.add('open');
