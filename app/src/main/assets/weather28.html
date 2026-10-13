@@ -1244,6 +1244,27 @@ function updateWindy(lat,lon){
 
 // WEATHER
 let ld=null,ln='',lc='',clat=48.2086,clon=17.2736;
+/* Ak je predpovedané nenulové množstvo zrážok, pravdepodobnosť nemôže byť 0 % – minimum 1 %. */
+function fixPrecipProb(d){
+  try{
+    const h=d.hourly, dl=d.daily;
+    if(h&&h.precipitation&&h.precipitation_probability){
+      for(let i=0;i<h.time.length;i++){
+        if((h.precipitation[i]||0)>0 && (h.precipitation_probability[i]||0)<1) h.precipitation_probability[i]=1;
+      }
+    }
+    if(dl&&dl.precipitation_probability_max){
+      for(let i=0;i<dl.time.length;i++){
+        let wet=(dl.precipitation_sum&&(dl.precipitation_sum[i]||0)>0);
+        if(!wet&&h&&h.precipitation){
+          for(let j=0;j<h.time.length;j++){ if(String(h.time[j]).slice(0,10)===dl.time[i]&&(h.precipitation[j]||0)>0){wet=true;break;} }
+        }
+        if(wet && (dl.precipitation_probability_max[i]||0)<1) dl.precipitation_probability_max[i]=1;
+      }
+    }
+  }catch(e){}
+}
+
 async function loadW(lat,lon,name,country){
   clat=lat;clon=lon;ln=name;lc=country;
   pushAlertLoc();
@@ -1292,6 +1313,7 @@ async function loadW(lat,lon,name,country){
     }
   }
 
+  fixPrecipProb(d);
   ld=d;
   renderCur(d,name,country);
   renderMinutecast(d);
