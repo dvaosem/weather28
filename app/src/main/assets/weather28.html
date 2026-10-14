@@ -14,15 +14,16 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 [data-theme="dark"]{--bg:#0d1117;--card:#161b27;--card2:#1c2333;--border:#21293d;--text:#e6edf3;--text2:#7d8fa8;--inp:#1c2333;}
+:root[data-theme="gray"]{--bg:#262624;--card:#30302e;--card2:#3a3a37;--border:#4a4944;--text:#f0eee6;--text2:#a8a498;--inp:#3a3a37;--green:#e8875a;--g1:#d97757;--g2:#f0a868;}
 [data-theme="light"]{--bg:#f0f4ff;--card:#ffffff;--card2:#e8eeff;--border:#c8d8f0;--text:#0a1628;--text2:#4a6fa5;--inp:#e8eeff;}
-:root{--green:#00e5a0;--blue:#4d9fff;--pink:#ff4d6d;--purple:#a855f7;--orange:#f59e0b;--cyan:#22d3ee;--top-safe:calc(env(safe-area-inset-top, 0px) + 12px);}
+:root{--g1:var(--green);--g2:var(--blue);--green:#00e5a0;--blue:#4d9fff;--pink:#ff4d6d;--purple:#a855f7;--orange:#f59e0b;--cyan:#22d3ee;--top-safe:calc(env(safe-area-inset-top, 0px) + 12px);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 *::-webkit-scrollbar{display:none;}
 html,body{width:100%;overflow-x:hidden;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;}
 
 header{display:flex;align-items:center;justify-content:space-between;padding:var(--top-safe) 14px 8px;width:100%;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;flex-shrink:0;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;flex-shrink:0;}
 .hbtns{display:flex;gap:6px;align-items:center;}
 .hbtn{background:var(--card2);border:1px solid var(--border);color:var(--text2);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;flex-shrink:0;}
 
@@ -30,7 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:var
 .srow input{flex:1;min-width:0;background:var(--inp);border:1px solid var(--border);border-radius:12px;padding:0 13px;height:40px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.88rem;outline:none;transition:border-color .2s;}
 .srow input:focus{border-color:var(--green);}
 .srow input::placeholder{color:var(--text2);}
-.sbtn{background:linear-gradient(135deg,var(--green),var(--blue));border:none;border-radius:12px;padding:0 14px;height:40px;align-self:center;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.sbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;padding:0 14px;height:40px;align-self:center;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .suggs{position:absolute;top:calc(100% - 4px);left:14px;right:14px;background:var(--card2);border:1px solid var(--border);border-radius:12px;z-index:9999;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .si{padding:10px 14px;font-size:0.86rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
 .si:last-child{border-bottom:none;}
@@ -82,7 +83,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 /* DUO CARDS */
 .duo-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
 .dcard{background:var(--card);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.dcard.today::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--blue));}
+.dcard.today::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--g1),var(--g2));}
 .dcard.tomorrow::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pink));}
 .dtop{display:flex;align-items:center;justify-content:space-between;padding:12px 10px 6px;}
 .dtag{font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;}
@@ -141,13 +142,13 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .tog{display:flex;background:var(--card2);border-radius:9px;padding:3px;gap:2px;}
 .to{flex:1;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
 .to.on{background:var(--green);color:#0d1117;}
-.ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--green),var(--blue));border:none;border-radius:12px;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
+.ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
 .ibtn:disabled{opacity:.35;cursor:default;}
 
 .day-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:10000;flex-direction:column;overflow-y:auto;}
 .day-modal.open{display:flex;}
 .day-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--card);}
-.day-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.day-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .day-back{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
 .day-content{padding:14px 16px 40px;display:flex;flex-direction:column;gap:10px;max-width:480px;margin:0 auto;width:100%;}
 .day-summary{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:16px;}
@@ -173,7 +174,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .day-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:10000;flex-direction:column;overflow-y:auto;}
 .day-modal.open{display:flex;}
 .day-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--card);}
-.day-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.day-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .day-back{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
 .day-content{padding:14px 16px 40px;display:flex;flex-direction:column;gap:10px;max-width:480px;margin:0 auto;width:100%;}
 .day-summary{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:16px;}
@@ -194,7 +195,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .hour-temp{font-size:1rem;font-weight:700;text-align:right;}
 .hour-feel{font-size:0.62rem;color:var(--text2);text-align:right;}
 .rctrl{display:flex;align-items:center;gap:8px;padding:10px 14px 13px;background:var(--card2);}
-.pbtn{background:linear-gradient(135deg,var(--green),var(--blue));border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#0d1117;font-size:0.9rem;cursor:pointer;flex-shrink:0;font-weight:700;}
+.pbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#0d1117;font-size:0.9rem;cursor:pointer;flex-shrink:0;font-weight:700;}
 .rsl{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
 .rsl::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 6px rgba(0,229,160,.5);}
 .rtm{font-size:0.68rem;font-weight:600;min-width:72px;text-align:right;color:var(--text2);}
@@ -252,7 +253,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .info-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
 .info-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;}
 .info-icon{font-size:2rem;}
-.info-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.info-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .info-close{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;width:34px;height:34px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .info-value-row{display:flex;align-items:center;gap:10px;padding:0 16px 14px;}
 .info-big{font-family:'Bebas Neue',sans-serif;font-size:3rem;line-height:1;}
@@ -276,7 +277,6 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   <div class="logo">Weather28</div>
   <div class="hbtns">
     <button class="hbtn" id="sharebtn" onclick="shareForecast()" title="Zdieľať predpoveď" aria-label="Zdieľať"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"></line></svg></button>
-    <button class="hbtn" id="thbtn" onclick="toggleTheme()">🌙</button>
     <button class="hbtn" onclick="locMe()" title="Moja poloha">◎</button>
     <button class="hbtn" onclick="openS()">⚙️</button>
   </div>
@@ -440,10 +440,10 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   <div class="spnl">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
       <button onclick="closeS()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">← Späť</button>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nastavenia</div>
-      <button onclick="closeS()" style="background:linear-gradient(135deg,var(--green),var(--blue));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nastavenia</div>
+      <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
-    <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button></div></div>
+    <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
     <div class="sr"><div><div class="sl2">Teplota</div></div><div class="tog"><button class="to on" id="tc" onclick="setTU('C')">°C</button><button class="to" id="tf" onclick="setTU('F')">°F</button></div></div>
     <div class="sr"><div><div class="sl2">Vietor</div></div><div class="tog"><button class="to on" id="wk" onclick="setWU('kmh')">km/h</button><button class="to" id="wm" onclick="setWU('mph')">mph</button></div></div>
@@ -506,9 +506,14 @@ function renderFavbar(){
   }).join('');
 }
 
-function applyT(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function setTheme(t){S.theme=t;saveS();applyT(t);document.getElementById('td').classList.toggle('on',t==='dark');document.getElementById('tl').classList.toggle('on',t==='light');}
-function toggleTheme(){setTheme(S.theme==='dark'?'light':'dark');}
+const THEME_BG={dark:'#0d1117',light:'#f0f4ff',gray:'#262624'};
+function applyT(t){
+  if(!THEME_BG[t])t='dark';
+  document.documentElement.setAttribute('data-theme',t);
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',THEME_BG[t]);
+  ['dark','light','gray'].forEach(k=>{const b=document.getElementById('t'+k[0]);if(b)b.classList.toggle('on',k===t);});
+}
+function setTheme(t){if(!THEME_BG[t])t='dark';S.theme=t;saveS();applyT(t);}
 function setTU(u){S.tu=u;saveS();document.getElementById('tc').classList.toggle('on',u==='C');document.getElementById('tf').classList.toggle('on',u==='F');if(ld){renderCur(ld,ln,lc);renderH(ld);renderF(ld);}}
 function setWU(u){S.wu=u;saveS();document.getElementById('wk').classList.toggle('on',u==='kmh');document.getElementById('wm').classList.toggle('on',u==='mph');if(ld){renderCur(ld,ln,lc);renderF(ld);}}
 function setPU(u){S.pu=u;saveS();document.getElementById('pm').classList.toggle('on',u==='mm');document.getElementById('pi').classList.toggle('on',u==='in');if(ld){renderCur(ld,ln,lc);renderH(ld);renderF(ld);}}
@@ -1022,8 +1027,6 @@ function closeS(){document.getElementById('sov').classList.remove('open');docume
 function maybeCloseS(e){if(e.target===document.getElementById('sov'))closeS();}
 function syncUI(){
   applyT(S.theme);
-  document.getElementById('td').classList.toggle('on',S.theme==='dark');
-  document.getElementById('tl').classList.toggle('on',S.theme==='light');
   document.getElementById('tc').classList.toggle('on',S.tu==='C');
   document.getElementById('tf').classList.toggle('on',S.tu==='F');
   document.getElementById('wk').classList.toggle('on',S.wu==='kmh');
@@ -1067,7 +1070,7 @@ function loc(){return S.lang==='en'?'en-GB':'sk-SK';}
 /* static texts (settings, labels, tooltips) – exact SK → EN */
 const STATIC_EN={
  'Rozšírená mapa':'Extended map','← Späť':'← Back','Nastavenia':'Settings','Uložiť':'Save',
- 'Téma':'Theme','Tmavá':'Dark','Svetlá':'Light','Jazyk':'Language','Teplota':'Temperature','Vietor':'Wind','Zrážky':'Precipitation',
+ 'Téma':'Theme','Tmavá':'Dark','Svetlá':'Light','Šedá':'Gray','Jazyk':'Language','Teplota':'Temperature','Vietor':'Wind','Zrážky':'Precipitation',
  'Zdroj dát':'Data source','Minútový radar zrážok má len Open-Meteo a Best of':'Minute-by-minute rain is available only with Open-Meteo and Best of',
  'Presnosť zdrojov':'Source accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
  'Vynulovať':'Reset','Upozornenia':'Notifications','Upozornenia fungujú len v Android aplikácii.':'Notifications work only in the Android app.',
@@ -2470,7 +2473,7 @@ function openWidgetCfg(){
   <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span id="upd-txt" style="font-size:0.85rem;font-weight:700;color:var(--text);">Nová verzia</span><span style="font-size:0.66rem;color:var(--text2);">Weather28 pre Android</span></div>
   <div style="display:flex;gap:8px;flex-shrink:0;">
     <button onclick="document.getElementById('upd-bar').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:8px 12px;font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;">Neskôr</button>
-    <button id="upd-go" onclick="w28InstallUpdate()" style="background:linear-gradient(135deg,var(--green),var(--blue));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Aktualizovať</button>
+    <button id="upd-go" onclick="w28InstallUpdate()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Aktualizovať</button>
   </div>
 </div>
 <script>document.addEventListener('DOMContentLoaded',function(){try{i18nStatic(S.lang);}catch(e){}});</script>
