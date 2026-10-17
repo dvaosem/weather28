@@ -797,8 +797,9 @@ function accSrcOrder(){
   return order.sort((a,b)=>a.e-b.e).map(o=>o.i);
 }
 function round1(x){return x==null?null:+(+x).toFixed(1);}
+function withTimeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);}
 async function loadBestOf(lat,lon){
-  const res=await Promise.allSettled([loadFromOpenMeteo(lat,lon), loadFromMetNo(lat,lon), loadFromECMWF(lat,lon)]);
+  const res=await Promise.allSettled([withTimeout(loadFromOpenMeteo(lat,lon),8000), withTimeout(loadFromMetNo(lat,lon),8000), withTimeout(loadFromECMWF(lat,lon),8000)]);
   const srcs=res.map(r=>r.status==='fulfilled'?r.value:null);
   const ok=srcs.filter(Boolean);
   if(!ok.length) throw new Error('Žiadny zdroj nedostupný');
@@ -1272,15 +1273,41 @@ function fixPrecipProb(d){
   }catch(e){}
 }
 
+let loadTok=0;
+function renderAll(d,name,country){
+  renderCur(d,name,country);
+  renderMinutecast(d);
+  renderH(d);
+  renderF(d);
+  renderFcChart(d);
+  renderAI(d,name);
+}
 async function loadW(lat,lon,name,country){
   clat=lat;clon=lon;ln=name;lc=country;
   pushAlertLoc();
   const si=document.getElementById('si');if(si&&name)si.value=name;
   renderFavbar();
-  document.getElementById('cur').innerHTML='<div class="ld"><div class="sp"></div>'+tx('Načítavam…','Loading…')+'</div>';
-  document.getElementById('fccnt').innerHTML='<div class="ld"><div class="sp"></div></div>';
-
+  const myTok=++loadTok;
   const primary = S.src || 'openmeteo';
+
+  // 1) cache: ak máme dáta pre toto miesto a zdroj, ukáž ich hneď a obnov na pozadí
+  let fromCache=false;
+  try{
+    const c=JSON.parse(localStorage.getItem('w28cache')||'null');
+    if(c&&c.data&&c.src===primary&&Math.abs(c.lat-lat)<0.01&&Math.abs(c.lon-lon)<0.01&&Date.now()-c.ts<6*3600*1000){
+      c.data._ts=c.ts;
+      fixPrecipProb(c.data);
+      ld=c.data;
+      renderAll(c.data,name,country);
+      fromCache=true;
+      if(Date.now()-c.ts<3*60*1000){pendingLat=lat;pendingLon=lon;return;} // čerstvé (<3 min) – netreba sťahovať
+    }
+  }catch(e){}
+  if(!fromCache){
+    document.getElementById('cur').innerHTML='<div class="ld"><div class="sp"></div>'+tx('Načítavam…','Loading…')+'</div>';
+    document.getElementById('fccnt').innerHTML='<div class="ld"><div class="sp"></div></div>';
+  }
+
   const secondary = primary === 'openmeteo' ? 'metno' : 'openmeteo';
   let d=null, usedSrc=null, primaryErr=null;
   try{
@@ -1292,6 +1319,8 @@ async function loadW(lat,lon,name,country){
       d = await loadFromSource(secondary, lat, lon);
       usedSrc = secondary;
     }catch(e2){
+      if(myTok!==loadTok) return;
+      if(fromCache) return; // zostávajú zobrazené staršie dáta z cache
       // Both sources failed — try cache
       let cached=null;
       try{cached=JSON.parse(localStorage.getItem('w28cache'));}catch(e){}
@@ -1320,14 +1349,11 @@ async function loadW(lat,lon,name,country){
     }
   }
 
+  if(myTok!==loadTok) return; // medzitým sa načítavalo iné miesto
+  d._ts=Date.now();
   fixPrecipProb(d);
   ld=d;
-  renderCur(d,name,country);
-  renderMinutecast(d);
-  renderH(d);
-  renderF(d);
-  renderFcChart(d);
-  renderAI(d,name);
+  renderAll(d,name,country);
   pendingLat=lat;pendingLon=lon;
   if(radarOpen){if(!radarInited){radarInited=true;initMap(lat,lon);}else{map.setView([lat,lon],7);loadRadar();}}
 
@@ -1345,7 +1371,7 @@ async function loadW(lat,lon,name,country){
   // Save last city + cache data
   try{
     localStorage.setItem('w28last',JSON.stringify({lat,lon,name,country}));
-    localStorage.setItem('w28cache',JSON.stringify({lat,lon,name,country,ts:Date.now(),data:d}));
+    localStorage.setItem('w28cache',JSON.stringify({lat,lon,name,country,src:usedSrc,ts:Date.now(),data:d}));
   }catch(e){}
 
   // Štatistika presnosti – na pozadí
@@ -1397,8 +1423,9 @@ function renderCur(d,name,country){
   }
   const tmrHum=tmrHumArr.length?Math.round(tmrHumArr.reduce((a,b)=>a+b,0)/tmrHumArr.length):c.relativehumidity_2m;
 
-  const updTime=new Date().toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'});
-  const updDate=new Date().toLocaleDateString(loc(),{weekday:'short',day:'2-digit',month:'2-digit'});
+  const _ut=new Date(d._ts||Date.now());
+  const updTime=_ut.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'});
+  const updDate=_ut.toLocaleDateString(loc(),{weekday:'short',day:'2-digit',month:'2-digit'});
 
   const row=(lbl,val,color,onclick='')=>`<div class="drow" ${onclick?`onclick="${onclick}" style="cursor:pointer"`:''}><span class="drlbl">${lbl}</span><span class="drval" style="color:${color}">${val}</span></div>`;
 
