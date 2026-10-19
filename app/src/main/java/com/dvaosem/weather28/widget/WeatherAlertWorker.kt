@@ -45,6 +45,10 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             if (type == "morning") {
                 if (!AlertPrefs.morningEnabled(ctx)) return Result.success()
                 doMorning(ctx, lat, lon, city)
+            } else if (type == "smart") {
+                val force = inputData.getBoolean("force", false) // "send test" button in settings
+                if (!force && !AlertPrefs.smartEnabled(ctx)) return Result.success()
+                doSmart(ctx, lat, lon, city, force)
             } else {
                 if (!AlertPrefs.stormEnabled(ctx)) return Result.success()
                 doStormCheck(ctx, lat, lon, city)
@@ -73,6 +77,85 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         val title = "$icon $city · ${if (en) "today" else "dnes"} $max° / $min°"
         val text = "$desc · ${if (en) "rain" else "zrážky"} $rain%"
         notify(ctx, 1001, title, text, "morning")
+    }
+
+    // ------------------------------------------------------------------
+    // Smart forecast: looks at tomorrow and the day after (and today as the baseline) and
+    // sends ONE notification only when something notable is coming.
+    // ------------------------------------------------------------------
+    data class Day(val max: Double, val min: Double, val rainMm: Double, val rainProb: Int, val gust: Double)
+    data class Signal(val kind: Int, val key: String, val icon: String, val text: String)
+
+    private fun doSmart(ctx: Context, lat: Double, lon: Double, city: String, force: Boolean = false) {
+        val url = "https://api.open-meteo.com/v1/forecast?" +
+                "latitude=$lat&longitude=$lon" +
+                "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_gusts_10m_max" +
+                "&timezone=auto&forecast_days=3"
+        val body = get(url) ?: throw Exception("forecast unavailable")
+        val d = JSONObject(body).getJSONObject("daily")
+        val days = (0 until 3).map { i ->
+            Day(d.getJSONArray("temperature_2m_max").optDouble(i, 0.0), d.getJSONArray("temperature_2m_min").optDouble(i, 0.0),
+                d.getJSONArray("precipitation_sum").optDouble(i, 0.0), d.getJSONArray("precipitation_probability_max").optInt(i, 0),
+                d.getJSONArray("wind_gusts_10m_max").optDouble(i, 0.0))
+        }
+        val en = WidgetPrefs.isEn(ctx)
+        val signals = smartSignals(days, AlertPrefs.smartMask(ctx), en)
+        val today = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date())
+        val fresh = if (force) signals else signals.filter { !AlertPrefs.wasAlerted(ctx, "sm-$today-${it.key}") }
+        if (fresh.isEmpty()) {
+            if (force) notify(ctx, 1003, if (en) "✅ Smart forecast works" else "✅ Chytrá predpoveď funguje",
+                if (en) "Nothing notable in the next 2 days for $city – you'll only get a message when something changes." else "V najbližších 2 dňoch pre $city nič výrazné – ozve sa len pri zmene.", "smart")
+            return
+        }
+        if (!force) fresh.forEach { AlertPrefs.markAlerted(ctx, "sm-$today-${it.key}") }
+
+        val first = fresh[0]
+        val body2 = if (fresh.size == 1) (if (en) "See the full forecast for $city" else "Pozrite si úplnú predpoveď pre $city")
+                    else fresh.joinToString("\n") { "${it.icon} ${it.text}" }
+        notify(ctx, 1003, "${first.icon} ${first.text}", body2, "smart")
+    }
+
+    /** Pure logic (also unit-testable): days[0] = today, [1] = tomorrow, [2] = day after tomorrow. */
+    fun smartSignals(days: List<Day>, mask: Int, en: Boolean): List<Signal> {
+        val out = ArrayList<Signal>()
+        fun r(v: Double) = Math.floor(v + 0.5).toInt()
+        fun dayName(i: Int) = if (i == 1) (if (en) "tomorrow" else "zajtra") else (if (en) "the day after tomorrow" else "pozajtra")
+        val (t0, t1, t2) = Triple(days[0], days[1], days[2])
+
+        if (mask and AlertPrefs.SM_FROST != 0) {
+            val i = if (t1.min <= 0.0) 1 else if (t2.min <= 0.0) 2 else 0
+            if (i > 0) {
+                val m = r(days[i].min)
+                out += Signal(AlertPrefs.SM_FROST, "frost", "❄️",
+                    if (en) "Frost ${dayName(i)}: $m°" else "Mráz ${if (i == 1) "zajtra ráno" else "pozajtra ráno"}: $m°")
+            }
+        }
+        if (mask and AlertPrefs.SM_HEAT != 0) {
+            val i = if (t1.max >= 30.0) 1 else if (t2.max >= 30.0) 2 else 0
+            if (i > 0) out += Signal(AlertPrefs.SM_HEAT, "heat", "☀️",
+                if (en) "Heat ${dayName(i)}: ${r(days[i].max)}°" else "Horúčava ${dayName(i)}: ${r(days[i].max)}°")
+        }
+        if (mask and AlertPrefs.SM_WIND != 0) {
+            val i = if (t1.gust >= 60.0) 1 else if (t2.gust >= 60.0) 2 else 0
+            if (i > 0) out += Signal(AlertPrefs.SM_WIND, "wind", "💨",
+                if (en) "Strong wind ${dayName(i)}: gusts up to ${r(days[i].gust)} km/h" else "Silný vietor ${dayName(i)}: nárazy do ${r(days[i].gust)} km/h")
+        }
+        if (mask and AlertPrefs.SM_RAIN != 0 && (t1.rainMm >= 1.0 || t1.rainProb >= 60)) {
+            val mm = if (t1.rainMm >= 0.1) "%.1f mm".format(java.util.Locale.US, t1.rainMm) else ""
+            val parts = listOf(mm, (if (en) "chance " else "šanca ") + "${t1.rainProb}%").filter { it.isNotEmpty() }
+            out += Signal(AlertPrefs.SM_RAIN, "rain", "🌧️", (if (en) "Rain tomorrow: " else "Zajtra bude pršať: ") + parts.joinToString(" · "))
+        }
+        if (mask and AlertPrefs.SM_TEMP != 0) {
+            val up = maxOf(t1.max, t2.max) - t0.max
+            val down = t0.max - minOf(t1.max, t2.max)
+            if (up >= 4.0 && up >= down) out += Signal(AlertPrefs.SM_TEMP, "warm", "🌡️",
+                if (en) "Warming in the next 2 days: up to ${r(maxOf(t1.max, t2.max))}° (today ${r(t0.max)}°)"
+                else "V nasledujúcich 2 dňoch sa očakáva oteplenie: až ${r(maxOf(t1.max, t2.max))}° (dnes ${r(t0.max)}°)")
+            else if (down >= 4.0) out += Signal(AlertPrefs.SM_TEMP, "cool", "🥶",
+                if (en) "Cooling in the next 2 days: down to ${r(minOf(t1.max, t2.max))}° (today ${r(t0.max)}°)"
+                else "V nasledujúcich 2 dňoch sa očakáva ochladenie: len ${r(minOf(t1.max, t2.max))}° (dnes ${r(t0.max)}°)")
+        }
+        return out
     }
 
     // ------------------------------------------------------------------
@@ -212,12 +295,15 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
     }
 
     private fun notify(ctx: Context, nid: Int, title: String, text: String, channel: String) {
-        val chId = if (channel == "storm") "w28_storm" else "w28_morning"
+        val chId = when (channel) { "storm" -> "w28_storm"; "smart" -> "w28_smart"; else -> "w28_morning" }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val en = WidgetPrefs.isEn(ctx)
-            val name = if (channel == "storm") (if (en) "Weather alerts" else "Výstrahy počasia")
-                       else (if (en) "Morning summary" else "Ranný súhrn")
+            val name = when (channel) {
+                "storm" -> if (en) "Weather alerts" else "Výstrahy počasia"
+                "smart" -> if (en) "Smart forecast" else "Chytrá predpoveď"
+                else -> if (en) "Morning summary" else "Ranný súhrn"
+            }
             val imp = if (channel == "storm") NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
             nm.createNotificationChannel(NotificationChannel(chId, name, imp))
         }

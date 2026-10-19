@@ -142,6 +142,9 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .tog{display:flex;background:var(--card2);border-radius:9px;padding:3px;gap:2px;}
 .to{flex:1;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
 .to.on{background:var(--green);color:#0d1117;}
+.smchips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 12px;border-bottom:1px solid var(--border);}
+.smchip{padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'Inter',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.smchip.on{background:var(--green);color:#0d1117;border-color:transparent;}
 .ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
 .ibtn:disabled{opacity:.35;cursor:default;}
 
@@ -466,6 +469,12 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="sr"><div><div class="sl2">Ranné zhrnutie</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Predpoveď na deň ráno</div></div><div class="tog"><button class="to on" id="mna" onclick="setMorningAlert(true)">Zap</button><button class="to" id="mnb" onclick="setMorningAlert(false)">Vyp</button></div></div>
       <div class="sr" id="mtime-row"><div><div class="sl2">Čas ranného</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">05:00 – 11:00</div></div><input type="time" id="mtime" min="05:00" max="11:00" onchange="setMorningTime(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:0.82rem;"/></div>
       <div class="sr"><div><div class="sl2">Búrky a dážď</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Výstraha pri zrážkach</div></div><div class="tog"><button class="to on" id="sta" onclick="setStormAlert(true)">Zap</button><button class="to" id="stb" onclick="setStormAlert(false)">Vyp</button></div></div>
+      <div class="sr"><div><div class="sl2">Chytrá predpoveď</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Upozornenie na zmenu počasia v najbližších 2 dňoch</div></div><div class="tog"><button class="to on" id="sma" onclick="setSmartAlert(true)">Zap</button><button class="to" id="smb" onclick="setSmartAlert(false)">Vyp</button></div></div>
+      <div id="smart-opts">
+        <div class="sr" id="smtime-row"><div><div class="sl2">Čas chytrej predpovede</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">12:00 – 22:00</div></div><input type="time" id="smtime" min="12:00" max="22:00" onchange="setSmartTime(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:0.82rem;"/></div>
+        <div class="smchips" id="smart-chips"></div>
+        <div class="sr"><div><div class="sl2">Vyskúšať upozornenie</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Pošle skúšobné upozornenie hneď</div></div><div class="tog"><button class="to" onclick="testSmartAlert()">Test</button></div></div>
+      </div>
       <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
       <div class="sr" id="upd-row" style="display:none;"><div><div class="sl2">Aktualizácia</div><div id="upd-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Verzia –</div></div><div class="tog"><button class="to" id="upd-btn" onclick="w28CheckUpdate()">Skontrolovať</button></div></div>
       <div class="sr" id="apk-row"><div><div class="sl2" id="apk-ttl">Android appka</div><div id="apk-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Widget, upozornenia a aktualizácie</div></div><div class="tog"><button class="to" id="apk-btn" onclick="w28ApkAction()">Stiahnuť</button></div></div>
@@ -482,7 +491,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 <script>
 // SETTINGS
 const DEFAULT_ORDER=['cur','ai','radar','hourly','fcchart','fclist'];
-let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,cardOrder:[...DEFAULT_ORDER],cardHidden:{}};
+let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{}};
 function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
 function saveS(){localStorage.setItem('w28s',JSON.stringify(S));}
 // FAVORITES
@@ -1038,6 +1047,8 @@ function syncUI(){
   syncLangButtons();
   syncAlertUI();
   applyLang(S.lang);
+  renderSmartChips();
+  pushSmartAtStart();
   applyCardOrder();
   renderCardOrderUI();
 }
@@ -1076,7 +1087,7 @@ const STATIC_EN={
  'Presnosť zdrojov':'Source accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
  'Vynulovať':'Reset','Upozornenia':'Notifications','Upozornenia fungujú len v Android aplikácii.':'Notifications work only in the Android app.',
  'Ranné zhrnutie':'Morning summary','Predpoveď na deň ráno':"Today's forecast every morning",'Zap':'On','Vyp':'Off',
- 'Čas ranného':'Morning time','Búrky a dážď':'Storms & rain','Výstraha pri zrážkach':'Alerts for storms, heavy rain and wind',
+ 'Čas ranného':'Morning time','Chytrá predpoveď':'Smart forecast','Upozornenie na zmenu počasia v najbližších 2 dňoch':'Heads-up about weather changes in the next 2 days','Čas chytrej predpovede':'Smart forecast time','Vyskúšať upozornenie':'Try the notification','Pošle skúšobné upozornenie hneď':'Sends a test notification right now','Búrky a dážď':'Storms & rain','Výstraha pri zrážkach':'Alerts for storms, heavy rain and wind',
  'Nastavenie home-screen widgetu':'Home-screen widget settings','Nastaviť':'Set up',
  'Aktualizácia':'Updates','Skontrolovať':'Check','Weather28 pre Android':'Weather28 for Android','Neskôr':'Later',
  'Radar · Mapa':'Radar · Map','AI Predpoveď':'AI Forecast','Android appka':'Android app','Widget, upozornenia a aktualizácie':'Widget, notifications and updates','Stiahnuť':'Download','Aktualizovať':'Update','Nová verzia':'New version','Zdieľať predpoveď':'Share forecast','Zdieľať':'Share','Moja poloha':'My location'
@@ -1140,7 +1151,7 @@ function toggleLang(){
   syncLangButtons();
   w28SyncLang();
 }
-function setLang(l){S.lang=l;saveS();applyLang(l);syncLangButtons();w28SyncLang();try{w28ApkRowInApp();}catch(e){}}
+function setLang(l){S.lang=l;saveS();applyLang(l);renderSmartChips();syncLangButtons();w28SyncLang();try{w28ApkRowInApp();}catch(e){}}
 function syncLangButtons(){
   const sk=document.getElementById('lsk'),en=document.getElementById('len');
   if(sk)sk.classList.toggle('on',S.lang==='sk');
@@ -1151,12 +1162,36 @@ function syncLangButtons(){
 function setMorningAlert(on){S.morningAlert=on;saveS();syncAlertUI();pushAlerts();}
 function setMorningTime(v){if(v){S.morningTime=v;saveS();pushAlerts();}}
 function setStormAlert(on){S.stormAlert=on;saveS();syncAlertUI();pushAlerts();}
+function setSmartAlert(on){S.smartAlert=on;saveS();syncAlertUI();pushAlerts();}
+function setSmartTime(v){if(v){S.smartTime=v;saveS();pushAlerts();}}
+const SMART_TYPES=[[1,'🌡️','Oteplenie / ochladenie','Warming / cooling'],[2,'❄️','Mráz','Frost'],[4,'🌧️','Dážď','Rain'],[8,'💨','Vietor','Wind'],[16,'☀️','Horúčava','Heat']];
+function renderSmartChips(){
+  const el=document.getElementById('smart-chips');if(!el)return;
+  el.innerHTML=SMART_TYPES.map(t=>`<button class="smchip${(S.smartMask&t[0])?' on':''}" onclick="toggleSmartType(${t[0]})">${t[1]} ${tx(t[2],t[3])}</button>`).join('');
+}
+function toggleSmartType(b){S.smartMask=(S.smartMask^b)&31;saveS();renderSmartChips();pushAlerts();}
+// smart forecast is on by default -> register it natively once the app starts (idempotent)
+function pushSmartAtStart(){
+  try{
+    if(window.AndroidBridge&&typeof AndroidBridge.setSmartAlerts==='function'){
+      const [sh,sm]=(S.smartTime||'19:00').split(':').map(Number);
+      AndroidBridge.setSmartAlerts(!!S.smartAlert,sh,sm||0,S.smartMask|0);
+    }
+  }catch(e){}
+}
+function testSmartAlert(){
+  if(window.AndroidBridge&&typeof AndroidBridge.testSmartAlert==='function'){pushAlerts();try{AndroidBridge.testSmartAlert();}catch(e){}}
+}
 function syncAlertUI(){
   const set=(id,on)=>{const e=document.getElementById(id);if(e)e.classList.toggle('on',on);};
   set('mna',!!S.morningAlert);set('mnb',!S.morningAlert);
   set('sta',!!S.stormAlert);set('stb',!S.stormAlert);
   const mt=document.getElementById('mtime');if(mt)mt.value=S.morningTime||'07:00';
   const row=document.getElementById('mtime-row');if(row)row.style.opacity=S.morningAlert?'1':'0.45';
+  set('sma',!!S.smartAlert);set('smb',!S.smartAlert);
+  const st=document.getElementById('smtime');if(st)st.value=S.smartTime||'19:00';
+  const so=document.getElementById('smart-opts');if(so){so.style.opacity=S.smartAlert?'1':'0.45';so.style.pointerEvents=S.smartAlert?'auto':'none';}
+  renderSmartChips();
   const na=document.getElementById('notif-na');if(na)na.style.display=window.AndroidBridge?'none':'block';
 }
 function pushAlertLoc(){
@@ -1171,6 +1206,8 @@ function pushAlerts(){
     const [h,m]=(S.morningTime||'07:00').split(':').map(Number);
     if(typeof AndroidBridge.setMorningAlert==='function')AndroidBridge.setMorningAlert(!!S.morningAlert,h,m||0);
     if(typeof AndroidBridge.setStormAlert==='function')AndroidBridge.setStormAlert(!!S.stormAlert);
+    const [sh,sm]=(S.smartTime||'19:00').split(':').map(Number);
+    if(typeof AndroidBridge.setSmartAlerts==='function')AndroidBridge.setSmartAlerts(!!S.smartAlert,sh,sm||0,S.smartMask|0);
   }catch(e){}
 }
 

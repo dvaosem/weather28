@@ -83,5 +83,10 @@
             android:name=".widget.MorningAlarmReceiver"
             android:exported="false"/>
 
+        <!-- Presný budík pre chytrú predpoveď -->
+        <receiver
+            android:name=".widget.SmartAlarmReceiver"
+            android:exported="false"/>
+
     </application>
 </manifest>

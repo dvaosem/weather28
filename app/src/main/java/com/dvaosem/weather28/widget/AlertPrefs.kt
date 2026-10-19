@@ -33,6 +33,16 @@ object AlertPrefs {
     fun cacheDistrict(c: Context, key: String, d: String) =
         p(c).edit().putString("district_key", key).putString("district", d).apply()
 
+    // ---- smart forecast notification (warming/cooling, frost, rain, wind, heat) ----
+    const val SM_TEMP = 1; const val SM_FROST = 2; const val SM_RAIN = 4; const val SM_WIND = 8; const val SM_HEAT = 16
+    fun smartEnabled(c: Context) = p(c).getBoolean("smart", false)
+    fun smartHour(c: Context) = p(c).getInt("smart_hour", 19)
+    fun smartMinute(c: Context) = p(c).getInt("smart_min", 0)
+    fun smartMask(c: Context) = p(c).getInt("smart_mask", 31)
+    fun setSmart(c: Context, on: Boolean, h: Int, m: Int, mask: Int) =
+        p(c).edit().putBoolean("smart", on).putInt("smart_hour", h.coerceIn(0, 23))
+            .putInt("smart_min", m.coerceIn(0, 59)).putInt("smart_mask", mask).apply()
+
     fun lastStormDay(c: Context) = p(c).getString("last_storm", "") ?: ""
     fun setLastStormDay(c: Context, d: String) = p(c).edit().putString("last_storm", d).apply()
 }

@@ -20,6 +20,9 @@ object AlertScheduler {
             cancelMorningAlarm(ctx)
         }
 
+        // Chytrá predpoveď – tiež presný denný alarm
+        if (AlertPrefs.smartEnabled(ctx)) scheduleSmartAlarm(ctx) else cancelSmartAlarm(ctx)
+
         // Búrky / výstrahy SHMÚ – kontrola každú hodinu
         val wm = WorkManager.getInstance(ctx)
         if (AlertPrefs.stormEnabled(ctx)) {
@@ -70,5 +73,36 @@ object AlertScheduler {
     fun cancelMorningAlarm(ctx: Context) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         am.cancel(morningPendingIntent(ctx))
+    }
+
+    // ---- smart forecast alarm ----
+    private fun smartPendingIntent(ctx: Context): PendingIntent =
+        PendingIntent.getBroadcast(
+            ctx, 2002, Intent(ctx, SmartAlarmReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    fun scheduleSmartAlarm(ctx: Context) {
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val now = Calendar.getInstance()
+        val next = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, AlertPrefs.smartHour(ctx))
+            set(Calendar.MINUTE, AlertPrefs.smartMinute(ctx))
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            if (!after(now)) add(Calendar.DAY_OF_MONTH, 1)
+        }
+        val pi = smartPendingIntent(ctx)
+        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+        try {
+            if (canExact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.timeInMillis, pi)
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.timeInMillis, pi)
+        } catch (e: SecurityException) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.timeInMillis, pi)
+        }
+    }
+
+    fun cancelSmartAlarm(ctx: Context) {
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        am.cancel(smartPendingIntent(ctx))
     }
 }

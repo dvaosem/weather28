@@ -132,6 +132,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun setSmartAlerts(on: Boolean, hour: Int, minute: Int, mask: Int) {
+            AlertPrefs.setSmart(this@MainActivity, on, hour, minute, mask)
+            if (on) runOnUiThread { maybeAskNotifPerm() }
+            AlertScheduler.reschedule(this@MainActivity)
+        }
+
+        @JavascriptInterface
+        fun testSmartAlert() {
+            runOnUiThread { maybeAskNotifPerm() }
+            val work = androidx.work.OneTimeWorkRequestBuilder<com.dvaosem.weather28.widget.WeatherAlertWorker>()
+                .setInputData(androidx.work.workDataOf("type" to "smart", "force" to true)).build()
+            androidx.work.WorkManager.getInstance(this@MainActivity).enqueue(work)
+        }
+
+        @JavascriptInterface
         fun setStormAlert(on: Boolean) {
             AlertPrefs.setStorm(this@MainActivity, on)
             if (on) runOnUiThread { maybeAskNotifPerm() }
