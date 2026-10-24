@@ -1701,7 +1701,7 @@ function renderFcChart(d){
     const prec=dy.precipitation_sum[i]||0;
     const prob=(dy.precipitation_probability_max&&dy.precipitation_probability_max[i])||0;
     const bh=Math.max(2,(prec/mx)*34);
-    return`<div class="dcol">
+    return`<div class="dcol" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <span class="dcday">${dn}</span>
       <span class="dcdt">${dt.getDate()}.${dt.getMonth()+1}.</span>
       <span class="dcic">${wico(dy.weathercode[i])}</span>
@@ -1738,6 +1738,12 @@ function drawDailyGraf(d){
   ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
 
   const padL=28,padR=8,padT=18,padB=18;
+  canvas.style.cursor='pointer';
+  canvas.onclick=e=>{
+    const r=canvas.getBoundingClientRect();
+    const i=Math.max(0,Math.min(n-1,Math.round((e.clientX-r.left-padL)/((W-padL-padR)/(n-1)))));
+    openDayModal(dy.time[i],i);
+  };
   const gW=W-padL-padR,gH=H-padT-padB;
   const allT=[...cols.map(x=>x.maxT),...cols.map(x=>x.minT)];
   const minT=Math.min(...allT)-2,maxT=Math.max(...allT)+2;
