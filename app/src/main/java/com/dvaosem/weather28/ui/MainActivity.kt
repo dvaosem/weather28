@@ -23,6 +23,7 @@ import android.webkit.JavascriptInterface
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private var lastBackAt = 0L
     @Volatile private var pendingUpdateUrl: String? = null
 
     private fun jsCall(fn: String, arg: String) {
@@ -241,7 +242,23 @@ class MainActivity : AppCompatActivity() {
         checkLocationPermission()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (webView.canGoBack()) webView.goBack() else finish()
+                // 1) let the page close its top-most overlay (settings, day detail, info, radar)
+                webView.evaluateJavascript("(window.w28Back&&window.w28Back())?'1':'0'") { r ->
+                    if (r != null && r.contains("1")) return@evaluateJavascript
+                    // 2) on the main screen: press twice to exit
+                    val now = System.currentTimeMillis()
+                    if (now - lastBackAt < 2000) {
+                        finish()
+                    } else {
+                        lastBackAt = now
+                        val sk = java.util.Locale.getDefault().language == "sk"
+                        android.widget.Toast.makeText(
+                            this@MainActivity,
+                            if (sk) "Stlač znova pre ukončenie" else "Press back again to exit",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
         })
     }

@@ -1947,6 +1947,12 @@ function closeWindy(){
   document.getElementById('windy-overlay').classList.remove('open');
 }
 
+// BACK BUTTON / GESTURE (called by the Android app): close top-most overlay, true if something was closed
+window.w28Back=function(){
+  const o=(id,fn)=>{const e=document.getElementById(id);if(e&&e.classList.contains('open')){fn();return true;}return false;};
+  return o('info-modal',()=>closeInfoModal())||o('day-modal',()=>closeDayModal())||o('windy-overlay',()=>closeWindy())||o('sov',()=>closeS());
+};
+
 // DAY MODAL
 function openDayModal(date,dayIdx){
   if(!ld)return;
