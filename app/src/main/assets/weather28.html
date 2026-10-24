@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-[data-theme="dark"]{--bg:#0d1117;--card:#161b27;--card2:#1c2333;--border:#21293d;--text:#e6edf3;--text2:#7d8fa8;--inp:#1c2333;}
+:root[data-theme="dark"]{--bg:#000000;--card:#0f0f0f;--card2:#1a1a1a;--border:#2a2a2a;--text:#f5f5f5;--text2:#8c8c8c;--inp:#1a1a1a;--green:#ffffff;--g1:#ffffff;--g2:#a8a8a8;}
 :root[data-theme="gray"]{--bg:#1a1918;--card:#232220;--card2:#2c2b28;--border:#363431;--text:#ece9e1;--text2:#9a968b;--inp:#2c2b28;--green:#e8875a;--g1:#d97757;--g2:#f0a868;}
 [data-theme="light"]{--bg:#f0f4ff;--card:#ffffff;--card2:#e8eeff;--border:#c8d8f0;--text:#0a1628;--text2:#4a6fa5;--inp:#e8eeff;}
 :root{--g1:var(--green);--g2:var(--blue);--green:#00e5a0;--blue:#4d9fff;--pink:#ff4d6d;--purple:#a855f7;--orange:#f59e0b;--cyan:#22d3ee;--top-safe:calc(env(safe-area-inset-top, 0px) + 12px);}
@@ -515,7 +515,7 @@ function renderFavbar(){
   }).join('');
 }
 
-const THEME_BG={dark:'#0d1117',light:'#f0f4ff',gray:'#1a1918'};
+const THEME_BG={dark:'#000000',light:'#f0f4ff',gray:'#1a1918'};
 function applyT(t){
   if(!THEME_BG[t])t='dark';
   document.documentElement.setAttribute('data-theme',t);
