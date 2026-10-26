@@ -63,24 +63,42 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
         val url = "https://api.open-meteo.com/v1/forecast?" +
                 "latitude=$lat&longitude=$lon" +
                 "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum" +
-                "&hourly=weather_code" +
+                "&hourly=weather_code,precipitation,precipitation_probability" +
                 "&timezone=auto&forecast_days=1"
         val body = client.newCall(Request.Builder().url(url).build()).execute().body?.string() ?: return
         val root = JSONObject(body)
         val daily = root.getJSONObject("daily")
         val max = Math.floor(daily.getJSONArray("temperature_2m_max").getDouble(0) + 0.5).toInt()
         val min = Math.floor(daily.getJSONArray("temperature_2m_min").getDouble(0) + 0.5).toInt()
-        var code = daily.getJSONArray("weather_code").getInt(0)
-        val prob0 = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
-        val sum = daily.optJSONArray("precipitation_sum")?.optDouble(0, 0.0) ?: 0.0
         val en = WidgetPrefs.isEn(ctx)
-
-        // Same rule as the app: no measurable precipitation -> no rain wording. The daily weather code is the
-        // "worst hour of the day", so a rain code with ~0 mm is replaced by the most common dry hourly code.
         val wet = { c: Int -> c in 51..67 || c in 80..82 || c in 95..99 }
+
+        // Only what is still ahead today (from the current local hour) – rain that already fell at night must not trigger "rain today".
+        val hr = root.optJSONObject("hourly")
+        val times = hr?.optJSONArray("time")
+        val hCode = hr?.optJSONArray("weather_code")
+        val hPrec = hr?.optJSONArray("precipitation")
+        val hProb = hr?.optJSONArray("precipitation_probability")
+        val off = root.optLong("utc_offset_seconds", 0L)
+        val nowKey = java.time.Instant.ofEpochMilli(System.currentTimeMillis()).plusSeconds(off)
+            .atZone(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH"))
+        var sum = 0.0; var prob0 = 0; var code = -1; var cnt = 0
+        if (times != null) for (i in 0 until times.length()) {
+            val t = times.optString(i)
+            if (t.length < 13 || t.substring(0, 13) < nowKey || t.substring(0, 10) != nowKey.substring(0, 10)) continue
+            cnt++
+            sum += hPrec?.optDouble(i, 0.0) ?: 0.0
+            prob0 = maxOf(prob0, hProb?.optInt(i, 0) ?: 0)
+            code = maxOf(code, hCode?.optInt(i, 0) ?: 0)
+        }
+        if (cnt == 0) { // fallback: whole-day values
+            code = daily.getJSONArray("weather_code").getInt(0)
+            prob0 = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
+            sum = daily.optJSONArray("precipitation_sum")?.optDouble(0, 0.0) ?: 0.0
+        }
         if (sum < 0.05 && wet(code)) {
-            val hc = root.optJSONObject("hourly")?.optJSONArray("weather_code")
-            val dry = (6..22).mapNotNull { hc?.optInt(it, -1) }.filter { it >= 0 && !wet(it) }
+            val dry = (0 until (times?.length() ?: 0)).filter { (times!!.optString(it)).startsWith(nowKey.substring(0, 10)) }
+                .mapNotNull { hCode?.optInt(it, -1) }.filter { it >= 0 && !wet(it) }
             code = dry.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: 3
         }
         val rain = if (sum > 0.0 && prob0 < 1) 1 else prob0

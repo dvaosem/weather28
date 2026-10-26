@@ -1307,6 +1307,26 @@ function fixPrecipProb(d){
         if(wet && (dl.precipitation_probability_max[i]||0)<1) dl.precipitation_probability_max[i]=1;
       }
     }
+    // "Today" = what is still ahead (from the current hour), not rain that already fell at night
+    if(dl&&h&&h.time&&dl.time&&dl.time.length){
+      const n0=new Date();n0.setMinutes(0,0,0);
+      const pad=x=>String(x).padStart(2,'0');
+      const today=n0.getFullYear()+'-'+pad(n0.getMonth()+1)+'-'+pad(n0.getDate());
+      if(dl.time[0]===today){
+        let sum=0,pm=0,code=-1,cnt=0;
+        for(let j=0;j<h.time.length;j++){
+          if(String(h.time[j]).slice(0,10)!==today||new Date(h.time[j])<n0)continue;
+          cnt++;sum+=h.precipitation?(h.precipitation[j]||0):0;
+          pm=Math.max(pm,h.precipitation_probability?(h.precipitation_probability[j]||0):0);
+          const c=h.weathercode?h.weathercode[j]:0;if(c>code)code=c;
+        }
+        if(cnt){
+          dl.precipitation_sum[0]=+sum.toFixed(2);
+          dl.precipitation_probability_max[0]=(sum>0&&pm<1)?1:pm;
+          if(code>=0)dl.weathercode[0]=code;
+        }
+      }
+    }
   }catch(e){}
 }
 
@@ -1571,7 +1591,7 @@ function renderMinutecast(d){
 function renderH(d){
   const h=d.hourly;const now=new Date();const cols=[];
   for(let i=0;i<h.time.length&&cols.length<24;i++){const t=new Date(h.time[i]);if(t>=now)cols.push({time:t,temp:h.temperature_2m[i],prob:h.precipitation_probability[i]||0,code:h.weathercode[i]});}
-  const mx=Math.max(...cols.map(x=>x.prob),1);
+  const mx=100; // absolute 0-100 % so a 4 % chance does not look like a downpour
   document.getElementById('hcnt').innerHTML=cols.map(hh=>{
     const bh=Math.max(2,(hh.prob/mx)*38);
     return`<div class="hcol"><span class="htm">${hh.time.getHours().toString().padStart(2,'0')}h</span><span class="hic">${wico(hh.code)}</span><span class="htp">${fT(hh.temp).replace('°C','°').replace('°F','°')}</span><div class="hbg"><div class="hb" style="height:${bh}px"></div></div><span class="hpr">${hh.prob}%</span></div>`;
@@ -1962,7 +1982,7 @@ function openDayModal(date,dayIdx){
   document.getElementById('day-modal-title').textContent=dn;
   const hours=[];
   for(let i=0;i<h.time.length;i++){
-    if(h.time[i].startsWith(date)){
+    if(h.time[i].startsWith(date)&&!(dayIdx===0&&new Date(h.time[i])<(()=>{const z=new Date();z.setMinutes(0,0,0);return z;})())){
       hours.push({
         time:new Date(h.time[i]),
         temp:h.temperature_2m[i],
@@ -2221,7 +2241,7 @@ function openDayModal(date,dayIdx){
   document.getElementById('day-modal-title').textContent=dn;
   const hours=[];
   for(let i=0;i<h.time.length;i++){
-    if(h.time[i].startsWith(date)){
+    if(h.time[i].startsWith(date)&&!(dayIdx===0&&new Date(h.time[i])<(()=>{const z=new Date();z.setMinutes(0,0,0);return z;})())){
       hours.push({time:new Date(h.time[i]),temp:h.temperature_2m[i],feel:h.apparent_temperature?.[i],prob:h.precipitation_probability[i]||0,prec:h.precipitation[i]||0,code:h.weathercode[i],wind:h.windspeed_10m?.[i]||0,wdeg:h.winddirection_10m?.[i]||0});
     }
   }
