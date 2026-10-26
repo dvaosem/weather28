@@ -62,20 +62,38 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
     private fun doMorning(ctx: Context, lat: Double, lon: Double, city: String) {
         val url = "https://api.open-meteo.com/v1/forecast?" +
                 "latitude=$lat&longitude=$lon" +
-                "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max" +
+                "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum" +
+                "&hourly=weather_code" +
                 "&timezone=auto&forecast_days=1"
         val body = client.newCall(Request.Builder().url(url).build()).execute().body?.string() ?: return
-        val daily = JSONObject(body).getJSONObject("daily")
+        val root = JSONObject(body)
+        val daily = root.getJSONObject("daily")
         val max = Math.floor(daily.getJSONArray("temperature_2m_max").getDouble(0) + 0.5).toInt()
         val min = Math.floor(daily.getJSONArray("temperature_2m_min").getDouble(0) + 0.5).toInt()
-        val code = daily.getJSONArray("weather_code").getInt(0)
-        val rain = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
-        val desc = codeDesc(code, WidgetPrefs.isEn(ctx))
+        var code = daily.getJSONArray("weather_code").getInt(0)
+        val prob0 = daily.getJSONArray("precipitation_probability_max").optInt(0, 0)
+        val sum = daily.optJSONArray("precipitation_sum")?.optDouble(0, 0.0) ?: 0.0
+        val en = WidgetPrefs.isEn(ctx)
+
+        // Same rule as the app: no measurable precipitation -> no rain wording. The daily weather code is the
+        // "worst hour of the day", so a rain code with ~0 mm is replaced by the most common dry hourly code.
+        val wet = { c: Int -> c in 51..67 || c in 80..82 || c in 95..99 }
+        if (sum < 0.05 && wet(code)) {
+            val hc = root.optJSONObject("hourly")?.optJSONArray("weather_code")
+            val dry = (6..22).mapNotNull { hc?.optInt(it, -1) }.filter { it >= 0 && !wet(it) }
+            code = dry.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: 3
+        }
+        val rain = if (sum > 0.0 && prob0 < 1) 1 else prob0
+        val desc = codeDesc(code, en)
         val icon = codeIcon(code)
 
-        val en = WidgetPrefs.isEn(ctx)
         val title = "$icon $city · ${if (en) "today" else "dnes"} $max° / $min°"
-        val text = "$desc · ${if (en) "rain" else "zrážky"} $rain%"
+        val rainText = when {
+            sum < 0.05 -> if (en) "no rain" else "bez dažďa"
+            sum < 0.1 -> (if (en) "rain " else "zrážky ") + "$rain% · <0.1 mm"
+            else -> (if (en) "rain " else "zrážky ") + "$rain% · " + "%.1f mm".format(java.util.Locale.US, sum)
+        }
+        val text = "$desc · $rainText"
         notify(ctx, 1001, title, text, "morning")
     }
 
