@@ -58,6 +58,10 @@
                 android:resource="@xml/widget_info"/>
         </receiver>
 
+        <receiver
+            android:name=".ui.InstallResultReceiver"
+            android:exported="false"/>
+
         <!-- FileProvider pre zdieľanie PNG -->
         <provider
             android:name="androidx.core.content.FileProvider"

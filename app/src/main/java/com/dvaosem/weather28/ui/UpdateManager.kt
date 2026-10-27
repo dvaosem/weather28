@@ -1,8 +1,10 @@
 package com.dvaosem.weather28.ui
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -95,6 +97,34 @@ object UpdateManager {
     fun openInstallPermissionSettings(activity: Activity) {
         activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
             Uri.parse("package:${activity.packageName}")))
+    }
+
+    /**
+     * Installs through PackageInstaller. On Android 12+ an update of an app that this app installed itself
+     * is applied without a confirmation dialog; otherwise (first time, older Android) the system shows its normal prompt.
+     * Falls back to the plain VIEW intent when the session cannot be created.
+     */
+    fun installSession(activity: Activity, apk: File) {
+        try {
+            val pi = activity.packageManager.packageInstaller
+            val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+            params.setAppPackageName(activity.packageName)
+            if (Build.VERSION.SDK_INT >= 31) params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+            val sid = pi.createSession(params)
+            pi.openSession(sid).use { session ->
+                apk.inputStream().use { input ->
+                    session.openWrite("weather28.apk", 0, apk.length()).use { out ->
+                        input.copyTo(out); session.fsync(out)
+                    }
+                }
+                val intent = Intent(activity, InstallResultReceiver::class.java).setPackage(activity.packageName)
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+                session.commit(PendingIntent.getBroadcast(activity, sid, intent, flags).intentSender)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "session install failed, falling back", e)
+            install(activity, apk)
+        }
     }
 
     fun install(activity: Activity, apk: File) {

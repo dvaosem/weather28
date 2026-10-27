@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity() {
             Thread {
                 val apk = UpdateManager.download(this@MainActivity, url) { p -> jsCall("w28OnUpdateProgress", p.toString()) }
                 if (apk == null) { jsCall("w28OnUpdateProgress", "-1"); return@Thread }
-                runOnUiThread { UpdateManager.install(this@MainActivity, apk) }
+                runOnUiThread { UpdateManager.installSession(this@MainActivity, apk) }
                 jsCall("w28OnUpdateProgress", "101")
             }.start()
         }
