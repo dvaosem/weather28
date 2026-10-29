@@ -488,7 +488,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   <div class="footer">
     <div class="footer-actions">
       <div class="faction" id="btn-refresh" onclick="location.reload()">Obnoviť</div>
-      <div class="faction" id="btn-share" onclick="shareForecast()">Zdieľať</div>
+      <div class="faction" id="btn-share" onclick="w28ShareLink()">Zdieľať</div>
     </div>
     <div class="footer-credit">Made by <a href="https://dvaosem.com/info.html">dvaosem.com</a> &nbsp;·&nbsp; Open-Meteo &nbsp;·&nbsp; Windy</div>
   </div>
@@ -2298,6 +2298,12 @@ function shareApp(){
       .then(()=>alert(tx('Link skopírovaný!','Link copied!')))
       .catch(()=>alert('https://dvaosem.com/weather28.html'));
   }
+}
+
+/* footer share = link to the app (APK link inside the app, page link on the web); header icon keeps sharing the forecast image */
+function w28ShareLink(){
+  if(window.AndroidBridge&&typeof AndroidBridge.shareText==='function'){w28ApkAction();return;}
+  shareApp();
 }
 
 // SHARE PNG — vykreslí kartu (aktuálne + 24 h + týždeň) a zdieľa ako obrázok
