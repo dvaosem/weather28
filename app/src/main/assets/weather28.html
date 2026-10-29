@@ -36,6 +36,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:var
 .si{padding:10px 14px;font-size:0.86rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
 .si:last-child{border-bottom:none;}
 .si:hover{background:var(--border);color:var(--green);}
+/* SEARCH DROPDOWN (lupa v hlavičke) */
+header{position:relative;}
+.srow{display:none;flex-direction:column;gap:8px;position:absolute;top:100%;left:14px;right:14px;width:auto;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:14px;z-index:9998;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.srow.open{display:flex;}
+.sprow{display:flex;gap:6px;}
+.srow .suggs{position:static;box-shadow:none;border-radius:10px;}
+.srow .favbar{flex-direction:column;overflow:visible;padding:0;gap:4px;}
+.srow .favchip{width:100%;border-radius:10px;padding:9px 10px;font-size:0.82rem;}
+.srow .favchip .favrm{margin-left:auto;padding:0 4px;}
+.srow .favchip .favok{color:var(--green);margin-left:6px;}
+.srow .favadd{color:var(--text2);border-style:dashed;}
 .hidden{display:none!important;}
 
 /* MINUTECAST */
@@ -390,20 +401,21 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 <header>
   <div class="logo">Weather28</div>
   <div class="hbtns">
+    <button class="hbtn" id="searchbtn" onclick="toggleSearch()" title="Hľadať / obľúbené" aria-label="Hľadať"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
     <button class="hbtn" id="sharebtn" onclick="shareForecast()" title="Zdieľať predpoveď" aria-label="Zdieľať"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"></line></svg></button>
     <button class="hbtn" onclick="locMe()" title="Moja poloha">◎</button>
     <button class="hbtn" onclick="openS()">⚙️</button>
   </div>
+  <div class="srow" id="spanel">
+    <div class="sprow">
+      <input type="text" id="si" placeholder="Hľadaj mesto…" autocomplete="off"/>
+      <button class="sbtn" onclick="doSearch()">Hľadaj</button>
+    </div>
+    <div class="suggs hidden" id="suggs"></div>
+    <div class="favbar" id="favbar"></div>
+  </div>
 </header>
 
-<div class="srow">
-  <input type="text" id="si" placeholder="Hľadaj mesto…" autocomplete="off"/>
-  <button class="sbtn" onclick="doSearch()">Hľadaj</button>
-  <div class="suggs hidden" id="suggs"></div>
-</div>
-
-
-<div class="favbar" id="favbar"></div>
 <main id="main-cards">
   <div data-section="cur">
     <div class="card" data-banner="current" id="cur" style="padding:0;"><div class="w28-skel"><div class="w28-sk" style="height:12px;width:45%;margin-bottom:16px"></div><div style="display:flex;align-items:center;gap:14px"><div class="w28-sk" style="height:70px;width:110px"></div><div class="w28-sk" style="height:56px;width:56px;border-radius:50%"></div></div><div style="display:flex;gap:10px;margin-top:18px"><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div></div></div></div>
@@ -620,10 +632,15 @@ function renderFavbar(){
   const favs=loadFavs();
   const bar=document.getElementById('favbar');
   if(!bar)return;
-  bar.innerHTML=favs.map(f=>{
+  let html=favs.map(f=>{
     const active=Math.abs(f.lat-clat)<0.01&&Math.abs(f.lon-clon)<0.01;
-    return `<div class="favchip${active?' active':''}" onclick="loadW(${f.lat},${f.lon},'${f.name.replace(/'/g,"\'")}','${f.country}')"><span>❤️</span>${f.name}<span class="favrm" onclick="event.stopPropagation();toggleFav(${JSON.stringify(f).replace(/"/g,'&quot;')})">✕</span></div>`;
+    return `<div class="favchip${active?' active':''}" onclick="closeSearch();loadW(${f.lat},${f.lon},'${f.name.replace(/'/g,"\\'")}','${f.country}')"><span>❤️</span>${f.name}${active?'<span class="favok">✓</span>':''}<span class="favrm" onclick="event.stopPropagation();toggleFav(${JSON.stringify(f).replace(/"/g,'&quot;')})">✕</span></div>`;
   }).join('');
+  if(typeof ln!=='undefined'&&ln&&favs.length<3&&!isFav(clat,clon)){
+    const cur={lat:clat,lon:clon,name:ln,country:(typeof lc!=='undefined'&&lc)?lc:''};
+    html+=`<div class="favchip favadd" onclick="toggleFav(${JSON.stringify(cur).replace(/"/g,'&quot;')})"><span>☆</span>${S.lang==='sk'?'Pridať':'Add'}: ${ln}</div>`;
+  }
+  bar.innerHTML=html;
 }
 
 const THEME_BG={dark:'#000000',light:'#f0f4ff',gray:'#1a1918'};
@@ -1346,7 +1363,10 @@ function warr(d){return`<span style="display:inline-block;transform:rotate(${((d
 let dt2;
 document.getElementById('si').addEventListener('input',e=>{clearTimeout(dt2);const v=e.target.value.trim();if(v.length<2){hideSg();return;}dt2=setTimeout(()=>fetchSg(v),300);});
 document.getElementById('si').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
-document.addEventListener('click',e=>{if(!e.target.closest('#si')&&!e.target.closest('.sbtn'))hideSg();});
+document.addEventListener('click',e=>{if(!e.target.closest('#si')&&!e.target.closest('.sbtn'))hideSg();const pn=document.getElementById('spanel');const inside=e.composedPath().some(n=>n===pn||n.id==='searchbtn');if(!inside)closeSearch();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
+function closeSearch(){const p=document.getElementById('spanel');if(p)p.classList.remove('open');hideSg();}
+function toggleSearch(){const p=document.getElementById('spanel');if(!p)return;if(p.classList.contains('open')){closeSearch();return;}renderFavbar();p.classList.add('open');const si=document.getElementById('si');if(si){si.value='';setTimeout(()=>si.focus(),50);}}
 function hideSg(){document.getElementById('suggs').classList.add('hidden');}
 async function fetchSg(q){
   try{
@@ -1356,13 +1376,13 @@ async function fetchSg(q){
     box.innerHTML='';
     d.results.forEach(loc=>{const el=document.createElement('div');el.className='si';const label=`${loc.name}${loc.admin1?', '+loc.admin1:''}, ${loc.country}`;
       el.style.cssText='display:flex;align-items:center;justify-content:space-between;';
-      el.innerHTML=`<span>${label}</span><span onclick="event.stopPropagation();toggleFav({lat:${loc.latitude},lon:${loc.longitude},name:'${loc.name.replace(/'/g,"\\'")}',country:'${loc.country_code?.toUpperCase()||''}'})" style="padding:4px 6px;font-size:1rem;cursor:pointer;">${'❤️'}</span>`;el.onclick=()=>{document.getElementById('si').value=loc.name;hideSg();loadW(loc.latitude,loc.longitude,loc.name,loc.country);};box.appendChild(el);});
+      el.innerHTML=`<span>${label}</span><span onclick="event.stopPropagation();toggleFav({lat:${loc.latitude},lon:${loc.longitude},name:'${loc.name.replace(/'/g,"\\'")}',country:'${loc.country_code?.toUpperCase()||''}'})" style="padding:4px 6px;font-size:1rem;cursor:pointer;">${'❤️'}</span>`;el.onclick=()=>{document.getElementById('si').value=loc.name;hideSg();closeSearch();loadW(loc.latitude,loc.longitude,loc.name,loc.country);};box.appendChild(el);});
     box.classList.remove('hidden');
   }catch(e){}
 }
 async function doSearch(){
   const q=document.getElementById('si').value.trim();if(!q)return;hideSg();
-  try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=sk&format=json`);const d=await r.json();if(d.results?.[0]){const l=d.results[0];loadW(l.latitude,l.longitude,l.name,l.country);}}catch(e){}
+  try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=sk&format=json`);const d=await r.json();if(d.results?.[0]){const l=d.results[0];closeSearch();loadW(l.latitude,l.longitude,l.name,l.country);}}catch(e){}
 }
 function locMe(){
   if(!navigator.geolocation){alert(tx('Geolokácia nie je dostupná v tomto prehliadači.','Geolocation is not available in this browser.'));return;}
