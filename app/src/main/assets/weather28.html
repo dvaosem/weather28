@@ -1327,7 +1327,44 @@ function fixPrecipProb(d){
         }
       }
     }
+    fixRainIcons(d);
   }catch(e){}
+}
+
+/* Rain icon by our own rule instead of blindly trusting the model's weather code.
+   Rain/drizzle/shower icon only when chance AND amount are meaningful; otherwise cloud.
+   Daily icon: night hours (22:00–06:00) count at half weight – rain at 2 am matters less than at 6 am.
+   Snow, fog and thunderstorm codes are never touched. Tune the numbers here. */
+const RAIN_ICON={p:40,mmDay:0.3,mmHour:0.1,night:0.5};
+function fixRainIcons(d){
+  const h=d.hourly, dl=d.daily; if(!h||!dl||!h.time) return;
+  const isRain=c=>(c>=51&&c<=57)||(c>=61&&c<=67)||(c>=80&&c<=82);
+  const calm=c=>(c>=80&&c<=82)?2:3;                       // showers -> partly cloudy, rain/drizzle -> overcast
+  const wt=iso=>{const hr=parseInt(String(iso).slice(11,13),10);return (hr>=22||hr<6)?RAIN_ICON.night:1;};
+  if(h.weathercode){
+    for(let i=0;i<h.time.length;i++){
+      const c=h.weathercode[i]; if(!isRain(c)) continue;
+      const p=h.precipitation_probability?(h.precipitation_probability[i]||0):0;   // hourly rows show the exact time -> no night weighting
+      const mm=h.precipitation?(h.precipitation[i]||0):0;
+      if(!(p>=RAIN_ICON.p&&mm>=RAIN_ICON.mmHour)) h.weathercode[i]=calm(c);
+    }
+  }
+  if(dl.weathercode&&dl.time){
+    const now=new Date();now.setMinutes(0,0,0);
+    for(let i=0;i<dl.time.length;i++){
+      const c=dl.weathercode[i]; if(!isRain(c)) continue;
+      let pm=0,sum=0,cnt=0;
+      for(let j=0;j<h.time.length;j++){
+        if(String(h.time[j]).slice(0,10)!==dl.time[i]) continue;
+        if(i===0&&new Date(h.time[j])<now) continue;     // today = only what is still ahead
+        const w=wt(h.time[j]);
+        pm=Math.max(pm,(h.precipitation_probability?(h.precipitation_probability[j]||0):0)*w);
+        sum+=(h.precipitation?(h.precipitation[j]||0):0)*w; cnt++;
+      }
+      if(!cnt){pm=(dl.precipitation_probability_max?dl.precipitation_probability_max[i]:0)||0;sum=(dl.precipitation_sum?dl.precipitation_sum[i]:0)||0;}
+      if(!(pm>=RAIN_ICON.p&&sum>=RAIN_ICON.mmDay)) dl.weathercode[i]=calm(c);
+    }
+  }
 }
 
 let loadTok=0;
