@@ -47,7 +47,24 @@ object WeatherFetcher {
 
     private data class Day(val max: Double, val min: Double, val code: Int)
     private class Src(val curTemp: Double, val curCode: Int, val isDay: Boolean?, val days: Map<String, Day>)
-    private class OmResult(val src: Src, val rain: List<RainSlot>)
+    private class HourRain(val time: String, val prob: Int, val mm: Double)
+    private class OmResult(val src: Src, val rain: List<RainSlot>, val hourly: List<HourRain> = emptyList())
+
+    /** Same rule as the app's fixRainIcons(): a rain/drizzle/shower code stays only when chance >= 40 % AND amount >= 0.3 mm/day
+     *  (night hours 22-06 count half), otherwise it is shown as cloud (showers -> partly cloudy). Snow/fog/thunder untouched. */
+    private fun calmRainCode(code: Int, date: String, hours: List<HourRain>): Int {
+        val isRain = (code in 51..57) || (code in 61..67) || (code in 80..82)
+        if (!isRain) return code
+        var pm = 0.0; var sum = 0.0; var cnt = 0
+        for (h in hours) {
+            if (!h.time.startsWith(date)) continue
+            val hr = h.time.substring(11, 13).toIntOrNull() ?: continue
+            val w = if (hr >= 22 || hr < 6) 0.5 else 1.0
+            pm = maxOf(pm, h.prob * w); sum += h.mm * w; cnt++
+        }
+        if (cnt == 0) return code
+        return if (pm >= 40.0 && sum >= 0.3) code else if (code in 80..82) 2 else 3
+    }
 
     fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2)): WeatherData? {
         val om = fetchOpenMeteo(lat, lon, null) // always: base + rain forecast
@@ -73,7 +90,7 @@ object WeatherFetcher {
             tomorrowMin = jsRound(d1.min),
             todayCode = chosen.curCode,
             todayIsDay = chosen.isDay ?: om?.src?.isDay ?: true,
-            tomorrowCode = d1.code,
+            tomorrowCode = calmRainCode(d1.code, tomorrow, om?.hourly ?: emptyList()),
             source = source,
             rain = om?.rain ?: emptyList()
         )
@@ -115,7 +132,12 @@ object WeatherFetcher {
             if (cur.has("is_day")) cur.optInt("is_day", 1) == 1 else null,
             days
         )
-        OmResult(src, if (model == null) rainSlots(j) else emptyList())
+        val hours = ArrayList<HourRain>()
+        if (model == null) j.optJSONObject("hourly")?.let { h ->
+            val t = h.getJSONArray("time"); val p = h.optJSONArray("precipitation"); val pr = h.optJSONArray("precipitation_probability")
+            for (i in 0 until t.length()) hours += HourRain(t.getString(i), pr?.optInt(i, 0) ?: 0, p?.optDouble(i, 0.0) ?: 0.0)
+        }
+        OmResult(src, if (model == null) rainSlots(j) else emptyList(), hours)
     } catch (e: Exception) {
         Log.e(TAG, "Open-Meteo ($model) error: ${e.message}"); null
     }
