@@ -49,6 +49,17 @@ header{position:relative;}
 .srow .favadd{color:var(--text2);border-style:dashed;}
 .hidden{display:none!important;}
 [data-section="station"]:has(#stcard.hidden){display:none;}
+[data-section]{position:relative;}
+.w28-cv{position:absolute;top:9px;right:10px;width:28px;height:28px;border:none;background:transparent;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;border-radius:8px;padding:0;}
+.w28-cv svg{transition:transform .25s;transform:rotate(180deg);}
+.w28-col .w28-cv svg{transform:rotate(0deg);}
+[data-section="cur"] .w28-meta{padding-right:30px;}
+#stcard>div:first-child{padding-right:28px;}
+.w28-col[data-section="cur"] :is(.w28-hours,.w28-scene,.w28-tabs,.w28-det){display:none;}
+.w28-col[data-section="station"] #stcard>div:nth-child(2){display:none!important;}
+.w28-col[data-section="station"] #stcard>div:first-child{margin-bottom:0!important;}
+.w28-col[data-section="ai"] .ai-body{display:none;}
+.w28-col:is([data-section="hourly"],[data-section="fcchart"],[data-section="fclist"]) .card>:not(.stitle){display:none;}
 
 /* MINUTECAST */
 .mcast{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;width:100%;}
@@ -445,7 +456,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
         <div class="rlbl"><div class="ldot"></div>Radar · Mapa</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span id="rhdrtime" style="font-size:0.68rem;color:var(--text2);font-weight:600;">--:--</span>
-          <span id="radar-arrow" style="font-size:0.8rem;color:var(--text2);transition:transform .25s;">▼</span>
+          <span id="radar-arrow" style="display:flex;color:var(--text2);transition:transform .25s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
         </div>
       </div>
     </div>
@@ -617,7 +628,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 <script>
 // SETTINGS
 const DEFAULT_ORDER=['cur','station','ai','radar','hourly','fcchart','fclist'];
-let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{}};
+let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{},cardCollapsed:{}};
 function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('station')&&s.cardOrder.length===DEFAULT_ORDER.length-1){const i=s.cardOrder.indexOf('cur');s.cardOrder.splice(i+1,0,'station');}if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
 function saveS(){localStorage.setItem('w28s',JSON.stringify(S));}
 // FAVORITES
@@ -2143,6 +2154,32 @@ const CARD_NAMES={
   sk:{cur:'Aktuálne počasie',station:'Stanica Viničné',ai:'AI Predpoveď',radar:'Radar · Mapa',hourly:'Zrážky · 24h',fcchart:'Predpoveď · Graf',fclist:'Predpoveď 10 dní'},
   en:{cur:'Current weather',station:'Viničné station',ai:'AI Forecast',radar:'Radar · Map',hourly:'Precip · 24h',fcchart:'Forecast · Chart',fclist:'10-day forecast'}
 };
+const W28_COLLAPSIBLE=['cur','station','ai','hourly','fcchart','fclist'];
+function w28ApplyCollapse(){
+  const main=document.getElementById('main-cards');if(!main)return;
+  const sk=S.lang==='sk';
+  W28_COLLAPSIBLE.forEach(id=>{
+    const el=main.querySelector(`[data-section="${id}"]`);if(!el)return;
+    let b=el.querySelector(':scope>.w28-cv');
+    if(!b){
+      b=document.createElement('button');b.className='w28-cv';
+      b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+      b.onclick=()=>w28ToggleCollapse(id);
+      el.insertBefore(b,el.firstChild);
+    }
+    const c=!!(S.cardCollapsed&&S.cardCollapsed[id]);
+    el.classList.toggle('w28-col',c);
+    b.setAttribute('aria-label',c?(sk?'Rozbaliť':'Expand'):(sk?'Zbaliť':'Collapse'));
+  });
+}
+function w28ToggleCollapse(id){
+  if(!S.cardCollapsed)S.cardCollapsed={};
+  S.cardCollapsed[id]=!S.cardCollapsed[id];
+  saveS();w28ApplyCollapse();
+  if(!S.cardCollapsed[id]&&ld){ // grafy sa kreslia podľa šírky – po rozbalení prekresli
+    try{if(id==='hourly')renderH(ld);if(id==='fcchart')renderFcChart(ld);}catch(e){}
+  }
+}
 function applyCardOrder(){
   const main=document.getElementById('main-cards');
   const footer=main.querySelector('.footer');
@@ -2152,6 +2189,7 @@ function applyCardOrder(){
     main.insertBefore(el,footer);
     el.style.display=S.cardHidden[id]?'none':'';
   });
+  w28ApplyCollapse();
 }
 function moveCard(id,dir){
   const arr=S.cardOrder;
