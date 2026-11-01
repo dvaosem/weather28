@@ -1694,7 +1694,7 @@ function renderStation(d){
   const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
   const cell=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
   const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div><button onclick="w28HistOpen()" style="flex-shrink:0;white-space:nowrap;font-size:.68rem;font-weight:600;color:var(--text);background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg>${sk?'História':'History'}</button></div>
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
     ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°')}
     ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'))}
@@ -1704,6 +1704,7 @@ function renderStation(d){
     ${cell(sk?'Nárazy':'Gusts',s.windGust==null?'–':fW(s.windGust))}
     ${cell(sk?'Zrážky dnes':'Rain today',n(s.precipTotal,' mm',1))}
     ${cell(sk?'Intenzita':'Rain rate',n(s.precipRate,' mm/h',1))}
+    <button onclick="w28HistOpen()" style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;min-width:0;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;text-align:left"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--orange)"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg><span style="font-size:1rem;font-weight:600">${sk?'História':'History'}</span></button>
   </div>`;
   el.classList.remove('hidden');
 }
