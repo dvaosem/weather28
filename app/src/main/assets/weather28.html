@@ -176,7 +176,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .to{flex:1;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
 .to.on{background:var(--green);color:#1d1b19;}
 .smchips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 12px;border-bottom:1px solid var(--border);}
-.smchip{padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'Inter',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.smchip{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'Inter',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .smchip.on{background:var(--green);color:#1d1b19;border-color:transparent;}
 .ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#1d1b19;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
 .ibtn:disabled{opacity:.35;cursor:default;}
@@ -606,7 +606,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div id="acc-list"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
         <div id="acc-days" style="font-size:0.62rem;color:var(--text2);"></div>
-        <button onclick="accReset()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Vynulovať</button>
+        <div style="display:flex;gap:6px;"><button id="acc-check" onclick="accCheckNow()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Skontrolovať</button><button onclick="accReset()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Vynulovať</button></div>
       </div>
     </div>
 
@@ -1188,6 +1188,14 @@ function renderAccUI(){
   if(daysEl)daysEl.textContent=(S.lang==='en'?`${maxN} ${maxN===1?'day':'days'} evaluated`:`vyhodnotených ${maxN} ${maxN===1?'deň':maxN<5?'dni':'dní'}`)+(nSt?(S.lang==='en'?` · ${nSt} verified by home station`:` · ${nSt} podľa domácej stanice`):'');
 }
 
+async function accCheckNow(){
+  const b=document.getElementById('acc-check'),d=document.getElementById('acc-days');
+  if(b){b.disabled=true;b.style.opacity='.5';}
+  if(d)d.textContent=tx('Kontrolujem…','Checking…');
+  try{if(typeof clat!=='undefined')await accTick(clat,clon);}catch(e){}
+  renderAccUI();
+  if(b){b.disabled=false;b.style.opacity='1';}
+}
 function accReset(){
   const k=accLocKey();if(!k)return;
   const all=accAll();delete all[k];
@@ -1328,7 +1336,7 @@ function setMorningTime(v){if(v){S.morningTime=v;saveS();pushAlerts();}}
 function setStormAlert(on){S.stormAlert=on;saveS();syncAlertUI();pushAlerts();}
 function setSmartAlert(on){S.smartAlert=on;saveS();syncAlertUI();pushAlerts();}
 function setSmartTime(v){if(v){S.smartTime=v;saveS();pushAlerts();}}
-const SMART_TYPES=[[1,'🌡️','Oteplenie / ochladenie','Warming / cooling'],[2,'❄️','Mráz','Frost'],[4,'🌧️','Dážď','Rain'],[8,'💨','Vietor','Wind'],[16,'☀️','Horúčava','Heat']];
+const SMART_TYPES=[[1,'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>','Oteplenie / ochladenie','Warming / cooling'],[2,'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></svg>','Mráz','Frost'],[4,'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>','Dážď','Rain'],[8,'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>','Vietor','Wind'],[16,'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>','Horúčava','Heat']];
 function renderSmartChips(){
   const el=document.getElementById('smart-chips');if(!el)return;
   el.innerHTML=SMART_TYPES.map(t=>`<button class="smchip${(S.smartMask&t[0])?' on':''}" onclick="toggleSmartType(${t[0]})">${t[1]} ${tx(t[2],t[3])}</button>`).join('');
