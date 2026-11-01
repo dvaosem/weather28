@@ -1582,7 +1582,8 @@ async function w28Station(d,lat,lon,nm){
     const ac=new AbortController();const t=setTimeout(()=>ac.abort(),3500);
     const r=await fetch(w28StUrl(),{signal:ac.signal,cache:'no-store'});clearTimeout(t);
     const s=await r.json();
-    if(!s||!s.ok||s.ageMin==null||s.ageMin>30)return;
+    if(!s||!s.ok||s.ageMin==null)return;
+    if(s.ageMin>30){d._station=Object.assign({},s,{stale:true});return;} // bez spojenia: karta ostane (červená ikona), "Teraz" ostáva z modelu
     const c=d.current;
     if(!d._stOrig)d._stOrig={temperature_2m:c.temperature_2m,relativehumidity_2m:c.relativehumidity_2m,windspeed_10m:c.windspeed_10m,winddirection_10m:c.winddirection_10m};
     c.temperature_2m=s.temp;
@@ -1592,7 +1593,7 @@ async function w28Station(d,lat,lon,nm){
     d._station=s;
   }catch(e){}
 }
-function w28StIco(w){return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14"/></svg>`;}
+function w28StIco(w,c){return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px${c?';color:'+c:''}"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14"/></svg>`;}
 
 /* ===== História stanice (modal s grafmi) ===== */
 let w28H={range:'24h',metric:'temp',pts:null,tok:0};
@@ -1691,10 +1692,11 @@ function renderStation(d){
   const sk=S.lang==='sk';
   const dirs=['S','SSV','SV','VSV','V','VJV','JV','JJV','J','JJZ','JZ','ZJZ','Z','ZSZ','SZ','SSZ'];
   const dirsE=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  const ok=s.ageMin<=5,stc=ok?'#8fb996':'#c8553d',stt=ok?(sk?'Spojenie v poriadku':'Connection OK'):(sk?`Bez spojenia ${s.ageMin} min`:`No connection for ${s.ageMin} min`);
   const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
   const cell=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
   const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25" title="${stt}"><span title="${stt}">${w28StIco(16,stc)}</span> ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
     ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°')}
     ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'))}
@@ -2002,7 +2004,7 @@ function renderCur(d,name,country){
   // keep banners (stale / fallback notes) that loadW inserted before first render
   el.innerHTML=`<div class="${first&&!W28_RM?'w28-enter':''}">
   <div class="w28-hero">
-    <div class="w28-meta"><span>${name} · ${country}${d._station?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span>↻ ${updDate} ${updTime}</span></div>
+    <div class="w28-meta"><span>${name} · ${country}${d._station&&!d._station.stale?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span>↻ ${updDate} ${updTime}</span></div>
     <div class="w28-now">
       <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
       <div class="w28-nowM">${w28Icon(c.weathercode,w28Night(d,nowIso),64,true)}</div>
