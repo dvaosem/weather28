@@ -326,6 +326,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .w28-nowR{text-align:right;min-width:0;}
 .w28-cond{font-size:1.05rem;font-weight:500;line-height:1.25;}
 .w28-feel{font-size:.74rem;color:var(--text2);margin-top:5px;}
+.w28-mini{display:flex;justify-content:flex-end;gap:10px;margin-top:5px;font-size:.68rem;color:var(--text2);}
+.w28-mini span{display:inline-flex;align-items:center;gap:3px;}
 .w28-hl{font-size:.74rem;color:var(--text2);margin-top:2px;}
 .w28-hours{display:flex;gap:2px;overflow-x:auto;margin:14px -14px 0;padding:0 8px 12px;scroll-snap-type:x proximity;}
 .w28-h{flex:0 0 auto;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px;border-radius:12px;scroll-snap-align:start;}
@@ -1919,6 +1921,8 @@ function w28Details(d,i){
   const row=(lbl,val,fn)=>`<div class="w28-row" onclick="${fn}"><span>${lbl}</span><span>${val}</span></div>`;
   const fcR=idx.length?`<div class="w28-bars-wrap">${w28Bars(hv('precipitation_probability'),100)}</div>`:'';
   return `
+  <button class="w28-more${w28MoreOpen?' open':''}" onclick="w28TogMore(this)" aria-expanded="${w28MoreOpen}"><span class="w28-ml">${w28MoreOpen?tx('Zobraziť menej','Show less'):tx('Zobraziť ďalšie','Show more')}</span>${W28_CHEV}</button>
+  <div class="w28-x${w28MoreOpen?' open':''}" style="padding:0"><div class="w28-xb"><div class="w28-xbi">
   <div class="w28-x">
     <button class="w28-xh" onclick="w28Tog(this)" aria-expanded="false"><span class="w28-xi">${W28_I_RAIN}</span><span class="w28-xt">${tx('Zrážky','Precipitation')}</span><span class="w28-xv">${prob} %</span>${W28_CHEV}</button>
     <div class="w28-xb"><div class="w28-xbi"><div class="w28-xin">
@@ -1933,8 +1937,6 @@ function w28Details(d,i){
       ${idx.length?w28Bars(wh,Math.max(wmax,10),'w'):''}
     </div></div></div>
   </div>
-  <button class="w28-more${w28MoreOpen?' open':''}" onclick="w28TogMore(this)" aria-expanded="${w28MoreOpen}"><span class="w28-ml">${w28MoreOpen?tx('Zobraziť menej','Show less'):tx('Zobraziť ďalšie','Show more')}</span>${W28_CHEV}</button>
-  <div class="w28-x${w28MoreOpen?' open':''}" style="padding:0"><div class="w28-xb"><div class="w28-xbi">
     ${row(t('humidity'),hum+'%',`openInfoModal('humidity',${hum},${today?c.apparent_temperature:0})`)}
     ${row(t('uv'),uv,`openInfoModal('uv',${uv==='–'?0:uv},0)`)}
     ${feelMax!=null?row(tx('Pocitová max.','Feels-like max'),fT(feelMax),'void 0'):''}
@@ -1981,6 +1983,14 @@ function w28Scene(code,night){
   return `<div class="w28-scene${night?' n':''}${dark?' w':''}" aria-hidden="true"><svg viewBox="0 0 400 100" preserveAspectRatio="xMidYMax slice">${s}</svg>${k==='storm'?'<div class="w28-flash"></div>':''}</div>`;
 }
 try{document.addEventListener('visibilitychange',()=>document.documentElement.classList.toggle('w28-pause',document.hidden));}catch(e){}
+function w28Mini(d){
+  const dy=d.daily,h=d.hourly,sk=S.lang==='sk';
+  const prob=(dy.precipitation_probability_max&&dy.precipitation_probability_max[0])||0;
+  let wv=[];if(h&&h.time&&h.windspeed_10m){for(let k=0;k<h.time.length;k++)if(h.time[k].slice(0,10)===dy.time[0])wv.push(h.windspeed_10m[k]||0);}
+  const wavg=wv.length?wv.reduce((a,b)=>a+b,0)/wv.length:d.current.windspeed_10m;
+  const sm=x=>x.replace('width="24" height="24"','width="12" height="12"');
+  return `<div class="w28-mini"><span title="${sk?'Šanca zrážok dnes (predpoveď)':'Chance of rain today (forecast)'}">${sm(W28_I_RAIN)}${prob} %</span><span title="${sk?'Priemerný vietor za deň':'Average wind today'}">${sm(W28_I_WIND)}Ø ${fW(wavg)}</span></div>`;
+}
 function renderCur(d,name,country){
   const c=d.current,dy=d.daily,h=d.hourly,sk=S.lang==='sk';
   if(w28Sel>=dy.time.length)w28Sel=0;
@@ -2010,7 +2020,7 @@ function renderCur(d,name,country){
     <div class="w28-now">
       <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
       <div class="w28-nowM">${w28Icon(c.weathercode,w28Night(d,nowIso),64,true)}</div>
-      <div class="w28-nowR"><div class="w28-cond">${wdesc(c.weathercode)}</div><div class="w28-feel">${sk?'Pocitovo':'Feels like'} ${w28T(c.apparent_temperature)}°</div><div class="w28-hl">↑ ${w28T(dy.temperature_2m_max[0])}° · ↓ ${w28T(dy.temperature_2m_min[0])}°</div></div>
+      <div class="w28-nowR"><div class="w28-cond">${wdesc(c.weathercode)}</div><div class="w28-feel">${sk?'Pocitovo':'Feels like'} ${w28T(c.apparent_temperature)}°</div><div class="w28-hl">↑ ${w28T(dy.temperature_2m_max[0])}° · ↓ ${w28T(dy.temperature_2m_min[0])}°</div>${w28Mini(d)}</div>
     </div>
     <div class="w28-hours">${hours}</div>
     ${w28Scene(c.weathercode,w28Night(d,nowIso))}
