@@ -1100,20 +1100,31 @@ async function accEvaluate(lat,lon){
   const today=accDay(0);
   const due=Object.keys(acc.pending).filter(d=>d<today);
   if(!due.length)return;
-  let act;
-  try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&past_days=7&forecast_days=1&timezone=auto`;
-    act=await fetchWithRetry(u,{},2).then(r=>r.json());
-  }catch(e){return;}
-  if(!act.daily)return;
+  // pravda = domáca stanica (Viničné), inak model Open-Meteo
+  const sd={};
+  if(w28IsHome(lat,lon,ln)){
+    try{const r=await fetch(w28StUrl('?mode=daily'),{cache:'no-store'}).then(x=>x.json());if(r&&r.ok)(r.days||[]).forEach(x=>{if(x.tmax!=null&&x.tmin!=null)sd[x.date]=x;});}catch(e){}
+  }
+  let act=null;
+  if(due.some(d=>!sd[d])){
+    try{
+      const u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&past_days=7&forecast_days=1&timezone=auto`;
+      act=await fetchWithRetry(u,{},2).then(r=>r.json());
+    }catch(e){if(!Object.keys(sd).length)return;}
+  }
   let changed=false;
   for(const day of due){
-    const i=act.daily.time.indexOf(day);
-    if(i<0){ // staršie než 7 dní – zahoď
-      delete acc.pending[day];changed=true;continue;
+    let aTmax,aTmin,aPsum,fromSt=false;
+    if(sd[day]){aTmax=sd[day].tmax;aTmin=sd[day].tmin;aPsum=sd[day].precip??0;fromSt=true;}
+    else{
+      if(!act||!act.daily)continue;
+      const i=act.daily.time.indexOf(day);
+      if(i<0){ // staršie než 7 dní – zahoď
+        delete acc.pending[day];changed=true;continue;
+      }
+      aTmax=act.daily.temperature_2m_max[i];aTmin=act.daily.temperature_2m_min[i];
+      aPsum=act.daily.precipitation_sum?act.daily.precipitation_sum[i]??0:0;
     }
-    const aTmax=act.daily.temperature_2m_max[i],aTmin=act.daily.temperature_2m_min[i];
-    const aPsum=act.daily.precipitation_sum?act.daily.precipitation_sum[i]??0:0;
     if(aTmax==null)continue;
     const aRain=aPsum>=ACC_RAIN_THR;
     for(const s of ['openmeteo','metno','ecmwf','best']){
@@ -1121,7 +1132,7 @@ async function accEvaluate(lat,lon){
       if(!f)continue;
       if(!acc.stats[s])acc.stats[s]={n:0,tErrSum:0,rainHit:0,rainN:0};
       const st=acc.stats[s];
-      st.n++;
+      st.n++;if(fromSt)st.nSt=(st.nSt||0)+1;
       st.tErrSum+=(Math.abs(f.tmax-aTmax)+Math.abs(f.tmin-aTmin))/2;
       st.rainN++;
       if((f.psum>=ACC_RAIN_THR)===aRain)st.rainHit++;
@@ -1163,7 +1174,8 @@ function renderAccUI(){
       <div style="font-size:0.72rem;color:${top?'var(--green)':'var(--text2)'};font-weight:700;">${i+1}.</div>
     </div>`;
   }).join('');
-  if(daysEl)daysEl.textContent=S.lang==='en'?`${maxN} ${maxN===1?'day':'days'} evaluated`:`vyhodnotených ${maxN} ${maxN===1?'deň':maxN<5?'dni':'dní'}`;
+  const nSt=Math.max(0,...rows.map(r=>(st[r.s].nSt||0)));
+  if(daysEl)daysEl.textContent=(S.lang==='en'?`${maxN} ${maxN===1?'day':'days'} evaluated`:`vyhodnotených ${maxN} ${maxN===1?'deň':maxN<5?'dni':'dní'}`)+(nSt?(S.lang==='en'?` · ${nSt} verified by home station`:` · ${nSt} podľa domácej stanice`):'');
 }
 
 function accReset(){
@@ -1523,12 +1535,17 @@ function renderAll(d,name,country){
   renderAI(d,name);
 }
 /* Domáca stanica (Viničné): živé hodnoty z Wunderground cez station.php, inak model */
+function w28IsHome(lat,lon,nm){
+  const byName=/^vini[cč]n[eé]$/i.test(String(nm||'').trim().normalize('NFC'));
+  return byName||(Math.abs(lat-48.269)<=0.05&&Math.abs(lon-17.301)<=0.08);
+}
+function w28StUrl(q){return (/^https?:$/.test(location.protocol)?'':'https://dvaosem.com/')+'station.php'+(q||'');}
 async function w28Station(d,lat,lon,nm){
   try{
     const byName=/^vini[cč]n[eé]$/i.test(String(nm||'').trim().normalize('NFC'));
     if(!d||!d.current||(!byName&&(Math.abs(lat-48.269)>0.05||Math.abs(lon-17.301)>0.08)))return;
     const ac=new AbortController();const t=setTimeout(()=>ac.abort(),3500);
-    const r=await fetch((/^https?:$/.test(location.protocol)?'':'https://dvaosem.com/')+'station.php',{signal:ac.signal,cache:'no-store'});clearTimeout(t);
+    const r=await fetch(w28StUrl(),{signal:ac.signal,cache:'no-store'});clearTimeout(t);
     const s=await r.json();
     if(!s||!s.ok||s.ageMin==null||s.ageMin>30)return;
     const c=d.current;
