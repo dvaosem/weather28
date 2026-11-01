@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0d1117"
+    android:background="#1d1b19"
     android:fillViewport="true">
 
     <LinearLayout
@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="WEATHER28 WIDGET"
-            android:textColor="#00e5a0"
+            android:textColor="#d97757"
             android:textSize="18sp"
             android:fontFamily="sans-serif-condensed"
             android:textAllCaps="true"
@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_city"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -46,8 +46,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="@string/cfg_search_hint"
-                android:textColor="#e6edf3"
-                android:textColorHint="#7d8fa8"
+                android:textColor="#ece9e1"
+                android:textColorHint="#9a968b"
                 android:background="@drawable/config_input_bg"
                 android:padding="12dp"
                 android:textSize="14sp"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/cfg_search"
                 android:background="@drawable/config_btn_bg"
-                android:textColor="#0d1117"
+                android:textColor="#1d1b19"
                 android:fontFamily="sans-serif-medium"
                 android:textSize="13sp"
                 android:paddingStart="16dp"
@@ -78,7 +78,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
             android:visibility="gone"
-            android:indeterminateTint="#00e5a0"/>
+            android:indeterminateTint="#d97757"/>
 
         <!-- GPS button - compact, left aligned -->
         <Button
@@ -87,7 +87,7 @@
             android:layout_height="wrap_content"
             android:text="@string/cfg_my_location"
             android:background="@drawable/config_input_bg"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:fontFamily="sans-serif-medium"
             android:textSize="12sp"
             android:paddingStart="14dp"
@@ -102,7 +102,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="📍 Bratislava"
-            android:textColor="#00e5a0"
+            android:textColor="#d97757"
             android:textSize="11sp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="24dp"/>
@@ -112,7 +112,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_units"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -132,8 +132,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="°C Celsius"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"
                 android:checked="true"/>
 
             <RadioButton
@@ -142,8 +142,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="°F Fahrenheit"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
         </RadioGroup>
 
         <!-- Style -->
@@ -151,7 +151,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_style"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -170,9 +170,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/cfg_style_dark"
-                android:textColor="#e6edf3"
+                android:textColor="#ece9e1"
                 android:textSize="14sp"
-                android:buttonTint="#00e5a0"
+                android:buttonTint="#d97757"
                 android:padding="8dp"
                 android:checked="true"/>
 
@@ -181,9 +181,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/cfg_style_light"
-                android:textColor="#e6edf3"
+                android:textColor="#ece9e1"
                 android:textSize="14sp"
-                android:buttonTint="#00e5a0"
+                android:buttonTint="#d97757"
                 android:padding="8dp"/>
 
             <RadioButton
@@ -191,9 +191,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/cfg_style_none"
-                android:textColor="#e6edf3"
+                android:textColor="#ece9e1"
                 android:textSize="14sp"
-                android:buttonTint="#00e5a0"
+                android:buttonTint="#d97757"
                 android:padding="8dp"/>
         </RadioGroup>
 
@@ -203,7 +203,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_opacity"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -216,8 +216,8 @@
             android:layout_height="wrap_content"
             android:max="5"
             android:progress="4"
-            android:progressTint="#00e5a0"
-            android:thumbTint="#00e5a0"
+            android:progressTint="#d97757"
+            android:thumbTint="#d97757"
             android:layout_marginBottom="4dp"/>
 
         <TextView
@@ -225,7 +225,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="80%"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="11sp"
             android:gravity="end"
             android:layout_marginBottom="24dp"/>
@@ -236,7 +236,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_glass"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -250,8 +250,8 @@
             android:layout_height="wrap_content"
             android:max="5"
             android:progress="1"
-            android:progressTint="#00e5a0"
-            android:thumbTint="#00e5a0"
+            android:progressTint="#d97757"
+            android:thumbTint="#d97757"
             android:layout_marginBottom="4dp"
             android:visibility="gone"/>
 
@@ -260,7 +260,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="20%"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="11sp"
             android:gravity="end"
             android:layout_marginBottom="24dp"
@@ -274,7 +274,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_display"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -295,8 +295,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/cfg_mode_duo"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"
                 android:checked="true"/>
 
             <RadioButton
@@ -305,8 +305,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/cfg_mode_single"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
         </RadioGroup>
 
         <!-- Text forecast line -->
@@ -315,9 +315,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_show_text"
-            android:textColor="#e6edf3"
+            android:textColor="#ece9e1"
             android:textSize="14sp"
-            android:buttonTint="#00e5a0"
+            android:buttonTint="#d97757"
             android:checked="true"
             android:layout_marginBottom="12dp"/>
 
@@ -326,7 +326,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_text_font"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -345,8 +345,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/cfg_font_default"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"
                 android:checked="true"/>
 
             <RadioButton
@@ -354,40 +354,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Inter"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
 
             <RadioButton
                 android:id="@+id/rb_font_bebas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Bebas Neue"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
 
             <RadioButton
                 android:id="@+id/rb_font_condensed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Condensed"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
 
             <RadioButton
                 android:id="@+id/rb_font_serif"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Serif"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
 
             <RadioButton
                 android:id="@+id/rb_font_mono"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Mono"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
         </RadioGroup>
 
         <!-- Interval -->
@@ -395,7 +395,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/cfg_interval"
-            android:textColor="#7d8fa8"
+            android:textColor="#9a968b"
             android:textSize="9sp"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
@@ -416,8 +416,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="15 min"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
 
             <RadioButton
                 android:id="@+id/rb_30min"
@@ -425,8 +425,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="30 min"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"
                 android:checked="true"/>
 
             <RadioButton
@@ -435,8 +435,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="60 min"
-                android:textColor="#e6edf3"
-                android:buttonTint="#00e5a0"/>
+                android:textColor="#ece9e1"
+                android:buttonTint="#d97757"/>
         </RadioGroup>
 
         <!-- Save button -->
@@ -446,7 +446,7 @@
             android:layout_height="56dp"
             android:text="@string/cfg_add"
             android:background="@drawable/config_btn_bg"
-            android:textColor="#0d1117"
+            android:textColor="#1d1b19"
             android:fontFamily="sans-serif-medium"
             android:textSize="15sp"
             android:textAllCaps="false"/>

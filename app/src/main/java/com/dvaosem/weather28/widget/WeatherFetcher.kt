@@ -307,13 +307,13 @@ object WeatherFetcher {
 
     // ---------------- presentation helpers ----------------
     fun tempColor(t: Int): Int = when {
-        t <= -10 -> 0xFF4d9fff.toInt()
+        t <= -10 -> 0xFFc9a27a.toInt()
         t <= 0   -> 0xFFa0d4ff.toInt()
         t <= 5   -> 0xFFe0f0ff.toInt()
         t <= 15  -> 0xFFffffff.toInt()
         t <= 20  -> 0xFFffe066.toInt()
         t <= 28  -> 0xFFffaa00.toInt()
-        else     -> 0xFFff4d6d.toInt()
+        else     -> 0xFFc8553d.toInt()
     }
 
     /** Vector icon for a WMO weather code. light = icon variant for light widget background. */

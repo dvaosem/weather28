@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#1d1b19">
 <title>Weather28</title>
 <link rel="manifest" href="manifest-weather28.json">
 <link rel="icon" type="image/png" href="/icon-192.png">
@@ -15,8 +15,8 @@
 <style>
 :root[data-theme="dark"]{--bg:#000000;--card:#0f0f0f;--card2:#1a1a1a;--border:#2a2a2a;--text:#f5f5f5;--text2:#8c8c8c;--inp:#1a1a1a;--green:#ffffff;--g1:#ffffff;--g2:#a8a8a8;}
 :root[data-theme="gray"]{--bg:#1a1918;--card:#232220;--card2:#2c2b28;--border:#363431;--text:#ece9e1;--text2:#9a968b;--inp:#2c2b28;--green:#e8875a;--g1:#d97757;--g2:#f0a868;}
-[data-theme="light"]{--bg:#f0f4ff;--card:#ffffff;--card2:#e8eeff;--border:#c8d8f0;--text:#0a1628;--text2:#4a6fa5;--inp:#e8eeff;}
-:root{--g1:var(--green);--g2:var(--blue);--green:#00e5a0;--blue:#4d9fff;--pink:#ff4d6d;--purple:#a855f7;--orange:#f59e0b;--cyan:#22d3ee;--top-safe:calc(env(safe-area-inset-top, 0px) + 12px);}
+[data-theme="light"]{--bg:#f4f1ea;--card:#ffffff;--card2:#ebe6da;--border:#d9d2c3;--text:#2b2925;--text2:#6e685c;--inp:#ebe6da;}
+:root{--g1:var(--green);--g2:var(--blue);--green:#d97757;--blue:#c9a27a;--pink:#c8553d;--purple:#a98467;--orange:#e0a45a;--cyan:#d9b48f;--top-safe:calc(env(safe-area-inset-top, 0px) + 12px);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 *::-webkit-scrollbar{display:none;}
 html,body{width:100%;overflow-x:hidden;}
@@ -31,7 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:var
 .srow input{flex:1;min-width:0;background:var(--inp);border:1px solid var(--border);border-radius:12px;padding:0 13px;height:40px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.88rem;outline:none;transition:border-color .2s;}
 .srow input:focus{border-color:var(--green);}
 .srow input::placeholder{color:var(--text2);}
-.sbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;padding:0 14px;height:40px;align-self:center;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.sbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;padding:0 14px;height:40px;align-self:center;color:#1d1b19;font-family:'Inter',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .suggs{position:absolute;top:calc(100% - 4px);left:14px;right:14px;background:var(--card2);border:1px solid var(--border);border-radius:12px;z-index:9999;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .si{padding:10px 14px;font-size:0.86rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
 .si:last-child{border-bottom:none;}
@@ -48,6 +48,7 @@ header{position:relative;}
 .srow .favchip .favok{color:var(--green);margin-left:6px;}
 .srow .favadd{color:var(--text2);border-style:dashed;}
 .hidden{display:none!important;}
+[data-section="station"]:has(#stcard.hidden){display:none;}
 
 /* MINUTECAST */
 .mcast{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;width:100%;}
@@ -152,11 +153,11 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .sl2{font-size:0.88rem;font-weight:600;}
 .tog{display:flex;background:var(--card2);border-radius:9px;padding:3px;gap:2px;}
 .to{flex:1;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
-.to.on{background:var(--green);color:#0d1117;}
+.to.on{background:var(--green);color:#1d1b19;}
 .smchips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 12px;border-bottom:1px solid var(--border);}
 .smchip{padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'Inter',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.smchip.on{background:var(--green);color:#0d1117;border-color:transparent;}
-.ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#0d1117;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
+.smchip.on{background:var(--green);color:#1d1b19;border-color:transparent;}
+.ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#1d1b19;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
 .ibtn:disabled{opacity:.35;cursor:default;}
 
 .day-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:10000;flex-direction:column;overflow-y:auto;}
@@ -209,15 +210,15 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .hour-temp{font-size:1rem;font-weight:700;text-align:right;}
 .hour-feel{font-size:0.62rem;color:var(--text2);text-align:right;}
 .rctrl{display:flex;align-items:center;gap:8px;padding:10px 14px 13px;background:var(--card2);}
-.pbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#0d1117;font-size:0.9rem;cursor:pointer;flex-shrink:0;font-weight:700;}
+.pbtn{background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#1d1b19;font-size:0.9rem;cursor:pointer;flex-shrink:0;font-weight:700;}
 .rsl{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
-.rsl::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 6px rgba(0,229,160,.5);}
+.rsl::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 6px rgba(217,119,87,.5);}
 .rtm{font-size:0.68rem;font-weight:600;min-width:72px;text-align:right;color:var(--text2);}
-.windy-overlay{display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0d1117;}
+.windy-overlay{display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#1d1b19;}
 .windy-overlay.open{display:flex;}
-.windy-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #21293d;flex-shrink:0;}
-.windy-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;background:linear-gradient(90deg,#00e5a0,#4d9fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.windy-close{background:#1c2333;border:1px solid #21293d;color:#e6edf3;border-radius:10px;width:34px;height:34px;font-size:1rem;cursor:pointer;}
+.windy-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #363431;flex-shrink:0;}
+.windy-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;background:linear-gradient(90deg,#d97757,#c9a27a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.windy-close{background:#2c2b28;border:1px solid #363431;color:#ece9e1;border-radius:10px;width:34px;height:34px;font-size:1rem;cursor:pointer;}
 .ai-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;width:100%;}
 .ai-hdr{display:flex;align-items:center;gap:7px;padding:12px 14px 8px;}
 .ai-lbl{font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text2);}
@@ -286,8 +287,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 </style>
 <style id="w28-ui">
 /* ===== W28 UI v2 – now card, hourly strip, day tabs, expandable rows ===== */
-:root{--w28-cloud:#d9d5cb;--w28-cloud2:#a9a498;--w28-sun:#f2b84b;--w28-moon:#e9e2cf;--w28-drop:#7fb2e5;--w28-snow:#f4f1ea;--w28-bolt:#f2b84b;}
-[data-theme="light"]{--w28-cloud:#c3cde2;--w28-cloud2:#97a7c4;--w28-moon:#b9a978;--w28-snow:#9fb2d6;}
+:root{--w28-cloud:#d9d5cb;--w28-cloud2:#a9a498;--w28-sun:#f2b84b;--w28-moon:#e9e2cf;--w28-drop:#b8a58f;--w28-snow:#f4f1ea;--w28-bolt:#f2b84b;}
+[data-theme="light"]{--w28-cloud:#cfc9bb;--w28-cloud2:#a39d8f;--w28-moon:#b9a978;--w28-snow:#b5ad9c;}
 #cur{padding:0!important;}
 #cur>div:not([class]),#cur>.stale-banner{margin:10px 12px 0!important;}
 .w28-hero{padding:14px 14px 0;}
@@ -369,10 +370,10 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 
 /* ===== W28 scene ===== */
 :root{--w28-h1:#34322d;--w28-h2:#3f3d37;--w28-h3:#4c4a3e;}
-[data-theme="light"]{--w28-h1:#d7deec;--w28-h2:#c3cee4;--w28-h3:#aebdda;}
+[data-theme="light"]{--w28-h1:#ddd7ca;--w28-h2:#cdc6b6;--w28-h3:#bdb5a4;}
 .w28-scene{position:relative;height:100px;margin:0 -14px;overflow:hidden;background:linear-gradient(180deg,transparent 0%,rgba(242,184,75,.09) 100%);}
-.w28-scene.n{background:linear-gradient(180deg,transparent 0%,rgba(90,100,160,.18) 100%);}
-.w28-scene.w{background:linear-gradient(180deg,transparent 0%,rgba(127,150,175,.12) 100%);}
+.w28-scene.n{background:linear-gradient(180deg,transparent 0%,rgba(150,120,100,.18) 100%);}
+.w28-scene.w{background:linear-gradient(180deg,transparent 0%,rgba(160,150,135,.12) 100%);}
 .w28-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
 .w28-scene.n .w28-hills{filter:brightness(.82);}
 .w28-cl{animation:w28cl linear infinite;}
@@ -419,14 +420,16 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 <main id="main-cards">
   <div data-section="cur">
     <div class="card" data-banner="current" id="cur" style="padding:0;"><div class="w28-skel"><div class="w28-sk" style="height:12px;width:45%;margin-bottom:16px"></div><div style="display:flex;align-items:center;gap:14px"><div class="w28-sk" style="height:70px;width:110px"></div><div class="w28-sk" style="height:56px;width:56px;border-radius:50%"></div></div><div style="display:flex;gap:10px;margin-top:18px"><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div></div></div></div>
+  
   </div>
+  <div data-section="station"><div class="card hidden" id="stcard" style="padding:14px 16px;"></div></div>
   <div id="minutecast" class="mcast hidden"></div>
 
   <div data-section="ai">
   <div class="ai-card" id="ai-card">
     <div class="ai-hdr">
       <svg class="ai-spark" viewBox="0 0 24 24" fill="none" stroke="url(#aigrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <defs><linearGradient id="aigrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5a0"/><stop offset="100%" stop-color="#4d9fff"/></linearGradient></defs>
+        <defs><linearGradient id="aigrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#d97757"/><stop offset="100%" stop-color="#c9a27a"/></linearGradient></defs>
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
       </svg>
       <span class="ai-lbl" id="ai-lbl">AI Predpoveď</span>
@@ -449,7 +452,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
     <div id="radar-body" style="display:none;">
       <div style="position:relative;">
         <div id="radar-map" style="width:100%;height:260px;"></div>
-        <button onclick="openLayers()" style="position:absolute;bottom:10px;left:10px;z-index:1000;background:rgba(22,27,39,0.9);border:1px solid #21293d;color:#e6edf3;border-radius:12px;padding:8px 12px;font-size:0.85rem;cursor:pointer;backdrop-filter:blur(8px);">⊞</button>
+        <button onclick="openLayers()" style="position:absolute;bottom:10px;left:10px;z-index:1000;background:rgba(29,27,25,0.9);border:1px solid #363431;color:#ece9e1;border-radius:12px;padding:8px 12px;font-size:0.85rem;cursor:pointer;backdrop-filter:blur(8px);">⊞</button>
       </div>
       <div class="rctrl">
         <button class="pbtn" id="pbtn" onclick="togglePlay()">▶</button>
@@ -567,7 +570,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
       <button onclick="closeS()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">← Späť</button>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nastavenia</div>
-      <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
+      <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
     <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
@@ -613,9 +616,9 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 
 <script>
 // SETTINGS
-const DEFAULT_ORDER=['cur','ai','radar','hourly','fcchart','fclist'];
+const DEFAULT_ORDER=['cur','station','ai','radar','hourly','fcchart','fclist'];
 let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{}};
-function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
+function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('station')&&s.cardOrder.length===DEFAULT_ORDER.length-1){const i=s.cardOrder.indexOf('cur');s.cardOrder.splice(i+1,0,'station');}if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
 function saveS(){localStorage.setItem('w28s',JSON.stringify(S));}
 // FAVORITES
 function loadFavs(){try{return JSON.parse(localStorage.getItem('w28favs'))||[];}catch(e){return[];}}
@@ -643,7 +646,7 @@ function renderFavbar(){
   bar.innerHTML=html;
 }
 
-const THEME_BG={dark:'#000000',light:'#f0f4ff',gray:'#1a1918'};
+const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918'};
 function applyT(t){
   if(!THEME_BG[t])t='dark';
   document.documentElement.setAttribute('data-theme',t);
@@ -1140,7 +1143,7 @@ function renderAccUI(){
   const maxN=Math.max(...rows.map(r=>r.n));
   list.innerHTML=rows.map((r,i)=>{
     const top=i===0&&r.n>=3;
-    const badge=top?'<span style="font-size:0.55rem;letter-spacing:1px;color:#0d1117;background:var(--green);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:1px;">'+tx('PRESNEJŠÍ','MOST ACCURATE')+'</span>':'';
+    const badge=top?'<span style="font-size:0.55rem;letter-spacing:1px;color:#1d1b19;background:var(--green);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:1px;">'+tx('PRESNEJŠÍ','MOST ACCURATE')+'</span>':'';
     return `<div style="background:var(--card2);border:1px solid ${top?'var(--green)':'var(--border)'};border-radius:12px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:0.82rem;font-weight:600;">${srcLabel(r.s)}${badge}</div>
@@ -1501,11 +1504,54 @@ function fixRainIcons(d){
 let loadTok=0;
 function renderAll(d,name,country){
   renderCur(d,name,country);
+  renderStation(d);
   renderMinutecast(d);
   renderH(d);
   renderF(d);
   renderFcChart(d);
   renderAI(d,name);
+}
+/* Domáca stanica (Viničné): živé hodnoty z Wunderground cez station.php, inak model */
+async function w28Station(d,lat,lon,nm){
+  try{
+    const byName=/^vini[cč]n[eé]$/i.test(String(nm||'').trim().normalize('NFC'));
+    if(!d||!d.current||(!byName&&(Math.abs(lat-48.269)>0.05||Math.abs(lon-17.301)>0.08)))return;
+    const ac=new AbortController();const t=setTimeout(()=>ac.abort(),3500);
+    const r=await fetch((/^https?:$/.test(location.protocol)?'':'https://dvaosem.com/')+'station.php',{signal:ac.signal,cache:'no-store'});clearTimeout(t);
+    const s=await r.json();
+    if(!s||!s.ok||s.ageMin==null||s.ageMin>30)return;
+    const c=d.current;
+    if(!d._stOrig)d._stOrig={temperature_2m:c.temperature_2m,relativehumidity_2m:c.relativehumidity_2m,windspeed_10m:c.windspeed_10m,winddirection_10m:c.winddirection_10m};
+    c.temperature_2m=s.temp;
+    if(s.humidity!=null)c.relativehumidity_2m=Math.round(s.humidity);
+    if(s.windSpeed!=null)c.windspeed_10m=s.windSpeed;
+    if(s.winddir!=null)c.winddirection_10m=s.winddir;
+    d._station=s;
+  }catch(e){}
+}
+function w28StIco(w){return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14"/></svg>`;}
+function renderStation(d){
+  const el=document.getElementById('stcard');if(!el)return;
+  const s=d&&d._station;
+  if(!s){el.classList.add('hidden');el.innerHTML='';return;}
+  const sk=S.lang==='sk';
+  const dirs=['S','SSV','SV','VSV','V','VJV','JV','JJV','J','JJZ','JZ','ZJZ','Z','ZSZ','SZ','SSZ'];
+  const dirsE=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
+  const cell=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
+  const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-weight:600">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</span><span style="font-size:.72rem;color:var(--text2)">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°')}
+    ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'))}
+    ${cell(sk?'Rosný bod':'Dew point',s.dewpt==null?'–':w28T(s.dewpt)+'°')}
+    ${cell(sk?'Tlak':'Pressure',n(s.pressure,' hPa'))}
+    ${cell(sk?'Vietor':'Wind',(s.windSpeed==null?'–':fW(s.windSpeed))+(dn?' '+dn:''))}
+    ${cell(sk?'Nárazy':'Gusts',s.windGust==null?'–':fW(s.windGust))}
+    ${cell(sk?'Zrážky dnes':'Rain today',n(s.precipTotal,' mm',1))}
+    ${cell(sk?'Intenzita':'Rain rate',n(s.precipRate,' mm/h',1))}
+  </div>`;
+  el.classList.remove('hidden');
 }
 async function loadW(lat,lon,name,country){
   if(Math.abs(clat-lat)>0.001||Math.abs(clon-lon)>0.001){w28Sel=0;}
@@ -1523,8 +1569,11 @@ async function loadW(lat,lon,name,country){
     if(c&&c.data&&c.src===primary&&Math.abs(c.lat-lat)<0.01&&Math.abs(c.lon-lon)<0.01&&Date.now()-c.ts<6*3600*1000){
       c.data._ts=c.ts;
       fixPrecipProb(c.data);
+      if(c.data._stOrig){Object.assign(c.data.current,c.data._stOrig);}
+      delete c.data._station;delete c.data._stOrig;
       ld=c.data;
       renderAll(c.data,name,country);
+      w28Station(c.data,lat,lon,name).then(()=>{if(myTok===loadTok&&c.data._station){ld=c.data;renderCur(c.data,name,country);renderStation(c.data);}});
       fromCache=true;
       if(Date.now()-c.ts<3*60*1000){pendingLat=lat;pendingLon=lon;return;} // čerstvé (<3 min) – netreba sťahovať
     }
@@ -1563,7 +1612,7 @@ async function loadW(lat,lon,name,country){
         if(cur && !cur.querySelector('.stale-banner')){
           const banner=document.createElement('div');
           banner.className='stale-banner';
-          banner.style.cssText='background:rgba(255,170,0,.12);border:1px solid rgba(255,170,0,.35);color:#ffaa00;padding:8px 12px;border-radius:8px;font-size:0.78rem;margin-bottom:10px;';
+          banner.style.cssText='background:rgba(224,164,90,.12);border:1px solid rgba(224,164,90,.35);color:#e0a45a;padding:8px 12px;border-radius:8px;font-size:0.78rem;margin-bottom:10px;';
           banner.textContent=tx(`⚠️ Zdroj nedostupný – zobrazené dáta z cache (pred ${ageMin} min)`,`⚠️ Source unavailable – showing cached data (${ageMin} min old)`);
           cur.insertBefore(banner, cur.firstChild);
         }
@@ -1578,6 +1627,8 @@ async function loadW(lat,lon,name,country){
   if(myTok!==loadTok) return; // medzitým sa načítavalo iné miesto
   d._ts=Date.now();
   fixPrecipProb(d);
+  await w28Station(d,lat,lon,name);
+  if(myTok!==loadTok) return;
   ld=d;
   renderAll(d,name,country);
   pendingLat=lat;pendingLon=lon;
@@ -1588,7 +1639,7 @@ async function loadW(lat,lon,name,country){
     const cur=document.getElementById('cur');
     if(cur){
       const note=document.createElement('div');
-      note.style.cssText='background:rgba(77,159,255,.10);border:1px solid rgba(77,159,255,.30);color:var(--blue);padding:6px 10px;border-radius:8px;font-size:0.72rem;margin-bottom:10px;';
+      note.style.cssText='background:rgba(201,162,122,.10);border:1px solid rgba(201,162,122,.30);color:var(--blue);padding:6px 10px;border-radius:8px;font-size:0.72rem;margin-bottom:10px;';
       note.textContent=tx(`ℹ️ ${srcLabel(primary)} nedostupný – načítané z ${srcLabel(usedSrc)}`,`ℹ️ ${srcLabel(primary)} unavailable – loaded from ${srcLabel(usedSrc)}`);
       cur.insertBefore(note, cur.firstChild);
     }
@@ -1606,13 +1657,13 @@ async function loadW(lat,lon,name,country){
 
 function tempColor(t){
   // Below -10: deep blue, -10 to 0: blue, 0-10: cyan/white, 10-20: white/yellow, 20-30: orange, 30+: red
-  if(t<=-10) return '#4d9fff';
-  if(t<=0)   return '#a0d4ff';
-  if(t<=5)   return '#e0f0ff';
+  if(t<=-10) return '#c9a27a';
+  if(t<=0)   return '#d8c7ae';
+  if(t<=5)   return '#ece9e1';
   if(t<=15)  return '#ffffff';
   if(t<=20)  return '#ffe066';
-  if(t<=28)  return '#ffaa00';
-  return '#ff4d6d';
+  if(t<=28)  return '#e0a45a';
+  return '#c8553d';
 }
 
 /* ===== W28 UI v2 ===== */
@@ -1796,7 +1847,7 @@ function renderCur(d,name,country){
   // keep banners (stale / fallback notes) that loadW inserted before first render
   el.innerHTML=`<div class="${first&&!W28_RM?'w28-enter':''}">
   <div class="w28-hero">
-    <div class="w28-meta"><span>${name} · ${country}</span><span>↻ ${updDate} ${updTime}</span></div>
+    <div class="w28-meta"><span>${name} · ${country}${d._station?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span>↻ ${updDate} ${updTime}</span></div>
     <div class="w28-now">
       <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
       <div class="w28-nowM">${w28Icon(c.weathercode,w28Night(d,nowIso),64,true)}</div>
@@ -1852,7 +1903,7 @@ function renderMinutecast(d){
     <div class="mcast-bars">${slots.map(s=>{
       const h=Math.max(2,(s.prec/maxP)*40);
       const op=s.prec>0.05?(0.4+s.prec/maxP*0.6):0.25;
-      return `<div class="mcast-bar" style="height:${h}px;background:rgba(77,159,255,${op})"></div>`;
+      return `<div class="mcast-bar" style="height:${h}px;background:rgba(201,162,122,${op})"></div>`;
     }).join('')}</div>
     <div class="mcast-labels"><span>${startLbl}</span><span>${endLbl}</span></div>`;
   el.classList.remove('hidden');
@@ -1906,7 +1957,7 @@ function drawWeatherGraf(cols){
     const y=padT+gH-bH;
     ctx.beginPath();
     ctx.roundRect(x,y,barW,bH,2);
-    ctx.fillStyle=`rgba(77,159,255,${0.12+hh.prob/100*0.38})`;
+    ctx.fillStyle=`rgba(201,162,122,${0.12+hh.prob/100*0.38})`;
     ctx.fill();
   });
 
@@ -1921,8 +1972,8 @@ function drawWeatherGraf(cols){
   ctx.lineTo(xPos(0),padT+gH);
   ctx.closePath();
   const grad=ctx.createLinearGradient(0,padT,0,padT+gH);
-  grad.addColorStop(0,'rgba(245,158,11,0.22)');
-  grad.addColorStop(1,'rgba(245,158,11,0.01)');
+  grad.addColorStop(0,'rgba(224,164,90,0.22)');
+  grad.addColorStop(1,'rgba(224,164,90,0.01)');
   ctx.fillStyle=grad;
   ctx.fill();
 
@@ -1944,18 +1995,18 @@ function drawWeatherGraf(cols){
   }
 
   // Y os popisky
-  ctx.fillStyle='rgba(125,143,168,0.75)';
+  ctx.fillStyle='rgba(154,150,139,0.75)';
   ctx.font=`500 9px Inter,sans-serif`;
   ctx.textAlign='right';
   [minT+2,Math.round((minT+maxT)/2),maxT-2].forEach(v=>{
     const y=yTemp(v);
     ctx.fillText(Math.round(v)+'°',padL-4,y+3);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);
-    ctx.strokeStyle='rgba(33,41,61,0.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.strokeStyle='rgba(54,52,49,0.5)';ctx.lineWidth=1;ctx.stroke();
   });
 
   // X os popisky každé 4h
-  ctx.fillStyle='rgba(125,143,168,0.75)';
+  ctx.fillStyle='rgba(154,150,139,0.75)';
   ctx.textAlign='center';
   cols.forEach((hh,i)=>{
     if(hh.time.getHours()%4!==0)return;
@@ -2046,8 +2097,8 @@ function drawDailyGraf(d){
   [minT+2,Math.round((minT+maxT)/2),maxT-2].forEach(v=>{
     const y=yT(v);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);
-    ctx.strokeStyle='rgba(33,41,61,0.5)';ctx.lineWidth=1;ctx.stroke();
-    ctx.fillStyle='rgba(125,143,168,0.7)';ctx.font='500 8px Inter,sans-serif';ctx.textAlign='right';
+    ctx.strokeStyle='rgba(54,52,49,0.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(154,150,139,0.7)';ctx.font='500 8px Inter,sans-serif';ctx.textAlign='right';
     ctx.fillText(Math.round(v)+'°',padL-3,y+3);
   });
 
@@ -2057,7 +2108,7 @@ function drawDailyGraf(d){
     if(!d.prec)return;
     const bH=Math.max(2,(d.prec/maxPrec)*gH*0.5);
     ctx.beginPath();ctx.roundRect(xPos(i)-barW/2,padT+gH-bH,barW,bH,2);
-    ctx.fillStyle=`rgba(77,159,255,${0.18+d.prec/maxPrec*0.42})`;ctx.fill();
+    ctx.fillStyle=`rgba(201,162,122,${0.18+d.prec/maxPrec*0.42})`;ctx.fill();
   });
 
   // Gradient fill under max line
@@ -2065,13 +2116,13 @@ function drawDailyGraf(d){
   for(let i=1;i<n;i++){const cpx=(xPos(i-1)+xPos(i))/2;ctx.bezierCurveTo(cpx,yT(cols[i-1].maxT),cpx,yT(cols[i].maxT),xPos(i),yT(cols[i].maxT));}
   ctx.lineTo(xPos(n-1),padT+gH);ctx.lineTo(xPos(0),padT+gH);ctx.closePath();
   const grad=ctx.createLinearGradient(0,padT,0,padT+gH);
-  grad.addColorStop(0,'rgba(245,158,11,0.18)');grad.addColorStop(1,'rgba(245,158,11,0.01)');
+  grad.addColorStop(0,'rgba(224,164,90,0.18)');grad.addColorStop(1,'rgba(224,164,90,0.01)');
   ctx.fillStyle=grad;ctx.fill();
 
   // Min line (dashed blue)
   ctx.beginPath();ctx.setLineDash([3,3]);ctx.moveTo(xPos(0),yT(cols[0].minT));
   for(let i=1;i<n;i++){const cpx=(xPos(i-1)+xPos(i))/2;ctx.bezierCurveTo(cpx,yT(cols[i-1].minT),cpx,yT(cols[i].minT),xPos(i),yT(cols[i].minT));}
-  ctx.strokeStyle='rgba(77,159,255,0.7)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(201,162,122,0.7)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();ctx.setLineDash([]);
 
   // Max line (color gradient)
   for(let i=1;i<n;i++){
@@ -2083,14 +2134,14 @@ function drawDailyGraf(d){
   }
 
   // X labels
-  ctx.fillStyle='rgba(125,143,168,0.8)';ctx.font='600 8px Inter,sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='rgba(154,150,139,0.8)';ctx.font='600 8px Inter,sans-serif';ctx.textAlign='center';
   cols.forEach((d,i)=>ctx.fillText(d.label,xPos(i),H-2));
 }
 
 // CARD ORDERING
 const CARD_NAMES={
-  sk:{cur:'Aktuálne počasie',ai:'AI Predpoveď',radar:'Radar · Mapa',hourly:'Zrážky · 24h',fcchart:'Predpoveď · Graf',fclist:'Predpoveď 10 dní'},
-  en:{cur:'Current weather',ai:'AI Forecast',radar:'Radar · Map',hourly:'Precip · 24h',fcchart:'Forecast · Chart',fclist:'10-day forecast'}
+  sk:{cur:'Aktuálne počasie',station:'Stanica Viničné',ai:'AI Predpoveď',radar:'Radar · Mapa',hourly:'Zrážky · 24h',fcchart:'Predpoveď · Graf',fclist:'Predpoveď 10 dní'},
+  en:{cur:'Current weather',station:'Viničné station',ai:'AI Forecast',radar:'Radar · Map',hourly:'Precip · 24h',fcchart:'Forecast · Chart',fclist:'10-day forecast'}
 };
 function applyCardOrder(){
   const main=document.getElementById('main-cards');
@@ -2334,7 +2385,7 @@ function shareForecast(){
     const W=1080,PAD=60,CW=W-2*PAD;
     const DFULL=S.lang==='en'?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']:['Nedeľa','Pondelok','Utorok','Streda','Štvrtok','Piatok','Sobota'];
     const deg=c=>c==null?'–':Math.round(S.tu==='F'?c*9/5+32:c)+'°';
-    const card='#161b27',border='#21293d',txt='#e6edf3',txt2='#7d8fa8',blue='#4d9fff',green='#00e5a0';
+    const card='#232220',border='#363431',txt='#ece9e1',txt2='#9a968b',blue='#c9a27a',green='#d97757';
     const now=new Date();const p2=n=>String(n).padStart(2,'0');
     const nowStr=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}T${p2(now.getHours())}:00`;
     const h=ld.hourly||{};
@@ -2344,7 +2395,7 @@ function shareForecast(){
     const HGT=170+300+260+weekH+110;
     const cv=document.createElement('canvas');cv.width=W;cv.height=HGT;
     const x=cv.getContext('2d');
-    x.fillStyle='#0d1117';x.fillRect(0,0,W,HGT);
+    x.fillStyle='#1d1b19';x.fillRect(0,0,W,HGT);
     x.textBaseline='alphabetic';
     // hlavička
     x.fillStyle=txt;x.font='600 56px Inter, sans-serif';x.textAlign='left';
@@ -2390,7 +2441,7 @@ function shareForecast(){
       const maxS=deg(ld.daily.temperature_2m_max[k]);
       x.fillStyle=txt;x.font='600 38px Inter, sans-serif';x.fillText(maxS,W-PAD-45,ry);
       x.fillStyle=txt2;x.font='36px Inter, sans-serif';x.fillText(deg(ld.daily.temperature_2m_min[k]),W-PAD-45-x.measureText(maxS).width-60,ry);
-      if(k<nd){x.strokeStyle='#1c2333';x.beginPath();x.moveTo(PAD+40,y+30+(k-1)*lh+72);x.lineTo(W-PAD-40,y+30+(k-1)*lh+72);x.stroke();}
+      if(k<nd){x.strokeStyle='#2c2b28';x.beginPath();x.moveTo(PAD+40,y+30+(k-1)*lh+72);x.lineTo(W-PAD-40,y+30+(k-1)*lh+72);x.stroke();}
     }
     // pätička
     y+=weekH+70;
@@ -2440,7 +2491,7 @@ function initMap(lat,lon){
   map=L.map('radar-map',{zoomControl:true,attributionControl:false}).setView([lat,lon],7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_4eny_1_1c748b9b47249d029042a70b',{maxZoom:19}).addTo(map);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=cb1_4eny_1_1c748b9b47249d029042a70b',{maxZoom:19,zIndex:10}).addTo(map);
-  const ico=L.divIcon({html:'<div style="width:10px;height:10px;border-radius:50%;background:#00e5a0;border:2px solid #0d1117;box-shadow:0 0 8px #00e5a0"></div>',iconSize:[10,10],iconAnchor:[5,5],className:''});
+  const ico=L.divIcon({html:'<div style="width:10px;height:10px;border-radius:50%;background:#d97757;border:2px solid #1d1b19;box-shadow:0 0 8px #d97757"></div>',iconSize:[10,10],iconAnchor:[5,5],className:''});
   L.marker([lat,lon],{icon:ico,zIndexOffset:1000}).addTo(map);
   loadRadar();
 }
@@ -2582,27 +2633,27 @@ function openInfoModal(type, val, val2) {
     bigStr = uv.toFixed(1);
     let level, color, recs;
     if (uv < 3) {
-      level = sk?'Nízky':'Low'; color='#00e5a0';
+      level = sk?'Nízky':'Low'; color='#d97757';
       recs = sk
         ? [['😊','Žiadna špeciálna ochrana nie je potrebná'],['👓','Slnečné okuliare môžeš vynechať'],['🕐','Pobyt vonku je bezpečný celý deň']]
         : [['😊','No special protection needed'],['👓','Sunglasses optional'],['🕐','Safe to be outside all day']];
     } else if (uv < 6) {
-      level = sk?'Stredný':'Moderate'; color='#f59e0b';
+      level = sk?'Stredný':'Moderate'; color='#e0a45a';
       recs = sk
         ? [['🕶️','Nosenie slnečných okuliarov odporúčané'],['🧴','SPF 30+ krém pri dlhšom pobyte vonku'],['🧢','Čiapka alebo šiltovka v poludnie'],['⏰','Obmedz pobyt na slnku 10:00–16:00']]
         : [['🕶️','Sunglasses recommended'],['🧴','SPF 30+ sunscreen for extended outdoor time'],['🧢','Hat or cap around noon'],['⏰','Limit sun exposure 10:00–16:00']];
     } else if (uv < 8) {
-      level = sk?'Vysoký':'High'; color='#ff8c00';
+      level = sk?'Vysoký':'High'; color='#d9863f';
       recs = sk
         ? [['🧴','SPF 50+ krém — nanášaj každé 2 hodiny'],['🕶️','UV filtrujúce okuliare nutnosť'],['👕','Ľahké dlhé rukávy na priamom slnku'],['🌿','Hľadaj tieň medzi 11:00 a 15:00'],['💧','Pij viac vody — slnko dehydruje']]
         : [['🧴','SPF 50+ every 2 hours'],['🕶️','UV-filtering sunglasses essential'],['👕','Light long sleeves in direct sun'],['🌿','Seek shade 11:00–15:00'],['💧','Drink more water — sun dehydrates']];
     } else if (uv < 11) {
-      level = sk?'Veľmi vysoký':'Very high'; color='#ff4d6d';
+      level = sk?'Veľmi vysoký':'Very high'; color='#c8553d';
       recs = sk
         ? [['🧴','SPF 50+ krém každé 1,5 hodiny'],['🚫','Vyhýbaj sa priamemu slnku 10:00–16:00'],['👒','Klobúk so širokým okrajom povinný'],['👕','Zakryj čo najviac kože'],['🏠','Preferuj pobyt v tieni alebo vo vnútri']]
         : [['🧴','SPF 50+ every 1.5 hours'],['🚫','Avoid direct sun 10:00–16:00'],['👒','Wide-brimmed hat mandatory'],['👕','Cover as much skin as possible'],['🏠','Stay in shade or indoors']];
     } else {
-      level = sk?'Extrémny':'Extreme'; color='#a855f7';
+      level = sk?'Extrémny':'Extreme'; color='#a98467';
       recs = sk
         ? [['⚠️','Maximálna ochrana — vyhýbaj sa vonkajším aktivitám'],['🧴','SPF 50+ každú hodinu'],['🚫','Nepobývaj na priamom slnku'],['🏠','Zostán vo vnútri alebo v plnom tieni']]
         : [['⚠️','Maximum protection — avoid outdoor activities'],['🧴','SPF 50+ every hour'],['🚫','No direct sun exposure'],['🏠','Stay indoors or fully shaded']];
@@ -2622,17 +2673,17 @@ function openInfoModal(type, val, val2) {
     bigStr = fP(mm);
     let level, color, recs;
     if (prob < 20) {
-      level = sk?'Sucho':'Dry'; color='#00e5a0';
+      level = sk?'Sucho':'Dry'; color='#d97757';
       recs = sk
         ? [['☀️','Dnes by malo zostať sucho'],['👕','Ľahké oblečenie postačí'],['🎒','Dáždnik doma nechaj']]
         : [['☀️','Should stay dry today'],['👕','Light clothing is fine'],['🎒','Leave the umbrella at home']];
     } else if (prob < 50) {
-      level = sk?'Možný':'Possible'; color='#f59e0b';
+      level = sk?'Možný':'Possible'; color='#e0a45a';
       recs = sk
         ? [['🌂','Dáždnik radšej vezmi so sebou'],['🧥','Ľahká bunda sa hodí'],['👟','Voľ vodovzdornejšiu obuv']]
         : [['🌂','Take an umbrella just in case'],['🧥','A light jacket is a good idea'],['👟','Choose more waterproof footwear']];
     } else {
-      level = sk?'Pravdepodobný':'Likely'; color='#4d9fff';
+      level = sk?'Pravdepodobný':'Likely'; color='#c9a27a';
       recs = sk
         ? [['☔','Dáždnik alebo pršiplášť nutnosť'],['🥾','Vodovzdorná obuv odporúčaná'],['🧥','Teplejšia bunda — vlhký vzduch ochladzuje'],['🚗','Počítaj s horšou viditeľnosťou na cestách']]
         : [['☔','Umbrella or raincoat essential'],['🥾','Waterproof footwear recommended'],['🧥','Warmer jacket — damp air chills'],['🚗','Expect reduced road visibility']];
@@ -2652,17 +2703,17 @@ function openInfoModal(type, val, val2) {
     bigStr = hum + '%';
     let level, color, recs;
     if (hum < 30) {
-      level = sk?'Nízka':'Low'; color='#ff8c00';
+      level = sk?'Nízka':'Low'; color='#d9863f';
       recs = sk
         ? [['💦','Pij viac vody — suchý vzduch dehydruje rýchlejšie'],['🧴','Hydratačný krém na ruky a tvár'],['👃','Možné podráždenie nosovej sliznice'],['💊','Zvlhčovač vzduchu v interiéri pomôže']]
         : [['💦','Drink more water — dry air dehydrates faster'],['🧴','Moisturizer for hands and face'],['👃','Possible nasal irritation'],['💊','Indoor humidifier will help']];
     } else if (hum < 60) {
-      level = sk?'Ideálna':'Ideal'; color='#00e5a0';
+      level = sk?'Ideálna':'Ideal'; color='#d97757';
       recs = sk
         ? [['😊','Vlhkosť je v ideálnom rozmedzí'],['🌬️','Vzduch je príjemný a dýcha sa ľahko'],['🏃','Vhodné podmienky pre vonkajšie aktivity']]
         : [['😊','Humidity is in the ideal range'],['🌬️','Air is pleasant and easy to breathe'],['🏃','Great conditions for outdoor activities']];
     } else {
-      level = sk?'Vysoká':'High'; color='#4d9fff';
+      level = sk?'Vysoká':'High'; color='#c9a27a';
       recs = sk
         ? [['🥵','Vysoká vlhkosť zosilňuje pocit tepla'],['💧','Pij pravidelne — potenie je menej efektívne'],['👕','Ľahké priedušné materiály (bavlna, ľan)'],['🌿','Tieň a vzdušné miesta sú tvoji priatelia']]
         : [['🥵','High humidity amplifies the feeling of heat'],['💧','Drink regularly — sweating is less effective'],['👕','Light breathable fabrics (cotton, linen)'],['🌿','Shade and breezy spots are your friends']];
@@ -2682,18 +2733,18 @@ function openInfoModal(type, val, val2) {
     bigStr = fW(spd);
     let level, color, recs;
     if (spd < 10) {
-      level = sk?'Bezvetrie':'Calm'; color='#00e5a0';
+      level = sk?'Bezvetrie':'Calm'; color='#d97757';
       recs = sk ? [['😌','Pokojné podmienky, ideálne pre vonkajšie aktivity'],['☂️','Dáždnik nebude probém']] : [['😌','Calm conditions, ideal for outdoor activities'],['☂️','Umbrella will be no trouble']];
     } else if (spd < 30) {
-      level = sk?'Slabý':'Light'; color='#22d3ee';
+      level = sk?'Slabý':'Light'; color='#d9b48f';
       recs = sk ? [['🌿','Príjemný vánok — ochladzuje pri teple'],['🌂','S dáždnikom opatrne'],['🚴','Výborné podmienky pre cyklistiku']] : [['🌿','Pleasant breeze — cools on warm days'],['🌂','Handle umbrella with care'],['🚴','Great for cycling']];
     } else if (spd < 50) {
-      level = sk?'Stredný':'Moderate'; color='#f59e0b';
+      level = sk?'Stredný':'Moderate'; color='#e0a45a';
       recs = sk
         ? [['🧥','Vetrovka odporúčaná'],['☂️','Dáždnik môže byť problém — radšej pršiplášť'],['🌳','Možné padanie konárov — dávaj pozor'],['🏍️','Vodiči motocyklov — zvýšená opatrnosť']]
         : [['🧥','Windbreaker recommended'],['☂️','Umbrella may be trouble — raincoat better'],['🌳','Branches may fall — stay alert'],['🏍️','Motorcyclists — increased caution']];
     } else {
-      level = sk?'Silný':'Strong'; color='#ff4d6d';
+      level = sk?'Silný':'Strong'; color='#c8553d';
       recs = sk
         ? [['⚠️','Silný vietor — obmedz vonkajšie aktivity'],['🚫','Dáždnik nepoužívaj'],['🏠','Zaisti voľné predmety vonku'],['🚗','Opatrnosť pri šoférovaní — crosswind'],['🌲','Riziko pádu stromov a konárov']]
         : [['⚠️','Strong wind — limit outdoor activities'],['🚫','Do not use umbrella'],['🏠','Secure loose items outdoors'],['🚗','Drive carefully — crosswind risk'],['🌲','Risk of falling trees and branches']];
@@ -2710,7 +2761,7 @@ function openInfoModal(type, val, val2) {
     iconStr = '🌅';
     titleStr = sk?'Východ slnka':'Sunrise';
     bigStr = val;
-    badgeStr = sk?'Dnes':'Today'; badgeColor='#f59e0b';
+    badgeStr = sk?'Dnes':'Today'; badgeColor='#e0a45a';
     const desc = sk
       ? 'Slnko vychádza na východe a osvetľuje obzor. Ranné hodiny po východe sú ideálne na fotografovanie — tzv. zlatá hodina trvá asi 30–60 minút.'
       : 'The sun rises in the east and lights up the horizon. Morning hours after sunrise are ideal for photography — the golden hour lasts about 30–60 minutes.';
@@ -2721,7 +2772,7 @@ function openInfoModal(type, val, val2) {
     iconStr = '🌇';
     titleStr = sk?'Západ slnka':'Sunset';
     bigStr = val;
-    badgeStr = sk?'Dnes':'Today'; badgeColor='#ff4d6d';
+    badgeStr = sk?'Dnes':'Today'; badgeColor='#c8553d';
     const desc = sk
       ? 'Západ slnka označuje koniec astronomického dňa. Zlatá hodina pred západom ponúka teplé, mäkké svetlo.'
       : 'Sunset marks the end of the astronomical day. The golden hour before sunset offers warm, soft light.';
@@ -2845,7 +2896,7 @@ function openWidgetCfg(){
   <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span id="upd-txt" style="font-size:0.85rem;font-weight:700;color:var(--text);">Nová verzia</span><span style="font-size:0.66rem;color:var(--text2);">Weather28 pre Android</span></div>
   <div style="display:flex;gap:8px;flex-shrink:0;">
     <button onclick="document.getElementById('upd-bar').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:10px;padding:8px 12px;font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;">Neskôr</button>
-    <button id="upd-go" onclick="w28InstallUpdate()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#0d1117;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Aktualizovať</button>
+    <button id="upd-go" onclick="w28InstallUpdate()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Aktualizovať</button>
   </div>
 </div>
 <script>document.addEventListener('DOMContentLoaded',function(){try{i18nStatic(S.lang);}catch(e){}});</script>
