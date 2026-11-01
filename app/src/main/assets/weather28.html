@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#1d1b19">
 <title>Weather28</title>
+<meta name="description" content="Weather28 – počasie a predpoveď pre Viničné a okolie, so živými dátami z domácej stanice.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dvaosem">
+<meta property="og:title" content="Weather28 – počasie Viničné">
+<meta property="og:description" content="Aktuálne počasie, predpoveď, radar a domáca meteostanica.">
+<meta property="og:url" content="https://dvaosem.com/weather28.html">
+<meta property="og:image" content="https://dvaosem.com/icons/icon-weather28-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest-weather28.json">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -2426,9 +2436,12 @@ function shareApp(){
   }
 }
 
-/* footer share = link to the app (APK link inside the app, page link on the web); header icon keeps sharing the forecast image */
+/* footer share = odkaz na webovú stránku (náhľad v WhatsApp cez og: meta); header icon zdieľa obrázok predpovede */
 function w28ShareLink(){
-  if(window.AndroidBridge&&typeof AndroidBridge.shareText==='function'){w28ApkAction();return;}
+  const url='https://dvaosem.com/weather28.html';
+  if(window.AndroidBridge&&typeof AndroidBridge.shareText==='function'){
+    try{AndroidBridge.shareText('Weather28 – '+tx('počasie pre Viničné a okolie','weather for Viničné and around')+'\n'+url);return;}catch(e){}
+  }
   shareApp();
 }
 
