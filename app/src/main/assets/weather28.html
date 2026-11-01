@@ -176,6 +176,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .to{flex:1;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
 .to.on{background:var(--green);color:#1d1b19;}
 .smchips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 12px;border-bottom:1px solid var(--border);}
+#sth-r24,#sth-r7{white-space:nowrap;}
 .smchip{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text2);font-family:'Inter',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .smchip.on{background:var(--green);color:#1d1b19;border-color:transparent;}
 .ibtn{width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,var(--g1),var(--g2));border:none;border-radius:12px;color:#1d1b19;font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;}
@@ -546,6 +547,21 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 </div>
 
 <!-- DAY MODAL -->
+<div class="day-modal" id="sthist">
+  <div class="day-modal-hdr">
+    <button class="day-back" onclick="w28HistClose()">← <span id="sth-back">Späť</span></button>
+    <div class="day-modal-title" id="sth-title">História stanice</div>
+    <div style="width:70px;"></div>
+  </div>
+  <div class="day-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div class="tog"><button class="to on" id="sth-r24" onclick="w28HistSet('range','24h')">24 h</button><button class="to" id="sth-r7" onclick="w28HistSet('range','7d')">7 dní</button></div>
+    </div>
+    <div class="smchips" id="sth-metrics" style="border-bottom:none;padding:0;"></div>
+    <div class="card" style="padding:12px 10px 8px;"><div style="position:relative;width:100%;"><canvas id="sthist-cv" style="width:100%;display:block;"></canvas><div id="sth-msg" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;color:var(--text2);font-size:.8rem;padding:0 24px;"></div></div></div>
+    <div id="sthist-sum" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+  </div>
+</div>
 <div class="day-modal" id="day-modal">
   <div class="day-modal-hdr">
     <button class="day-back" onclick="closeDayModal()">← Späť</button>
@@ -1105,6 +1121,7 @@ async function accCollect(lat,lon){
 }
 
 // vyhodnotenie: porovnaj uložené predpovede so skutočnosťou (Open-Meteo past_days)
+const W28_ST_SKIP=['2026-11-01']; // stanica bola do ~11:00 vnútri (izbové hodnoty, test zrážkového kalíška)
 async function accEvaluate(lat,lon){
   const acc=accGet();
   const today=accDay(0);
@@ -1116,7 +1133,7 @@ async function accEvaluate(lat,lon){
     try{const r=await fetch(w28StUrl('?mode=daily'),{cache:'no-store'}).then(x=>x.json());if(r&&r.ok)(r.days||[]).forEach(x=>{if(x.tmax!=null&&x.tmin!=null)sd[x.date]=x;});}catch(e){}
   }
   let act=null;
-  if(due.some(d=>!sd[d])){
+  if(due.some(d=>!sd[d]||W28_ST_SKIP.includes(d))){
     try{
       const u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&past_days=7&forecast_days=1&timezone=auto`;
       act=await fetchWithRetry(u,{},2).then(r=>r.json());
@@ -1125,7 +1142,7 @@ async function accEvaluate(lat,lon){
   let changed=false;
   for(const day of due){
     let aTmax,aTmin,aPsum,fromSt=false;
-    if(sd[day]){aTmax=sd[day].tmax;aTmin=sd[day].tmin;aPsum=sd[day].precip??0;fromSt=true;}
+    if(sd[day]&&!W28_ST_SKIP.includes(day)){aTmax=sd[day].tmax;aTmin=sd[day].tmin;aPsum=sd[day].precip??0;fromSt=true;}
     else{
       if(!act||!act.daily)continue;
       const i=act.daily.time.indexOf(day);
@@ -1576,6 +1593,97 @@ async function w28Station(d,lat,lon,nm){
   }catch(e){}
 }
 function w28StIco(w){return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14"/></svg>`;}
+
+/* ===== História stanice (modal s grafmi) ===== */
+let w28H={range:'24h',metric:'temp',pts:null,tok:0};
+const W28_HM=[['temp','Teplota','Temperature'],['hum','Vlhkosť','Humidity'],['press','Tlak','Pressure'],['wind','Vietor','Wind'],['rain','Zrážky','Rain']];
+function w28HistOpen(){document.getElementById('sthist').classList.add('open');document.body.style.overflow='hidden';w28HistTabs();w28HistLoad();}
+function w28HistClose(){document.getElementById('sthist').classList.remove('open');document.body.style.overflow='';}
+function w28HistSet(k,v){w28H[k]=v;if(k==='range'){w28H.pts=null;w28HistTabs();w28HistLoad();}else{w28HistTabs();w28HistDraw();}}
+function w28HistTabs(){
+  const sk=S.lang==='sk';
+  document.getElementById('sth-r24').classList.toggle('on',w28H.range==='24h');
+  document.getElementById('sth-r7').classList.toggle('on',w28H.range==='7d');
+  document.getElementById('sth-r7').textContent=sk?'7 dní':'7 days';
+  document.getElementById('sth-title').textContent=sk?'História stanice':'Station history';
+  document.getElementById('sth-back').textContent=sk?'Späť':'Back';
+  document.getElementById('sth-metrics').innerHTML=W28_HM.map(m=>`<button class="smchip${w28H.metric===m[0]?' on':''}" onclick="w28HistSet('metric','${m[0]}')">${sk?m[1]:m[2]}</button>`).join('');
+}
+async function w28HistLoad(){
+  const tok=++w28H.tok,msg=document.getElementById('sth-msg'),sk=S.lang==='sk';
+  msg.style.display='flex';msg.textContent=sk?'Načítavam…':'Loading…';
+  try{
+    const ac=new AbortController();const t=setTimeout(()=>ac.abort(),20000);
+    const r=await fetch(w28StUrl('?mode=history&range='+w28H.range),{signal:ac.signal,cache:'no-store'}).then(x=>x.json());clearTimeout(t);
+    if(tok!==w28H.tok)return;
+    w28H.pts=(r&&r.pts)||[];
+  }catch(e){if(tok!==w28H.tok)return;w28H.pts=[];}
+  w28HistDraw();
+}
+function w28HistDraw(){
+  const cv=document.getElementById('sthist-cv'),sum=document.getElementById('sthist-sum'),msg=document.getElementById('sth-msg');
+  if(!cv||!w28H.pts)return;
+  const pts=w28H.pts,sk=S.lang==='sk',m=w28H.metric,loc_=(typeof loc==='function')?loc():'sk-SK';
+  const cs=getComputedStyle(document.documentElement),col=n=>(cs.getPropertyValue(n)||'').trim();
+  const cMain=col('--orange')||'#e0a45a',cAlt=col('--blue')||'#c9a27a',cTx=col('--text2')||'#999',cGrid=col('--border')||'#333';
+  const wrap=cv.parentElement,W=wrap.clientWidth||340,H=230,dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  if(pts.length<2){msg.style.display='flex';msg.textContent=sk?'Zatiaľ málo dát – stanica si históriu zbiera, skús o chvíľu.':'Not enough data yet – the station is still collecting history.';sum.innerHTML='';return;}
+  msg.style.display='none';
+  const PL=40,PR=10,PT=10,PB=24,pw=W-PL-PR,ph=H-PT-PB;
+  const F=S.tu==='F',MPH=S.wu==='mph';
+  const cfg={temp:{k:'temp',u:F?'°F':'°C',cv:v=>F?v*9/5+32:v,d:1},hum:{k:'hum',u:' %',cv:v=>v,d:0},press:{k:'press',u:' hPa',cv:v=>v,d:1},wind:{k:'wind',k2:'gust',u:MPH?' mph':' km/h',cv:v=>MPH?v*.621:v,d:1}}[m];
+  const fmt=(v,d)=>(+v).toFixed(d).replace('.',sk?',':'.');
+  x.font='500 10px Inter,sans-serif';x.textBaseline='middle';
+  const t0=pts[0].t,t1=pts[pts.length-1].t,span=Math.max(1,t1-t0);
+  const xl=(t,i,n)=>{const d=new Date(t*1000);return w28H.range==='24h'?d.toLocaleTimeString(loc_,{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString(loc_,{weekday:'short',day:'numeric'});};
+  const xTicks=()=>{x.fillStyle=cTx;x.textAlign='center';x.textBaseline='top';const n=4;for(let i=0;i<=n;i++){const t=t0+span*i/n;const px=PL+pw*i/n;x.textAlign=i===0?'left':i===n?'right':'center';x.fillText(xl(t),px,H-PB+7);}};
+  if(m==='rain'){
+    // zrážky = prírastky kumulatívneho úhrnu (nuluje sa o polnoci)
+    const b=new Map();let prev=null,peak=0,total=0;
+    pts.forEach(p=>{
+      if(p.rain==null)return;
+      const dl=prev&&prev.d===p.d?Math.max(0,p.rain-prev.rain):(prev?p.rain:0);prev=p;
+      const dt=new Date(p.t*1000);
+      const key=w28H.range==='24h'?p.d+' '+String(dt.getHours()).padStart(2,'0'):p.d;
+      b.set(key,(b.get(key)||0)+dl);total+=dl;if(p.rate!=null)peak=Math.max(peak,p.rate);
+    });
+    const arr=[...b.entries()],n=arr.length||1,mx=Math.max(1,...arr.map(e=>e[1]));
+    x.strokeStyle=cGrid;x.fillStyle=cTx;x.lineWidth=1;x.textAlign='right';x.textBaseline='middle';
+    for(let i=0;i<=4;i++){const y=PT+ph*i/4;x.beginPath();x.moveTo(PL,y);x.lineTo(W-PR,y);x.stroke();x.fillText(fmt(mx*(1-i/4),mx<5?1:0),PL-6,y);}
+    const bw=pw/n;x.fillStyle=cAlt;
+    arr.forEach((e,i)=>{const h=ph*e[1]/mx;x.globalAlpha=.9;x.fillRect(PL+i*bw+bw*.15,PT+ph-h,bw*.7,Math.max(h,e[1]>0?1.5:0));x.globalAlpha=1;});
+    x.fillStyle=cTx;x.textBaseline='top';
+    const lab=k=>w28H.range==='24h'?k.slice(11)+':00':new Date(k+'T12:00:00').toLocaleDateString(loc_,{weekday:'short',day:'numeric'});
+    [0,Math.floor((arr.length-1)/2),arr.length-1].filter((v,i,a)=>arr.length&&a.indexOf(v)===i).forEach(i=>{x.textAlign=i===0?'left':i===arr.length-1?'right':'center';x.fillText(lab(arr[i][0]),PL+i*bw+bw/2,H-PB+7);});
+    const tile=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
+    sum.innerHTML=tile(sk?'Spolu':'Total',fmt(total,1)+' mm')+tile(sk?'Max intenzita':'Peak rate',fmt(peak,1)+' mm/h')+tile(sk?'Najviac':'Most',arr.length?fmt(Math.max(...arr.map(e=>e[1])),1)+' mm':'–');
+    return;
+  }
+  const A=pts.filter(p=>p[cfg.k]!=null).map(p=>({t:p.t,v:cfg.cv(p[cfg.k])}));
+  const B=cfg.k2?pts.filter(p=>p[cfg.k2]!=null).map(p=>({t:p.t,v:cfg.cv(p[cfg.k2])})):[];
+  if(A.length<2){msg.style.display='flex';msg.textContent=sk?'Žiadne dáta pre túto veličinu.':'No data for this metric.';sum.innerHTML='';return;}
+  let lo=Math.min(...A.map(p=>p.v),...B.map(p=>p.v)),hi=Math.max(...A.map(p=>p.v),...B.map(p=>p.v));
+  if(hi-lo<(m==='press'?2:m==='hum'?6:2)){const c=(hi+lo)/2,h=m==='press'?1:m==='hum'?3:1;lo=c-h;hi=c+h;}else{const pd=(hi-lo)*.08;lo-=pd;hi+=pd;}
+  const px=t=>PL+pw*(t-t0)/span,py=v=>PT+ph*(1-(v-lo)/(hi-lo));
+  x.strokeStyle=cGrid;x.fillStyle=cTx;x.lineWidth=1;x.textAlign='right';x.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=hi-(hi-lo)*i/4,y=PT+ph*i/4;x.beginPath();x.moveTo(PL,y);x.lineTo(W-PR,y);x.stroke();x.fillText(fmt(v,m==='press'?0:(hi-lo)<10?1:0),PL-6,y);}
+  const line=(S_,c,w,a)=>{x.beginPath();S_.forEach((p,i)=>i?x.lineTo(px(p.t),py(p.v)):x.moveTo(px(p.t),py(p.v)));x.strokeStyle=c;x.lineWidth=w;x.globalAlpha=a;x.lineJoin='round';x.stroke();x.globalAlpha=1;};
+  if(B.length)line(B,cAlt,1.2,.8);
+  // plocha pod hlavnou čiarou
+  x.beginPath();A.forEach((p,i)=>i?x.lineTo(px(p.t),py(p.v)):x.moveTo(px(p.t),py(p.v)));x.lineTo(px(A[A.length-1].t),PT+ph);x.lineTo(px(A[0].t),PT+ph);x.closePath();x.fillStyle=cMain;x.globalAlpha=.12;x.fill();x.globalAlpha=1;
+  line(A,cMain,2,1);
+  const last=A[A.length-1];x.beginPath();x.arc(px(last.t),py(last.v),3.5,0,7);x.fillStyle=cMain;x.fill();
+  xTicks();
+  const vals=A.map(p=>p.v),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const tile=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
+  const d=cfg.d,u=cfg.u;
+  let t3=tile(sk?'Min':'Min',fmt(Math.min(...vals),d)+u)+tile('Max',fmt(Math.max(...vals),d)+u)+tile(sk?'Priemer':'Avg',fmt(avg,d)+u);
+  if(B.length)t3+=tile(sk?'Max nárazy':'Max gust',fmt(Math.max(...B.map(p=>p.v)),d)+u)+tile(sk?'Teraz':'Now',fmt(last.v,d)+u);
+  sum.innerHTML=t3;
+}
+window.addEventListener('resize',()=>{try{if(document.getElementById('sthist').classList.contains('open'))w28HistDraw();}catch(e){}});
 function renderStation(d){
   const el=document.getElementById('stcard');if(!el)return;
   const s=d&&d._station;
@@ -1586,7 +1694,7 @@ function renderStation(d){
   const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
   const cell=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
   const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-weight:600">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</span><span style="font-size:.72rem;color:var(--text2)">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</span></div>
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:600">${w28StIco(16)} ${sk?'Stanica Viničné':'Viničné station'}</span><span style="display:flex;align-items:center;gap:10px"><button onclick="w28HistOpen()" style="font-size:.68rem;font-weight:600;color:var(--text);background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg>${sk?'História':'History'}</button><span style="font-size:.72rem;color:var(--text2)">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</span></span></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
     ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°')}
     ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'))}
