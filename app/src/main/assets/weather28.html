@@ -331,6 +331,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .w28-hl{font-size:.74rem;color:var(--text2);margin-top:2px;}
 .w28-hours{display:flex;gap:2px;overflow-x:auto;margin:14px -14px 0;padding:0 8px 12px;scroll-snap-type:x proximity;}
 .w28-h{flex:0 0 auto;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px;border-radius:12px;scroll-snap-align:start;}
+.w28-ic{position:relative;display:inline-flex;}
+.w28-dr{position:absolute;right:-2px;bottom:-2px;}
 .w28-h.now{background:var(--card2);}
 .w28-ht{font-size:.86rem;font-weight:500;}
 .w28-hp{font-size:.58rem;font-weight:700;color:var(--w28-drop);height:.7rem;line-height:.7rem;}
@@ -2006,7 +2008,7 @@ function renderCur(d,name,country){
     if(tm<=now)continue;
     cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
   }
-  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Icon(x.code,x.night,30)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
+  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span><span class="w28-ic">${w28Icon(x.code,x.night,30)}${(x.prob>=20&&(x.code<=3||x.code===45||x.code===48))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span><span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
   const tabs=dy.time.map((date,i)=>{
     const dt=new Date(date+'T12:00:00');
     const dn=i===0?(sk?'Dnes':'Today'):dsA()[dt.getDay()];
