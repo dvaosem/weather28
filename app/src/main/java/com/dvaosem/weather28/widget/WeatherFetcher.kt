@@ -26,8 +26,8 @@ data class WeatherData(
     val todayCode: Int = -1,
     val todayIsDay: Boolean = true,
     val tomorrowCode: Int = -1,
-    val todayProb: Int = 0,      // max rain chance for the rest of today, %
-    val tomorrowProb: Int = 0,   // max rain chance tomorrow, %
+    val todayTier: Int = 0,      // rain tier for the rest of today: 0 dry, 1 possible, 2 rain
+    val tomorrowTier: Int = 0,
     val source: String = "openmeteo",
     val rain: List<RainSlot> = emptyList()
 )
@@ -48,39 +48,77 @@ object WeatherFetcher {
         .build()
 
     private data class Day(val max: Double, val min: Double, val code: Int)
-    private class Src(val curTemp: Double, val curCode: Int, val isDay: Boolean?, val days: Map<String, Day>)
-    private class HourRain(val time: String, val prob: Int, val mm: Double)
-    private class OmResult(val src: Src, val rain: List<RainSlot>, val hourly: List<HourRain> = emptyList())
+    /** One forecast hour. prob = null when the source has no rain probability (Met.no outside the Nordics). */
+    private class Hour(val time: String, val temp: Double?, val code: Int, val mm: Double, val prob: Int?)
+    private class Src(val curTemp: Double, val curCode: Int, val curMm: Double, val isDay: Boolean?,
+                      val days: Map<String, Day>, val hours: List<Hour>)
+    private class OmResult(val src: Src, val minutely: List<Pair<String, Double>>)
 
-    /** Same rule as the app's fixRainIcons(): a rain/drizzle/shower code stays only when chance >= 40 % AND amount >= 0.3 mm/day
-     *  (night hours 22-06 count half), otherwise it is shown as cloud (showers -> partly cloudy). Snow/fog/thunder untouched. */
-    private fun calmRainCode(code: Int, date: String, hours: List<HourRain>): Int {
-        val isRain = (code in 51..57) || (code in 61..67) || (code in 80..82)
-        if (!isRain) return code
-        var pm = 0.0; var sum = 0.0; var cnt = 0
+    // ================= RAIN: 1:1 copy of the app's rule (weather28.html, "RAIN: one rule for the whole app") =================
+    // tier 0 = dry, 1 = possible (blue drop), 2 = rain (rain/drizzle icon). Change numbers in BOTH places.
+    private object R {
+        const val hP2 = 40; const val hMm2 = 0.1; const val hP1 = 20; const val hMm1 = 0.1; const val hMmOnly2 = 0.2; const val hMmOnly1 = 0.05
+        const val dP2 = 40.0; const val dMm2 = 0.3; const val dP1 = 20.0; const val dMm1 = 0.1; const val dMmOnly2 = 0.5; const val night = 0.5
+        const val nowMm = 0.05   // "rain in X min" from 15-min data, same as the app's minutecast
+    }
+    private fun isRainCode(c: Int) = c in 51..57 || c in 61..65 || c in 80..82
+    private fun isDryCode(c: Int) = c in 0..3 || c == 45 || c == 48
+    private fun hourTier(p: Int?, mm: Double): Int =
+        if (p == null) (if (mm >= R.hMmOnly2) 2 else if (mm >= R.hMmOnly1) 1 else 0)
+        else if (p >= R.hP2 && mm >= R.hMm2) 2 else if (p >= R.hP1 || mm >= R.hMm1) 1 else 0
+    private fun dayTier(p: Double?, mm: Double): Int =
+        if (p == null) (if (mm >= R.dMmOnly2) 2 else if (mm >= R.dMm1) 1 else 0)
+        else if (p >= R.dP2 && mm >= R.dMm2) 2 else if (p >= R.dP1 || mm >= R.dMm1) 1 else 0
+    private fun tierCode(c: Int, tier: Int, temp: Double?, mm: Double): Int = when {
+        isRainCode(c) && tier < 2 -> if (c >= 80) 2 else 3
+        tier == 2 && c in 0..3 && (temp == null || temp > 1) -> if (mm < 0.5) 51 else 61
+        else -> c
+    }
+    private fun dayBaseCode(codes: List<Int>): Int {
+        codes.filter { it >= 95 }.maxOrNull()?.let { return it }
+        codes.filter { it in 66..77 || it in 83..86 }.maxOrNull()?.let { return it }
+        codes.filter { isRainCode(it) }.maxOrNull()?.let { return it }
+        return codes.groupingBy { it }.eachCount().entries
+            .sortedWith(compareByDescending<Map.Entry<Int, Int>> { it.value }.thenByDescending { it.key }).firstOrNull()?.key ?: 3
+    }
+    private class DayRain(val tier: Int, val code: Int?, val sumW: Double)
+    /** Rain tier + icon base for one date; fromKey = "yyyy-MM-ddTHH" to count only hours still ahead (today). */
+    private fun dayRain(hours: List<Hour>, date: String, fromKey: String?): DayRain {
+        var pm: Double? = null; var sum = 0.0; var cnt = 0; val codes = ArrayList<Int>()
         for (h in hours) {
             if (!h.time.startsWith(date)) continue
+            if (fromKey != null && h.time.substring(0, 13) < fromKey) continue
             val hr = h.time.substring(11, 13).toIntOrNull() ?: continue
-            val w = if (hr >= 22 || hr < 6) 0.5 else 1.0
-            pm = maxOf(pm, h.prob * w); sum += h.mm * w; cnt++
+            val w = if (hr >= 22 || hr < 6) R.night else 1.0
+            h.prob?.let { pm = maxOf(pm ?: 0.0, it * w) }
+            sum += h.mm * w; cnt++; codes += h.code
         }
-        if (cnt == 0) return code
-        return if (pm >= 40.0 && sum >= 0.3) code else if (code in 80..82) 2 else 3
+        if (cnt == 0) return DayRain(0, null, 0.0)
+        return DayRain(dayTier(pm, sum), dayBaseCode(codes), sum)
     }
 
     fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2)): WeatherData? {
-        val om = fetchOpenMeteo(lat, lon, null) // always: base + rain forecast
+        val om = fetchOpenMeteo(lat, lon, null) // always: 15-min rain for "rain in X min"
         val chosen: Src = when (source) {
-            "ecmwf" -> fetchOpenMeteo(lat, lon, "ecmwf_ifs025")?.src
+            "ecmwf" -> fetchEcmwf(lat, lon)
             "metno" -> fetchMetNo(lat, lon)
-            "best" -> bestOf(listOf(om?.src, fetchMetNo(lat, lon), fetchOpenMeteo(lat, lon, "ecmwf_ifs025")?.src), order)
+            "best" -> bestOf(listOf(om?.src, fetchMetNo(lat, lon), fetchEcmwf(lat, lon)), order)
             else -> om?.src
         } ?: om?.src ?: return null
 
         val today = LocalDate.now().toString()
         val tomorrow = LocalDate.now().plusDays(1).toString()
+        val nowKey = LocalDateTime.now().toString().substring(0, 13)
         val d0 = chosen.days[today] ?: chosen.days.values.firstOrNull() ?: return null
         val d1 = chosen.days[tomorrow] ?: chosen.days.values.drop(1).firstOrNull() ?: d0
+
+        val curHour = chosen.hours.firstOrNull { it.time.startsWith(nowKey) }
+        val curTier = curHour?.let { hourTier(it.prob, it.mm) } ?: 0
+        val todayCode = if (curHour == null) chosen.curCode
+            else tierCode(chosen.curCode, curTier, chosen.curTemp, maxOf(curHour.mm, chosen.curMm))
+        val todayRain = dayRain(chosen.hours, today, nowKey)          // widget "today" = rest of the day, like the app's today tab
+        val tmr = dayRain(chosen.hours, tomorrow, null)
+        val tomorrowCode = if (tmr.code == null) d1.code else tierCode(tmr.code, tmr.tier, d1.max, tmr.sumW)
 
         return WeatherData(
             city = cityName,
@@ -90,13 +128,13 @@ object WeatherFetcher {
             tomorrowTemp = jsRound(d1.max),
             tomorrowMax = jsRound(d1.max),
             tomorrowMin = jsRound(d1.min),
-            todayCode = chosen.curCode,
+            todayCode = todayCode,
             todayIsDay = chosen.isDay ?: om?.src?.isDay ?: true,
-            tomorrowCode = calmRainCode(d1.code, tomorrow, om?.hourly ?: emptyList()),
-            todayProb = (om?.hourly ?: emptyList()).filter { it.time.startsWith(today) && it.time >= java.time.LocalDateTime.now().toString().substring(0, 13) }.maxOfOrNull { it.prob } ?: 0,
-            tomorrowProb = (om?.hourly ?: emptyList()).filter { it.time.startsWith(tomorrow) }.maxOfOrNull { it.prob } ?: 0,
+            tomorrowCode = tomorrowCode,
+            todayTier = todayRain.tier,
+            tomorrowTier = tmr.tier,
             source = source,
-            rain = om?.rain ?: emptyList()
+            rain = rainSlots(om?.minutely ?: emptyList(), chosen.hours)
         )
     }
 
@@ -114,9 +152,10 @@ object WeatherFetcher {
     // ---------------- Open-Meteo (and ECMWF via models=) ----------------
     private fun fetchOpenMeteo(lat: Double, lon: Double, model: String?): OmResult? = try {
         val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon" +
-                "&current=temperature_2m,weather_code,is_day" +
+                "&current=temperature_2m,weather_code,is_day,precipitation" +
                 "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
-                (if (model == null) "&minutely_15=precipitation&hourly=precipitation,precipitation_probability" else "") +
+                "&hourly=temperature_2m,weather_code,precipitation,precipitation_probability" +
+                (if (model == null) "&minutely_15=precipitation" else "") +
                 "&forecast_days=3&timezone=auto" +
                 (if (model != null) "&models=$model" else "")
         val j = JSONObject(get(url) ?: throw Exception("no body"))
@@ -130,74 +169,112 @@ object WeatherFetcher {
             if (mx.isNaN() || mn.isNaN()) continue
             days[times.getString(i)] = Day(mx, mn, daily.getJSONArray("weather_code").optInt(i, 3))
         }
+        val hours = ArrayList<Hour>()
+        j.optJSONObject("hourly")?.let { h ->
+            val t = h.getJSONArray("time"); val p = h.optJSONArray("precipitation"); val pr = h.optJSONArray("precipitation_probability")
+            val tc = h.optJSONArray("temperature_2m"); val wc = h.optJSONArray("weather_code")
+            for (i in 0 until t.length()) hours += Hour(
+                t.getString(i),
+                tc?.let { if (it.isNull(i)) null else it.optDouble(i) },
+                wc?.optInt(i, 3) ?: 3,
+                p?.optDouble(i, 0.0)?.takeIf { !it.isNaN() } ?: 0.0,
+                pr?.let { if (it.isNull(i)) null else it.optInt(i, 0) })
+        }
+        val minutely = ArrayList<Pair<String, Double>>()
+        j.optJSONObject("minutely_15")?.let { m ->
+            val t = m.getJSONArray("time"); val p = m.getJSONArray("precipitation")
+            for (i in 0 until t.length()) minutely += t.getString(i) to (p.optDouble(i, 0.0).takeIf { !it.isNaN() } ?: 0.0)
+        }
         val src = Src(
             cur.getDouble("temperature_2m"),
             cur.optInt("weather_code", 3),
+            cur.optDouble("precipitation", 0.0).takeIf { !it.isNaN() } ?: 0.0,
             if (cur.has("is_day")) cur.optInt("is_day", 1) == 1 else null,
-            days
+            days, hours
         )
-        val hours = ArrayList<HourRain>()
-        if (model == null) j.optJSONObject("hourly")?.let { h ->
-            val t = h.getJSONArray("time"); val p = h.optJSONArray("precipitation"); val pr = h.optJSONArray("precipitation_probability")
-            for (i in 0 until t.length()) hours += HourRain(t.getString(i), pr?.optInt(i, 0) ?: 0, p?.optDouble(i, 0.0) ?: 0.0)
-        }
-        OmResult(src, if (model == null) rainSlots(j) else emptyList(), hours)
+        OmResult(src, minutely)
     } catch (e: Exception) {
         Log.e(TAG, "Open-Meteo ($model) error: ${e.message}"); null
     }
 
-    private fun rainSlots(j: JSONObject): List<RainSlot> {
+    /** ECMWF deterministic run + rain probability from the ECMWF ensemble (% of members with >= 0.1 mm), like the app. */
+    private fun fetchEcmwf(lat: Double, lon: Double): Src? {
+        val base = fetchOpenMeteo(lat, lon, "ecmwf_ifs025")?.src ?: return null
+        val ens = HashMap<String, Int>()
+        try {
+            val j = JSONObject(get("https://ensemble-api.open-meteo.com/v1/ensemble?latitude=$lat&longitude=$lon" +
+                    "&hourly=precipitation&models=ecmwf_ifs025&forecast_days=3&timezone=auto") ?: throw Exception("no body"))
+            val h = j.getJSONObject("hourly"); val t = h.getJSONArray("time")
+            val keys = h.keys().asSequence().filter { it.startsWith("precipitation") }.map { h.getJSONArray(it) }.toList()
+            for (i in 0 until t.length()) {
+                var n = 0; var wet = 0
+                for (a in keys) { if (a.isNull(i)) continue; n++; if (a.optDouble(i, 0.0) >= 0.1) wet++ }
+                if (n > 0) ens[t.getString(i)] = Math.floor(wet * 100.0 / n + 0.5).toInt()
+            }
+        } catch (e: Exception) { Log.e(TAG, "ECMWF ensemble error: ${e.message}") }
+        return Src(base.curTemp, base.curCode, base.curMm, base.isDay, base.days,
+            base.hours.map { Hour(it.time, it.temp, it.code, it.mm, it.prob ?: ens[it.time]) })
+    }
+
+    /** "Rain in X min": 15-min Open-Meteo data first (>= 0.05 mm), then the chosen source's hours (rain only at tier 2). */
+    private fun rainSlots(minutely: List<Pair<String, Double>>, hours: List<Hour>): List<RainSlot> {
         val zone = ZoneId.systemDefault()
         val now = System.currentTimeMillis()
         val out = ArrayList<RainSlot>()
         fun epoch(t: String) = LocalDateTime.parse(t).atZone(zone).toInstant().toEpochMilli()
         var minutelyEnd = now
-        j.optJSONObject("minutely_15")?.let { m ->
-            val t = m.getJSONArray("time"); val p = m.getJSONArray("precipitation")
-            for (i in 0 until t.length()) {
-                val s = epoch(t.getString(i))
-                if (s + 15 * 60_000 <= now || s > now + 2 * 3600_000) continue
-                out += RainSlot(s, 15, p.optDouble(i, 0.0) >= 0.1)
-                minutelyEnd = s + 15 * 60_000
-            }
+        for ((t, mm) in minutely) {
+            val s = epoch(t)
+            if (s + 15 * 60_000 <= now || s > now + 2 * 3600_000) continue
+            out += RainSlot(s, 15, mm >= R.nowMm)
+            minutelyEnd = s + 15 * 60_000
         }
-        j.optJSONObject("hourly")?.let { h ->
-            val t = h.getJSONArray("time"); val p = h.getJSONArray("precipitation")
-            val pr = h.optJSONArray("precipitation_probability")
-            for (i in 0 until t.length()) {
-                val s = epoch(t.getString(i))
-                if (s + 3600_000 <= minutelyEnd || s > now + 24 * 3600_000) continue
-                val mm = p.optDouble(i, 0.0); val prob = pr?.optInt(i, 0) ?: 0
-                out += RainSlot(maxOf(s, minutelyEnd), 60, mm >= 0.2 || (prob >= 70 && mm >= 0.1))
-            }
+        for (h in hours) {
+            val s = epoch(h.time)
+            if (s + 3600_000 <= minutelyEnd || s > now + 24 * 3600_000) continue
+            out += RainSlot(maxOf(s, minutelyEnd), 60, hourTier(h.prob, h.mm) == 2)
         }
         return out.sortedBy { it.start }
     }
 
-    // ---------------- Met.no (aggregated like the app's loadFromMetNo) ----------------
+    // ---------------- Met.no (same as the app's loadFromMetNo: 6 h steps expanded to hours) ----------------
     private fun fetchMetNo(lat: Double, lon: Double): Src? = try {
-        val url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${"%.4f".format(java.util.Locale.US, lat)}&lon=${"%.4f".format(java.util.Locale.US, lon)}"
+        val url = "https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${"%.4f".format(java.util.Locale.US, lat)}&lon=${"%.4f".format(java.util.Locale.US, lon)}"
         val ts = JSONObject(get(url) ?: throw Exception("no body")).getJSONObject("properties").getJSONArray("timeseries")
         val zone = ZoneId.systemDefault()
-        class Acc { var mn = Double.POSITIVE_INFINITY; var mx = Double.NEGATIVE_INFINITY; val codes = LinkedHashMap<Int, Int>() }
-        val byDay = LinkedHashMap<String, Acc>()
-        var curTemp = Double.NaN; var curCode = 0; var curDay: Boolean? = null
+        val hours = ArrayList<Hour>()
+        var curTemp = Double.NaN; var curCode = 0; var curDay: Boolean? = null; var curMm = 0.0
         for (i in 0 until ts.length()) {
             val e = ts.getJSONObject(i)
             val data = e.getJSONObject("data")
             val temp = data.getJSONObject("instant").getJSONObject("details").getDouble("air_temperature")
-            val sym = data.optJSONObject("next_1_hours")?.optJSONObject("summary")?.optString("symbol_code")
-                ?: data.optJSONObject("next_6_hours")?.optJSONObject("summary")?.optString("symbol_code")
+            val n1 = data.optJSONObject("next_1_hours"); val n6 = data.optJSONObject("next_6_hours")
+            val blk = n1 ?: n6
+            val steps = if (n1 != null) 1 else if (n6 != null) 6 else 0
+            val sym = blk?.optJSONObject("summary")?.optString("symbol_code")
             val code = metnoSymbolToWmo(sym)
-            if (i == 0) { curTemp = temp; curCode = code; curDay = sym?.let { !it.endsWith("_night") } }
-            val day = Instant.parse(e.getString("time")).atZone(zone).toLocalDate().toString()
-            val a = byDay.getOrPut(day) { Acc() }
-            a.mn = minOf(a.mn, temp); a.mx = maxOf(a.mx, temp)
-            a.codes[code] = (a.codes[code] ?: 0) + 1
+            val amt = blk?.optJSONObject("details")?.let { if (it.has("precipitation_amount")) it.optDouble("precipitation_amount", 0.0) else null }
+            val prob = blk?.optJSONObject("details")?.let { if (it.has("probability_of_precipitation")) jsRound(it.optDouble("probability_of_precipitation")) else null }
+            if (i == 0) { curTemp = temp; curCode = code; curDay = sym?.let { !it.endsWith("_night") }; curMm = amt ?: 0.0 }
+            if (steps == 0) continue
+            val next = if (i + 1 < ts.length()) ts.getJSONObject(i + 1).getJSONObject("data").getJSONObject("instant").getJSONObject("details").optDouble("air_temperature", temp) else temp
+            val t0 = Instant.parse(e.getString("time"))
+            for (s in 0 until steps) {
+                val tt = round1(temp + (next - temp) * s / steps)
+                val local = LocalDateTime.ofInstant(t0.plusSeconds(s * 3600L), zone).toString().substring(0, 16)
+                hours += Hour(local, tt, code, if (amt == null) 0.0 else Math.round(amt / steps * 100.0) / 100.0, prob)
+            }
+        }
+        class Acc { var mn = Double.POSITIVE_INFINITY; var mx = Double.NEGATIVE_INFINITY; val codes = LinkedHashMap<Int, Int>() }
+        val byDay = LinkedHashMap<String, Acc>()
+        for (h in hours) {
+            val a = byDay.getOrPut(h.time.substring(0, 10)) { Acc() }
+            h.temp?.let { a.mn = minOf(a.mn, it); a.mx = maxOf(a.mx, it) }
+            a.codes[h.code] = (a.codes[h.code] ?: 0) + 1
         }
         val days = LinkedHashMap<String, Day>()
-        for ((k, a) in byDay) days[k] = Day(round1(a.mx), round1(a.mn), a.codes.maxByOrNull { it.value }?.key ?: 3)
-        Src(curTemp, curCode, curDay, days)
+        for ((k, a) in byDay) if (a.mx.isFinite()) days[k] = Day(round1(a.mx), round1(a.mn), a.codes.maxByOrNull { it.value }?.key ?: 3)
+        Src(curTemp, curCode, curMm, curDay, days, hours)
     } catch (e: Exception) {
         Log.e(TAG, "Met.no error: ${e.message}"); null
     }
@@ -251,11 +328,22 @@ object WeatherFetcher {
                 majority(ds.map { it?.code }, order)
             )
         }
+        // hours aligned by timestamp; unknown probabilities (Met.no) are left out of the median
+        val maps = srcs.map { s -> s?.hours?.associateBy { it.time } }
+        val hours = base.hours.map { bh ->
+            val hs = maps.map { it?.get(bh.time) }
+            Hour(bh.time,
+                median(hs.map { it?.temp })?.let { round1(it) },
+                majority(hs.map { it?.code }, order),
+                round1(median(hs.map { it?.mm }) ?: 0.0),
+                median(hs.map { it?.prob?.toDouble() })?.let { jsRound(it) })
+        }
         return Src(
             round1(median(srcs.map { it?.curTemp }) ?: base.curTemp),
             majority(srcs.map { it?.curCode }, order),
+            round1(median(srcs.map { it?.curMm }) ?: 0.0),
             srcs[0]?.isDay ?: base.isDay,
-            days
+            days, hours
         )
     }
 
@@ -288,7 +376,7 @@ object WeatherFetcher {
         put("todayTemp", d.todayTemp); put("todayMax", d.todayMax); put("todayMin", d.todayMin)
         put("tomorrowTemp", d.tomorrowTemp); put("tomorrowMax", d.tomorrowMax); put("tomorrowMin", d.tomorrowMin)
         put("todayCode", d.todayCode); put("todayIsDay", d.todayIsDay); put("tomorrowCode", d.tomorrowCode)
-        put("todayProb", d.todayProb); put("tomorrowProb", d.tomorrowProb)
+        put("todayTier", d.todayTier); put("tomorrowTier", d.tomorrowTier)
         put("source", d.source)
         put("rain", JSONArray().apply { d.rain.forEach { put(JSONArray().put(it.start).put(it.minutes).put(it.wet)) } })
     }.toString()
@@ -305,7 +393,7 @@ object WeatherFetcher {
             tomorrowTemp = j.getInt("tomorrowTemp"), tomorrowMax = j.getInt("tomorrowMax"), tomorrowMin = j.getInt("tomorrowMin"),
             todayCode = j.optInt("todayCode", -1), todayIsDay = j.optBoolean("todayIsDay", true),
             tomorrowCode = j.optInt("tomorrowCode", -1),
-            todayProb = j.optInt("todayProb", 0), tomorrowProb = j.optInt("tomorrowProb", 0),
+            todayTier = j.optInt("todayTier", 0), tomorrowTier = j.optInt("tomorrowTier", 0),
             source = j.optString("source", "openmeteo"),
             rain = rain
         )
@@ -323,8 +411,8 @@ object WeatherFetcher {
     }
 
     /** Vector icon for a WMO weather code. light = icon variant for light widget background. */
-    /** Same rule as the app: cloudy/clear-ish/fog icon + rain chance >= 20% -> small blue drop badge. */
-    fun wantsDrop(code: Int, prob: Int): Boolean = prob >= 20 && (code in 0..3 || code == 45 || code == 48 || code < 0)
+    /** Same rule as the app: blue drop on a dry-looking icon when the rain tier is >= 1. */
+    fun wantsDrop(code: Int, tier: Int): Boolean = tier >= 1 && (code in 0..3 || code == 45 || code == 48 || code < 0)
 
     fun iconRes(code: Int, isDay: Boolean, light: Boolean): Int = when (code) {
         0 -> if (isDay) (if (light) R.drawable.wi_clear_day_l else R.drawable.wi_clear_day)
