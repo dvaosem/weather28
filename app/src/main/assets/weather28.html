@@ -1422,7 +1422,9 @@ const DS_SK=['Ned','Pon','Uto','Str','Štv','Pia','Sob'],DS_EN=['Sun','Mon','Tue
 function dsA(){return S.lang==='en'?DS_EN:DS_SK;}
 const WD_EN={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Rime fog',51:'Light drizzle',53:'Drizzle',55:'Dense drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Heavy showers',82:'Violent showers',95:'Thunderstorm',96:'Thunderstorm + hail',99:'Severe thunderstorm'};
 function wdesc(c){return (S.lang==='en'?WD_EN[c]:WD[c])||WD[c]||'—';}
-function wico(c,sz){return (typeof w28Icon==='function')?w28Icon(c,false,sz||28):(WI[c]||'—');}
+// one rule everywhere: cloudy/fog icon + rain chance >= 20% -> small blue drop badge (possible drizzle)
+function w28Wet(html,code,prob){return `<span class="w28-ic">${html}${((prob||0)>=20&&(code<=3||code===45||code===48))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span>`;}
+function wico(c,sz,prob){const ic=(typeof w28Icon==='function')?w28Icon(c,false,sz||28):(WI[c]||'—');return prob==null?ic:w28Wet(ic,c,prob);}
 function wdir(d){return(S.lang==='en'?['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']:['S','SSV','SV','VSV','V','VJV','JV','JJV','J','JJZ','JZ','ZJZ','Z','ZSZ','SZ','SSZ'])[Math.round((d||0)/22.5)%16];}
 function warr(d){return`<span style="display:inline-block;transform:rotate(${((d||0)+180)%360}deg)">↑</span>`;}
 
@@ -2008,11 +2010,11 @@ function renderCur(d,name,country){
     if(tm<=now)continue;
     cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
   }
-  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span><span class="w28-ic">${w28Icon(x.code,x.night,30)}${(x.prob>=20&&(x.code<=3||x.code===45||x.code===48))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span><span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
+  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Wet(w28Icon(x.code,x.night,30),x.code,x.prob)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
   const tabs=dy.time.map((date,i)=>{
     const dt=new Date(date+'T12:00:00');
     const dn=i===0?(sk?'Dnes':'Today'):dsA()[dt.getDay()];
-    return `<button class="w28-tab${i===w28Sel?' on':''}" role="tab" aria-selected="${i===w28Sel}" onclick="w28Pick(${i})"><span class="d">${dn}</span>${w28Icon(dy.weathercode[i],false,28)}<span class="t">${w28T(dy.temperature_2m_max[i])}°<i>/${w28T(dy.temperature_2m_min[i])}°</i></span></button>`;
+    return `<button class="w28-tab${i===w28Sel?' on':''}" role="tab" aria-selected="${i===w28Sel}" onclick="w28Pick(${i})"><span class="d">${dn}</span>${w28Wet(w28Icon(dy.weathercode[i],false,28),dy.weathercode[i],(dy.precipitation_probability_max||[])[i])}<span class="t">${w28T(dy.temperature_2m_max[i])}°<i>/${w28T(dy.temperature_2m_min[i])}°</i></span></button>`;
   }).join('');
   const el=document.getElementById('cur');
   // keep banners (stale / fallback notes) that loadW inserted before first render
@@ -2021,7 +2023,7 @@ function renderCur(d,name,country){
     <div class="w28-meta"><span>${name} · ${country}${d._station&&!d._station.stale?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span>↻ ${updDate} ${updTime}</span></div>
     <div class="w28-now">
       <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
-      <div class="w28-nowM">${w28Icon(c.weathercode,w28Night(d,nowIso),64,true)}</div>
+      <div class="w28-nowM">${w28Wet(w28Icon(c.weathercode,w28Night(d,nowIso),64,true),c.weathercode,((d.hourly&&d.hourly.precipitation_probability)||[])[Math.max(0,(d.hourly&&d.hourly.time||[]).findIndex(t=>String(t).slice(0,13)===String(nowIso).slice(0,13)))])}</div>
       <div class="w28-nowR"><div class="w28-cond">${wdesc(c.weathercode)}</div><div class="w28-feel">${sk?'Pocitovo':'Feels like'} ${w28T(c.apparent_temperature)}°</div><div class="w28-hl">↑ ${w28T(dy.temperature_2m_max[0])}° · ↓ ${w28T(dy.temperature_2m_min[0])}°</div>${w28Mini(d)}</div>
     </div>
     <div class="w28-hours">${hours}</div>
@@ -2086,7 +2088,7 @@ function renderH(d){
   const mx=100; // absolute 0-100 % so a 4 % chance does not look like a downpour
   document.getElementById('hcnt').innerHTML=cols.map(hh=>{
     const bh=Math.max(2,(hh.prob/mx)*38);
-    return`<div class="hcol"><span class="htm">${hh.time.getHours().toString().padStart(2,'0')}h</span><span class="hic">${wico(hh.code,26)}</span><span class="htp">${fT(hh.temp).replace('°C','°').replace('°F','°')}</span><div class="hbg"><div class="hb" style="height:${bh}px"></div></div><span class="hpr">${hh.prob}%</span></div>`;
+    return`<div class="hcol"><span class="htm">${hh.time.getHours().toString().padStart(2,'0')}h</span><span class="hic">${wico(hh.code,26,hh.prob)}</span><span class="htp">${fT(hh.temp).replace('°C','°').replace('°F','°')}</span><div class="hbg"><div class="hb" style="height:${bh}px"></div></div><span class="hpr">${hh.prob}%</span></div>`;
   }).join('');
   drawWeatherGraf(cols);
 }
@@ -2197,7 +2199,7 @@ function renderF(d){
     const fm=d.daily.apparent_temperature_max?d.daily.apparent_temperature_max[i]:null;
     return`<div class="fcr" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <div class="fday">${dn}<br><span>${dt.getDate()}.${dt.getMonth()+1}.</span></div>
-      <div class="fic">${wico(d.daily.weathercode[i],36)}</div>
+      <div class="fic">${wico(d.daily.weathercode[i],36,(d.daily.precipitation_probability_max||[])[i])}</div>
       <div class="fmeta"><div class="fra"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${prob}% · ${fP(prec,prob)}</div><div class="fwi">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div>
       <div class="fts"><span class="fmx">${fT(d.daily.temperature_2m_max[i])}</span><span class="fmn">${fT(d.daily.temperature_2m_min[i])}</span>${fm!==null?`<span class="ffl">${sk?'pocit':'feels'} ${fT(fm)}</span>`:''}</div>
     </div>`;
@@ -2216,7 +2218,7 @@ function renderFcChart(d){
     return`<div class="dcol" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <span class="dcday">${dn}</span>
       <span class="dcdt">${dt.getDate()}.${dt.getMonth()+1}.</span>
-      <span class="dcic">${wico(dy.weathercode[i],32)}</span>
+      <span class="dcic">${wico(dy.weathercode[i],32,(dy.precipitation_probability_max||[])[i])}</span>
       <span class="dcmx" style="color:${tempColor(dy.temperature_2m_max[i])}">${fT(dy.temperature_2m_max[i]).replace('°C','°').replace('°F','°')}</span>
       <span class="dcmn">${fT(dy.temperature_2m_min[i]).replace('°C','°').replace('°F','°')}</span>
       <div class="dcbg"><div class="dcb" style="height:${bh}px"></div></div>
@@ -2522,7 +2524,7 @@ function openDayModal(date,dayIdx){
   const wdeg=(d.winddirection_10m_dominant?.[dayIdx])||0;
   const hourRows=hours.map(hh=>`<div class="hour-row">
     <span class="hour-time">${hh.time.getHours().toString().padStart(2,'0')}:00</span>
-    <span class="hour-ico">${wico(hh.code)}</span>
+    <span class="hour-ico">${wico(hh.code,undefined,hh.prob)}</span>
     <div class="hour-meta">
       <span class="hour-rain"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${hh.prob}% · ${fP(hh.prec,hh.prob)}</span>
       <span class="hour-wind">${warr(hh.wdeg)} ${fW(hh.wind)} ${wdir(hh.wdeg)}</span>
@@ -2534,7 +2536,7 @@ function openDayModal(date,dayIdx){
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
     <div class="day-summary">
-      <div class="day-icon">${wico(d.weathercode[dayIdx],56)}</div>
+      <div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.precipitation_probability_max||[])[dayIdx])}</div>
       <div>
         <div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div>
         <div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div>
@@ -2781,12 +2783,12 @@ function openDayModal(date,dayIdx){
   const wdeg=(d.winddirection_10m_dominant?.[dayIdx])||0;
   const hourRows=hours.map(hh=>`<div class="hour-row">
     <span class="hour-time">${hh.time.getHours().toString().padStart(2,'0')}:00</span>
-    <span class="hour-ico">${wico(hh.code)}</span>
+    <span class="hour-ico">${wico(hh.code,undefined,hh.prob)}</span>
     <div class="hour-meta"><span class="hour-rain"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${hh.prob}% · ${fP(hh.prec,hh.prob)}</span><span class="hour-wind">${warr(hh.wdeg)} ${fW(hh.wind)} ${wdir(hh.wdeg)}</span></div>
     <div style="text-align:right;"><div class="hour-temp" style="color:${tempColor(hh.temp)}">${fT(hh.temp)}</div>${hh.feel!=null?`<div class="hour-feel">${tx("pocit","feels")} ${fT(hh.feel)}</div>`:''}</div>
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
-    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56)}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
+    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.precipitation_probability_max||[])[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
     <div class="day-stats"><div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${prob}% · ${fP(prec,prob)}</div></div><div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div></div>
     <div class="hour-title">${tx('Hodinový priebeh','Hour by hour')}</div>
     ${hourRows||'<div style="color:var(--text2);text-align:center;padding:20px;">'+tx('Dáta nedostupné','No data available')+'</div>'}`;
