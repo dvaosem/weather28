@@ -311,7 +311,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 </style>
 <style id="w28-ui">
 /* ===== W28 UI v2 – now card, hourly strip, day tabs, expandable rows ===== */
-:root{--w28-cloud:#d9d5cb;--w28-cloud2:#a9a498;--w28-sun:#f2b84b;--w28-moon:#e9e2cf;--w28-drop:#b8a58f;--w28-snow:#f4f1ea;--w28-bolt:#f2b84b;}
+:root{--w28-cloud:#d9d5cb;--w28-cloud2:#a9a498;--w28-sun:#f2b84b;--w28-moon:#e9e2cf;--w28-drop:#7fb2e5;--w28-snow:#f4f1ea;--w28-bolt:#f2b84b;}
 [data-theme="light"]{--w28-cloud:#cfc9bb;--w28-cloud2:#a39d8f;--w28-moon:#b9a978;--w28-snow:#b5ad9c;}
 #cur{padding:0!important;}
 #cur>div:not([class]),#cur>.stale-banner{margin:10px 12px 0!important;}
@@ -2104,7 +2104,7 @@ function renderMinutecast(d){
     <div class="mcast-bars">${slots.map(s=>{
       const h=Math.max(2,(s.prec/maxP)*40);
       const op=s.prec>0.05?(0.4+s.prec/maxP*0.6):0.25;
-      return `<div class="mcast-bar" style="height:${h}px;background:rgba(201,162,122,${op})"></div>`;
+      return `<div class="mcast-bar" style="height:${h}px;background:rgba(127,178,229,${op})"></div>`;
     }).join('')}</div>
     <div class="mcast-labels"><span>${startLbl}</span><span>${endLbl}</span></div>`;
   el.classList.remove('hidden');
