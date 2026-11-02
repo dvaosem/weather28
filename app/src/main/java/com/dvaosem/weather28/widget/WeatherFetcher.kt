@@ -26,6 +26,8 @@ data class WeatherData(
     val todayCode: Int = -1,
     val todayIsDay: Boolean = true,
     val tomorrowCode: Int = -1,
+    val todayProb: Int = 0,      // rain chance now (current hour), %
+    val tomorrowProb: Int = 0,   // max rain chance tomorrow, %
     val source: String = "openmeteo",
     val rain: List<RainSlot> = emptyList()
 )
@@ -91,6 +93,8 @@ object WeatherFetcher {
             todayCode = chosen.curCode,
             todayIsDay = chosen.isDay ?: om?.src?.isDay ?: true,
             tomorrowCode = calmRainCode(d1.code, tomorrow, om?.hourly ?: emptyList()),
+            todayProb = (om?.hourly ?: emptyList()).firstOrNull { it.time.startsWith(java.time.LocalDateTime.now().toString().substring(0, 13)) }?.prob ?: 0,
+            tomorrowProb = (om?.hourly ?: emptyList()).filter { it.time.startsWith(tomorrow) }.maxOfOrNull { it.prob } ?: 0,
             source = source,
             rain = om?.rain ?: emptyList()
         )
@@ -284,6 +288,7 @@ object WeatherFetcher {
         put("todayTemp", d.todayTemp); put("todayMax", d.todayMax); put("todayMin", d.todayMin)
         put("tomorrowTemp", d.tomorrowTemp); put("tomorrowMax", d.tomorrowMax); put("tomorrowMin", d.tomorrowMin)
         put("todayCode", d.todayCode); put("todayIsDay", d.todayIsDay); put("tomorrowCode", d.tomorrowCode)
+        put("todayProb", d.todayProb); put("tomorrowProb", d.tomorrowProb)
         put("source", d.source)
         put("rain", JSONArray().apply { d.rain.forEach { put(JSONArray().put(it.start).put(it.minutes).put(it.wet)) } })
     }.toString()
@@ -300,6 +305,7 @@ object WeatherFetcher {
             tomorrowTemp = j.getInt("tomorrowTemp"), tomorrowMax = j.getInt("tomorrowMax"), tomorrowMin = j.getInt("tomorrowMin"),
             todayCode = j.optInt("todayCode", -1), todayIsDay = j.optBoolean("todayIsDay", true),
             tomorrowCode = j.optInt("tomorrowCode", -1),
+            todayProb = j.optInt("todayProb", 0), tomorrowProb = j.optInt("tomorrowProb", 0),
             source = j.optString("source", "openmeteo"),
             rain = rain
         )
@@ -317,6 +323,9 @@ object WeatherFetcher {
     }
 
     /** Vector icon for a WMO weather code. light = icon variant for light widget background. */
+    /** Same rule as the app: cloudy/clear-ish/fog icon + rain chance >= 20% -> small blue drop badge. */
+    fun wantsDrop(code: Int, prob: Int): Boolean = prob >= 20 && (code in 0..3 || code == 45 || code == 48 || code < 0)
+
     fun iconRes(code: Int, isDay: Boolean, light: Boolean): Int = when (code) {
         0 -> if (isDay) (if (light) R.drawable.wi_clear_day_l else R.drawable.wi_clear_day)
              else (if (light) R.drawable.wi_clear_night_l else R.drawable.wi_clear_night)

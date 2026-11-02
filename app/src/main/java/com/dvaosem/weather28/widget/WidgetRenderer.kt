@@ -56,7 +56,8 @@ object WidgetRenderer {
         light: Boolean,
         shadow: Boolean,
         stack: Boolean,
-        font: String = "default"
+        font: String = "default",
+        drop: Boolean = false
     ): Bitmap {
         val pad = U * 0.08f
 
@@ -98,14 +99,14 @@ object WidgetRenderer {
 
         var y = pad
         if (stack) {
-            drawIcon(ctx, c, iconRes, (w - iconSize) / 2f, y, iconSize, shadow)
+            drawIcon(ctx, c, iconRes, (w - iconSize) / 2f, y, iconSize, shadow, drop)
             y += iconSize + U * 0.10f
             c.drawText(temp, (w - tempW) / 2f - tb.left, y - tb.top, tempPaint)
             y += tempH
         } else {
             val rowH = maxOf(iconSize, tempH)
             val x0 = (w - (iconSize + iconGap + tempW)) / 2f
-            drawIcon(ctx, c, iconRes, x0, y + (rowH - iconSize) / 2f, iconSize, shadow)
+            drawIcon(ctx, c, iconRes, x0, y + (rowH - iconSize) / 2f, iconSize, shadow, drop)
             c.drawText(temp, x0 + iconSize + iconGap - tb.left, y + (rowH - tempH) / 2f - tb.top, tempPaint)
             y += rowH
         }
@@ -160,7 +161,7 @@ object WidgetRenderer {
         return bmp
     }
 
-    private fun drawIcon(ctx: Context, c: Canvas, res: Int, x: Float, y: Float, size: Float, shadow: Boolean) {
+    private fun drawIcon(ctx: Context, c: Canvas, res: Int, x: Float, y: Float, size: Float, shadow: Boolean, drop: Boolean = false) {
         val d = ContextCompat.getDrawable(ctx, res) ?: return
         val s = size.toInt().coerceAtLeast(1)
         val iconBmp = Bitmap.createBitmap(s, s, Bitmap.Config.ARGB_8888)
@@ -175,5 +176,18 @@ object WidgetRenderer {
         }
         c.drawBitmap(iconBmp, x, y, null)
         iconBmp.recycle()
+        if (drop) {
+            val dp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF7FB2E5.toInt() }
+            val w = size * 0.2f; val hh = size * 0.28f
+            val cx = x + size * 0.86f; val top = y + size * 0.68f; val r = w / 2f
+            val path = android.graphics.Path().apply {
+                moveTo(cx, top)
+                cubicTo(cx - r * 0.2f, top + hh * 0.25f, cx - r, top + hh * 0.5f, cx - r, top + hh - r)
+                arcTo(android.graphics.RectF(cx - r, top + hh - 2 * r, cx + r, top + hh), 180f, -180f, false)
+                cubicTo(cx + r, top + hh * 0.5f, cx + r * 0.2f, top + hh * 0.25f, cx, top)
+                close()
+            }
+            c.drawPath(path, dp)
+        }
     }
 }

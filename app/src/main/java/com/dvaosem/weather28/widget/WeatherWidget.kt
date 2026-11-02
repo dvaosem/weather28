@@ -78,13 +78,15 @@ class WeatherWidget : AppWidgetProvider() {
                 val icon = WeatherFetcher.iconRes(
                     if (d == null) -1 else if (tomorrow) d.tomorrowCode else d.todayCode,
                     if (d == null || tomorrow) true else d.todayIsDay, light)
+                val prob = if (d == null) 0 else if (tomorrow) d.tomorrowProb else d.todayProb
+                val code = if (d == null) -1 else if (tomorrow) d.tomorrowCode else d.todayCode
                 WidgetRenderer.renderDay(
                     ctx, icon,
                     temp?.let { "$it°" } ?: "--°",
                     if (light) 0xFF16202C.toInt() else if (temp != null) WeatherFetcher.tempColor(temp) else 0xFFFFFFFF.toInt(),
                     d?.let { "${if (tomorrow) it.tomorrowMax else it.todayMax}°" },
                     d?.let { "${if (tomorrow) it.tomorrowMin else it.todayMin}°" },
-                    light, shadow, stack, font)
+                    light, shadow, stack, font, d != null && WeatherFetcher.wantsDrop(code, prob))
             }
 
             /** Pick the composition whose temperature ends up larger in a cw x ch box. */
