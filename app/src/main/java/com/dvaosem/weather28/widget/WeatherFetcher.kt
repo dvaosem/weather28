@@ -97,7 +97,7 @@ object WeatherFetcher {
         return DayRain(dayTier(pm, sum), dayBaseCode(codes), sum)
     }
 
-    fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2)): WeatherData? {
+    fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2), windowMin: Int = 60): WeatherData? {
         val om = fetchOpenMeteo(lat, lon, null) // always: 15-min rain for "rain in X min"
         val chosen: Src = when (source) {
             "ecmwf" -> fetchEcmwf(lat, lon)
@@ -112,11 +112,19 @@ object WeatherFetcher {
         val d0 = chosen.days[today] ?: chosen.days.values.firstOrNull() ?: return null
         val d1 = chosen.days[tomorrow] ?: chosen.days.values.drop(1).firstOrNull() ?: d0
 
-        val curHour = chosen.hours.firstOrNull { it.time.startsWith(nowKey) }
-        val curTier = curHour?.let { hourTier(it.prob, it.mm) } ?: 0
-        val todayCode = if (curHour == null) chosen.curCode
-            else tierCode(chosen.curCode, curTier, chosen.curTemp, maxOf(curHour.mm, chosen.curMm))
-        val todayRain = dayRain(chosen.hours, today, nowKey)          // widget "today" = rest of the day, like the app's today tab
+        // "today" in the widget = the window from now until the next refresh (at least 1 h), not the rest of the day;
+        // later rain today is covered by the rain note text under the days
+        val nowMs = System.currentTimeMillis()
+        val winEnd = nowMs + maxOf(windowMin, 60) * 60_000L
+        val zone = ZoneId.systemDefault()
+        val win = chosen.hours.filter {
+            val s = LocalDateTime.parse(it.time).atZone(zone).toInstant().toEpochMilli()
+            s + 3600_000L > nowMs && s < winEnd
+        }
+        val winTier = win.maxOfOrNull { hourTier(it.prob, it.mm) } ?: 0
+        val winMm = win.maxOfOrNull { it.mm } ?: 0.0
+        val todayCode = tierCode(dayBaseCode(win.map { it.code } + chosen.curCode), winTier, chosen.curTemp, maxOf(winMm, chosen.curMm))
+        val todayRain = DayRain(winTier, null, winMm)
         val tmr = dayRain(chosen.hours, tomorrow, null)
         val tomorrowCode = if (tmr.code == null) d1.code else tierCode(tmr.code, tmr.tier, d1.max, tmr.sumW)
 

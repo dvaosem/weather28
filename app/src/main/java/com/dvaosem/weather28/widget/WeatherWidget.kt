@@ -27,7 +27,8 @@ class WeatherWidget : AppWidgetProvider() {
 
             CoroutineScope(Dispatchers.IO).launch {
                 val data = WeatherFetcher.fetch(lat, lon, city,
-                    WidgetPrefs.getSource(context), WidgetPrefs.getSourceOrder(context))
+                    WidgetPrefs.getSource(context), WidgetPrefs.getSourceOrder(context),
+                    WidgetPrefs.getInterval(context, appWidgetId))
                 withContext(Dispatchers.Main) {
                     if (data != null) WidgetPrefs.saveCache(context, appWidgetId, WeatherFetcher.serialize(data))
                     render(context, appWidgetManager, appWidgetId, data ?: cached)
