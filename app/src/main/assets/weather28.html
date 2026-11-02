@@ -995,7 +995,8 @@ function majorityCode(codes, srcOrder){
 // poradie zdrojov podľa nazbieranej presnosti (index do [om,metno,ecmwf])
 function accSrcOrder(){
   const st=accGet().stats||{};
-  const order=['openmeteo','metno','ecmwf'].map((s,i)=>({i,e:(st[s]&&st[s].n>=3)?st[s].tErrSum/st[s].n:999}));
+  // score = temperature error (°C) + 0.5 x daily rain amount error (mm); both measured against the home station
+  const order=['openmeteo','metno','ecmwf'].map((s,i)=>({i,e:(st[s]&&st[s].n>=3)?st[s].tErrSum/st[s].n+0.5*(st[s].mmN?st[s].mmErrSum/st[s].mmN:0):999}));
   return order.sort((a,b)=>a.e-b.e).map(o=>o.i);
 }
 function round1(x){return x==null?null:+(+x).toFixed(1);}
@@ -1183,12 +1184,13 @@ async function accEvaluate(lat,lon){
     for(const s of ['openmeteo','metno','ecmwf','best']){
       const f=acc.pending[day][s];
       if(!f)continue;
-      if(!acc.stats[s])acc.stats[s]={n:0,tErrSum:0,rainHit:0,rainN:0};
+      if(!acc.stats[s])acc.stats[s]={n:0,tErrSum:0,rainHit:0,rainN:0,mmErrSum:0,mmN:0};
       const st=acc.stats[s];
       st.n++;if(fromSt)st.nSt=(st.nSt||0)+1;
       st.tErrSum+=(Math.abs(f.tmax-aTmax)+Math.abs(f.tmin-aTmin))/2;
       st.rainN++;
       if((f.psum>=ACC_RAIN_THR)===aRain)st.rainHit++;
+      if(f.psum!=null){st.mmErrSum=(st.mmErrSum||0)+Math.abs(f.psum-aPsum);st.mmN=(st.mmN||0)+1;}
     }
     delete acc.pending[day];changed=true;
   }
@@ -1208,8 +1210,9 @@ function renderAccUI(){
   const st=accGet().stats||{};
   const rows=['openmeteo','metno','ecmwf','best']
     .filter(s=>st[s]&&st[s].n>0)
-    .map(s=>({s,n:st[s].n,tErr:st[s].tErrSum/st[s].n,rain:st[s].rainN?Math.round(100*st[s].rainHit/st[s].rainN):null}))
-    .sort((a,b)=>a.tErr-b.tErr);
+    .map(s=>({s,n:st[s].n,tErr:st[s].tErrSum/st[s].n,mmErr:st[s].mmN?st[s].mmErrSum/st[s].mmN:null,rain:st[s].rainN?Math.round(100*st[s].rainHit/st[s].rainN):null}))
+    .map(r=>Object.assign(r,{score:r.tErr+0.5*(r.mmErr||0)}))
+    .sort((a,b)=>a.score-b.score);
   if(!rows.length){
     list.innerHTML='<div style="font-size:0.72rem;color:var(--text2);padding:6px 0;">'+tx('Zbiera sa štatistika – prvé výsledky zajtra po otvorení appky.','Collecting data – first results tomorrow after you open the app.')+'</div>';
     if(daysEl)daysEl.textContent='';
@@ -1222,7 +1225,7 @@ function renderAccUI(){
     return `<div style="background:var(--card2);border:1px solid ${top?'var(--green)':'var(--border)'};border-radius:12px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:0.82rem;font-weight:600;">${srcLabel(r.s)}${badge}</div>
-        <div style="font-size:0.68rem;color:var(--text2);margin-top:2px;">${tx('teplota','temperature')} ±${S.lang==='en'?r.tErr.toFixed(1):r.tErr.toFixed(1).replace('.',',')} °C${r.rain!=null?` · ${tx('zrážky','rain')} ${r.rain} %`:''}</div>
+        <div style="font-size:0.68rem;color:var(--text2);margin-top:2px;">${tx('teplota','temperature')} ±${S.lang==='en'?r.tErr.toFixed(1):r.tErr.toFixed(1).replace('.',',')} °C${r.rain!=null?` · ${tx('zrážky','rain')} ${r.rain} %`:''}${r.mmErr!=null?` · ±${S.lang==='en'?r.mmErr.toFixed(1):r.mmErr.toFixed(1).replace('.',',')} mm`:''}</div>
       </div>
       <div style="font-size:0.72rem;color:${top?'var(--green)':'var(--text2)'};font-weight:700;">${i+1}.</div>
     </div>`;
@@ -1623,6 +1626,12 @@ async function w28Station(d,lat,lon,nm){
     const c=d.current;
     if(!d._stOrig)d._stOrig={temperature_2m:c.temperature_2m,relativehumidity_2m:c.relativehumidity_2m,windspeed_10m:c.windspeed_10m,winddirection_10m:c.winddirection_10m};
     c.temperature_2m=s.temp;
+    // measured rain beats the model: the gauge reports rain now -> "Now" shows rain (never the other way round:
+    // a tipping-bucket gauge reads 0 in light drizzle, so a dry reading does not cancel a forecast)
+    const rate=+s.precipRate||0, wc=c.weathercode;
+    if(rate>0&&(isDryCode(wc)||isRainCode(wc))&&c.temperature_2m>1){
+      c.weathercode=rate>=2.5?63:rate>=0.5?61:51; c.rainTier=2; c.precipitation=Math.max(c.precipitation||0,rate);
+    }
     if(s.humidity!=null)c.relativehumidity_2m=Math.round(s.humidity);
     if(s.windSpeed!=null)c.windspeed_10m=s.windSpeed;
     if(s.winddir!=null)c.winddirection_10m=s.winddir;

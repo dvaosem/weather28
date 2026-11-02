@@ -120,23 +120,45 @@ object WeatherFetcher {
         val tmr = dayRain(chosen.hours, tomorrow, null)
         val tomorrowCode = if (tmr.code == null) d1.code else tierCode(tmr.code, tmr.tier, d1.max, tmr.sumW)
 
+        // home station (Viničné): measured temperature and measured rain beat the model for "now"
+        val st = if (isHome(lat, lon, cityName)) fetchStation() else null
+        var nowCode = todayCode; var nowTier = todayRain.tier
+        var rainList = rainSlots(om?.minutely ?: emptyList(), chosen.hours)
+        if (st != null && st.rate > 0 && (nowCode in 0..3 || nowCode == 45 || nowCode == 48 || isRainCode(nowCode)) && st.temp > 1) {
+            nowCode = if (st.rate >= 2.5) 63 else if (st.rate >= 0.5) 61 else 51; nowTier = 2
+            rainList = (listOf(RainSlot(System.currentTimeMillis() - 5 * 60_000L, 15, true)) + rainList).sortedBy { it.start }
+        }
+
         return WeatherData(
             city = cityName,
-            todayTemp = jsRound(chosen.curTemp),
+            todayTemp = jsRound(st?.temp ?: chosen.curTemp),
             todayMax = jsRound(d0.max),
             todayMin = jsRound(d0.min),
             tomorrowTemp = jsRound(d1.max),
             tomorrowMax = jsRound(d1.max),
             tomorrowMin = jsRound(d1.min),
-            todayCode = todayCode,
+            todayCode = nowCode,
             todayIsDay = chosen.isDay ?: om?.src?.isDay ?: true,
             tomorrowCode = tomorrowCode,
-            todayTier = todayRain.tier,
+            todayTier = nowTier,
             tomorrowTier = tmr.tier,
             source = source,
-            rain = rainSlots(om?.minutely ?: emptyList(), chosen.hours)
+            rain = rainList
         )
     }
+
+    // ---------------- home station (station.php proxy, same data as the app's station card) ----------------
+    private class Station(val temp: Double, val rate: Double)
+    private fun isHome(lat: Double, lon: Double, city: String): Boolean =
+        Regex("^vini[cč]n[eé]$", RegexOption.IGNORE_CASE).matches(java.text.Normalizer.normalize(city.trim(), java.text.Normalizer.Form.NFC)) ||
+            (Math.abs(lat - 48.269) <= 0.05 && Math.abs(lon - 17.301) <= 0.08)
+    /** Fresh reading (<= 30 min old) or null. */
+    private fun fetchStation(): Station? = try {
+        val j = JSONObject(get("https://dvaosem.com/station.php") ?: throw Exception("no body"))
+        val age = if (j.isNull("ageMin")) 999 else j.optInt("ageMin", 999)
+        if (!j.optBoolean("ok") || age > 30 || j.isNull("temp")) null
+        else Station(j.getDouble("temp"), if (j.isNull("precipRate")) 0.0 else j.optDouble("precipRate", 0.0))
+    } catch (e: Exception) { Log.e(TAG, "station error: ${e.message}"); null }
 
     /** Same as JavaScript Math.round (half up), unlike Kotlin's round() (half even) or toInt() (truncates). */
     private fun jsRound(v: Double): Int = Math.floor(v + 0.5).toInt()
