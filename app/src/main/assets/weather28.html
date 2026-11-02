@@ -1979,7 +1979,8 @@ function w28Details(d,i){
 }
 
 function w28Pick(i){
-  if(!ld||i===w28Sel)return;
+  if(!ld)return;
+  if(i===w28Sel){const dt=ld.daily&&ld.daily.time&&ld.daily.time[i];if(dt)openDayModal(dt,i);return;}   // tap the selected day again -> hourly details
   const dir=i>w28Sel?1:-1;w28Sel=i;
   document.querySelectorAll('#cur .w28-tab').forEach((b,k)=>{b.classList.toggle('on',k===i);b.setAttribute('aria-selected',k===i?'true':'false');});
   const el=document.getElementById('w28-det');if(!el)return;
