@@ -1511,14 +1511,14 @@ function updateWindy(lat,lon){
 let ld=null,ln='',lc='',clat=48.2086,clon=17.2736;
 /* ===== RAIN: one rule for the whole app (mirrored 1:1 in the widget, WeatherFetcher.kt) =====
    Every hour gets a tier:  0 = dry · 1 = possible (small blue drop) · 2 = rain (rain/drizzle icon).
-   Hour : tier 2 if chance >= 40 % and >= 0.1 mm · tier 1 if chance >= 20 % or >= 0.1 mm.
+   Hour : tier 2 if chance >= 40 % and >= 0.1 mm · tier 1 (drop) if chance >= 10 % or >= 0.05 mm.
           Unknown chance (Met.no) -> by amount only: >= 0.2 mm -> 2, >= 0.05 mm -> 1.
    Day  : same from the day's hours (today = only hours still ahead), night 22-06 counts half,
-          thresholds 40 % + 0.3 mm (rain) / 20 % or 0.1 mm (possible); unknown chance: 0.5 mm / 0.1 mm.
+          thresholds 40 % + 0.3 mm (rain) / 10 % or 0.05 mm (possible); unknown chance: 0.5 mm / 0.1 mm.
    Icons: rain/drizzle code below tier 2 -> cloud; dry code at tier 2 (and above +1 °C) -> drizzle (< 0.5 mm) or rain.
           Snow, sleet, thunder, fog codes are never rewritten. The drop shows on dry-looking icons at tier >= 1.
    Day icon: thunder > snow/sleet > rain > most common of the rest (not "highest code", one foggy hour no longer wins). */
-const RAIN={hP2:40,hMm2:0.1,hP1:20,hMm1:0.1,hMmOnly2:0.2,hMmOnly1:0.05,dP2:40,dMm2:0.3,dP1:20,dMm1:0.1,dMmOnly2:0.5,night:0.5};
+const RAIN={hP2:40,hMm2:0.1,hP1:10,hMm1:0.05,hMmOnly2:0.2,hMmOnly1:0.05,dP2:40,dMm2:0.3,dP1:10,dMm1:0.05,dMmOnly2:0.5,night:0.5};
 const isRainCode=c=>(c>=51&&c<=57)||(c>=61&&c<=65)||(c>=80&&c<=82);
 const isDryCode=c=>c<=3||c===45||c===48;
 function hourTier(p,mm){mm=mm||0;

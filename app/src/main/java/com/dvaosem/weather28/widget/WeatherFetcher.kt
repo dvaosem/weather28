@@ -57,8 +57,8 @@ object WeatherFetcher {
     // ================= RAIN: 1:1 copy of the app's rule (weather28.html, "RAIN: one rule for the whole app") =================
     // tier 0 = dry, 1 = possible (blue drop), 2 = rain (rain/drizzle icon). Change numbers in BOTH places.
     private object RainCfg {
-        const val hP2 = 40; const val hMm2 = 0.1; const val hP1 = 20; const val hMm1 = 0.1; const val hMmOnly2 = 0.2; const val hMmOnly1 = 0.05
-        const val dP2 = 40.0; const val dMm2 = 0.3; const val dP1 = 20.0; const val dMm1 = 0.1; const val dMmOnly2 = 0.5; const val night = 0.5
+        const val hP2 = 40; const val hMm2 = 0.1; const val hP1 = 10; const val hMm1 = 0.05; const val hMmOnly2 = 0.2; const val hMmOnly1 = 0.05
+        const val dP2 = 40.0; const val dMm2 = 0.3; const val dP1 = 10.0; const val dMm1 = 0.05; const val dMmOnly2 = 0.5; const val night = 0.5
         const val nowMm = 0.05   // "rain in X min" from 15-min data, same as the app's minutecast
     }
     private fun isRainCode(c: Int) = c in 51..57 || c in 61..65 || c in 80..82
