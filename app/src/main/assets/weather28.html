@@ -1602,7 +1602,7 @@ function w28StIco(w,c){return `<svg width="${w}" height="${w}" viewBox="0 0 24 2
 /* ===== História stanice (modal s grafmi) ===== */
 let w28H={range:'24h',metric:'temp',pts:null,tok:0};
 const W28_HM=[['temp','Teplota','Temperature'],['hum','Vlhkosť','Humidity'],['press','Tlak','Pressure'],['wind','Vietor','Wind'],['rain','Zrážky','Rain']];
-function w28HistOpen(){document.getElementById('sthist').classList.add('open');document.body.style.overflow='hidden';w28HistTabs();w28HistLoad();}
+function w28HistOpen(m){if(m)w28H.metric=m;document.getElementById('sthist').classList.add('open');document.body.style.overflow='hidden';w28HistTabs();w28HistLoad();}
 function w28HistClose(){document.getElementById('sthist').classList.remove('open');document.body.style.overflow='';}
 function w28HistSet(k,v){w28H[k]=v;if(k==='range'){w28H.pts=null;w28HistTabs();w28HistLoad();}else{w28HistTabs();w28HistDraw();}}
 function w28HistTabs(){
@@ -1698,18 +1698,18 @@ function renderStation(d){
   const dirsE=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
   const ok=s.ageMin<=5,stc=ok?'#8fb996':'#c8553d',stt=ok?(sk?'Spojenie v poriadku':'Connection OK'):(sk?`Bez spojenia ${s.ageMin} min`:`No connection for ${s.ageMin} min`);
   const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
-  const cell=(l,v)=>`<div style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
+  const cell=(l,v,m)=>`<div onclick="w28HistOpen('${m}')" role="button" style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0;cursor:pointer"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
   const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
   el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25" title="${stt}"><span title="${stt}">${w28StIco(16,stc)}</span> ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-    ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°')}
-    ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'))}
-    ${cell(sk?'Rosný bod':'Dew point',s.dewpt==null?'–':w28T(s.dewpt)+'°')}
-    ${cell(sk?'Tlak':'Pressure',n(s.pressure,' hPa'))}
-    ${cell(sk?'Vietor':'Wind',(s.windSpeed==null?'–':fW(s.windSpeed))+(dn?' '+dn:''))}
-    ${cell(sk?'Nárazy':'Gusts',s.windGust==null?'–':fW(s.windGust))}
-    ${cell(sk?'Zrážky dnes':'Rain today',n(s.precipTotal,' mm',1))}
-    ${cell(sk?'Intenzita':'Rain rate',n(s.precipRate,' mm/h',1))}
+    ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°','temp')}
+    ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'),'hum')}
+    ${cell(sk?'Rosný bod':'Dew point',s.dewpt==null?'–':w28T(s.dewpt)+'°','hum')}
+    ${cell(sk?'Tlak':'Pressure',n(s.pressure,' hPa'),'press')}
+    ${cell(sk?'Vietor':'Wind',(s.windSpeed==null?'–':fW(s.windSpeed))+(dn?' '+dn:''),'wind')}
+    ${cell(sk?'Nárazy':'Gusts',s.windGust==null?'–':fW(s.windGust),'wind')}
+    ${cell(sk?'Zrážky dnes':'Rain today',n(s.precipTotal,' mm',1),'rain')}
+    ${cell(sk?'Intenzita':'Rain rate',n(s.precipRate,' mm/h',1),'rain')}
     <button onclick="w28HistOpen()" style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;min-width:0;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;text-align:left"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--orange)"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg><span style="font-size:1rem;font-weight:600">${sk?'História':'History'}</span></button>
   </div>`;
   el.classList.remove('hidden');
@@ -2487,7 +2487,7 @@ function closeWindy(){
 // BACK BUTTON / GESTURE (called by the Android app): close top-most overlay, true if something was closed
 window.w28Back=function(){
   const o=(id,fn)=>{const e=document.getElementById(id);if(e&&e.classList.contains('open')){fn();return true;}return false;};
-  return o('info-modal',()=>closeInfoModal())||o('day-modal',()=>closeDayModal())||o('windy-overlay',()=>closeWindy())||o('sov',()=>closeS());
+  return o('sthist',()=>w28HistClose())||o('info-modal',()=>closeInfoModal())||o('day-modal',()=>closeDayModal())||o('windy-overlay',()=>closeWindy())||o('sov',()=>closeS());
 };
 
 // DAY MODAL
