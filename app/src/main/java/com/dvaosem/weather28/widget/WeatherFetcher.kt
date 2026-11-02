@@ -26,7 +26,7 @@ data class WeatherData(
     val todayCode: Int = -1,
     val todayIsDay: Boolean = true,
     val tomorrowCode: Int = -1,
-    val todayProb: Int = 0,      // rain chance now (current hour), %
+    val todayProb: Int = 0,      // max rain chance for the rest of today, %
     val tomorrowProb: Int = 0,   // max rain chance tomorrow, %
     val source: String = "openmeteo",
     val rain: List<RainSlot> = emptyList()
@@ -93,7 +93,7 @@ object WeatherFetcher {
             todayCode = chosen.curCode,
             todayIsDay = chosen.isDay ?: om?.src?.isDay ?: true,
             tomorrowCode = calmRainCode(d1.code, tomorrow, om?.hourly ?: emptyList()),
-            todayProb = (om?.hourly ?: emptyList()).firstOrNull { it.time.startsWith(java.time.LocalDateTime.now().toString().substring(0, 13)) }?.prob ?: 0,
+            todayProb = (om?.hourly ?: emptyList()).filter { it.time.startsWith(today) && it.time >= java.time.LocalDateTime.now().toString().substring(0, 13) }.maxOfOrNull { it.prob } ?: 0,
             tomorrowProb = (om?.hourly ?: emptyList()).filter { it.time.startsWith(tomorrow) }.maxOfOrNull { it.prob } ?: 0,
             source = source,
             rain = om?.rain ?: emptyList()

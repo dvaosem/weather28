@@ -10,9 +10,9 @@
     </style>
 
     <style name="Theme.Weather28.Config" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#d97757</item>
-        <item name="android:windowBackground">#1d1b19</item>
-        <item name="android:statusBarColor">#1d1b19</item>
-        <item name="android:navigationBarColor">#1d1b19</item>
+        <item name="colorPrimary">#c9a27a</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
     </style>
 </resources>
