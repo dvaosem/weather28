@@ -56,7 +56,7 @@ object WeatherFetcher {
 
     // ================= RAIN: 1:1 copy of the app's rule (weather28.html, "RAIN: one rule for the whole app") =================
     // tier 0 = dry, 1 = possible (blue drop), 2 = rain (rain/drizzle icon). Change numbers in BOTH places.
-    private object R {
+    private object RainCfg {
         const val hP2 = 40; const val hMm2 = 0.1; const val hP1 = 20; const val hMm1 = 0.1; const val hMmOnly2 = 0.2; const val hMmOnly1 = 0.05
         const val dP2 = 40.0; const val dMm2 = 0.3; const val dP1 = 20.0; const val dMm1 = 0.1; const val dMmOnly2 = 0.5; const val night = 0.5
         const val nowMm = 0.05   // "rain in X min" from 15-min data, same as the app's minutecast
@@ -64,11 +64,11 @@ object WeatherFetcher {
     private fun isRainCode(c: Int) = c in 51..57 || c in 61..65 || c in 80..82
     private fun isDryCode(c: Int) = c in 0..3 || c == 45 || c == 48
     private fun hourTier(p: Int?, mm: Double): Int =
-        if (p == null) (if (mm >= R.hMmOnly2) 2 else if (mm >= R.hMmOnly1) 1 else 0)
-        else if (p >= R.hP2 && mm >= R.hMm2) 2 else if (p >= R.hP1 || mm >= R.hMm1) 1 else 0
+        if (p == null) (if (mm >= RainCfg.hMmOnly2) 2 else if (mm >= RainCfg.hMmOnly1) 1 else 0)
+        else if (p >= RainCfg.hP2 && mm >= RainCfg.hMm2) 2 else if (p >= RainCfg.hP1 || mm >= RainCfg.hMm1) 1 else 0
     private fun dayTier(p: Double?, mm: Double): Int =
-        if (p == null) (if (mm >= R.dMmOnly2) 2 else if (mm >= R.dMm1) 1 else 0)
-        else if (p >= R.dP2 && mm >= R.dMm2) 2 else if (p >= R.dP1 || mm >= R.dMm1) 1 else 0
+        if (p == null) (if (mm >= RainCfg.dMmOnly2) 2 else if (mm >= RainCfg.dMm1) 1 else 0)
+        else if (p >= RainCfg.dP2 && mm >= RainCfg.dMm2) 2 else if (p >= RainCfg.dP1 || mm >= RainCfg.dMm1) 1 else 0
     private fun tierCode(c: Int, tier: Int, temp: Double?, mm: Double): Int = when {
         isRainCode(c) && tier < 2 -> if (c >= 80) 2 else 3
         tier == 2 && c in 0..3 && (temp == null || temp > 1) -> if (mm < 0.5) 51 else 61
@@ -89,7 +89,7 @@ object WeatherFetcher {
             if (!h.time.startsWith(date)) continue
             if (fromKey != null && h.time.substring(0, 13) < fromKey) continue
             val hr = h.time.substring(11, 13).toIntOrNull() ?: continue
-            val w = if (hr >= 22 || hr < 6) R.night else 1.0
+            val w = if (hr >= 22 || hr < 6) RainCfg.night else 1.0
             h.prob?.let { pm = maxOf(pm ?: 0.0, it * w) }
             sum += h.mm * w; cnt++; codes += h.code
         }
@@ -226,7 +226,7 @@ object WeatherFetcher {
         for ((t, mm) in minutely) {
             val s = epoch(t)
             if (s + 15 * 60_000 <= now || s > now + 2 * 3600_000) continue
-            out += RainSlot(s, 15, mm >= R.nowMm)
+            out += RainSlot(s, 15, mm >= RainCfg.nowMm)
             minutelyEnd = s + 15 * 60_000
         }
         for (h in hours) {
