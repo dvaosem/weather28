@@ -350,7 +350,7 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notif = NotificationCompat.Builder(ctx, chId)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.mipmap.ic_launcher_new)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
