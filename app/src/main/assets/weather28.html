@@ -2358,6 +2358,14 @@ const W28_COLLAPSIBLE=['cur','station','ai','hourly','fcchart','fclist'];
 function w28ApplyCollapse(){
   const main=document.getElementById('main-cards');if(!main)return;
   const sk=S.lang==='sk';
+  if(!main._w28hd){main._w28hd=1;main.addEventListener('click',e=>{
+    if(e.target.closest('button,a,input,select,textarea,label,canvas,[onclick]'))return;
+    const el=e.target.closest('[data-section]');if(!el)return;
+    const id=el.dataset.section;if(W28_COLLAPSIBLE.indexOf(id)<0)return;
+    const r=el.getBoundingClientRect();
+    if(!el.classList.contains('w28-col')&&e.clientY-r.top>48)return;
+    w28ToggleCollapse(id);
+  });}
   W28_COLLAPSIBLE.forEach(id=>{
     const el=main.querySelector(`[data-section="${id}"]`);if(!el)return;
     let b=el.querySelector(':scope>.w28-cv');
