@@ -70,8 +70,11 @@ header{position:relative;}
 .w28-col[data-section="station"] #stcard>div:first-child{margin-bottom:0!important;}
 .w28-col[data-section="ai"] .ai-body{display:none;}
 .w28-col:is([data-section="hourly"],[data-section="fcchart"],[data-section="fclist"],[data-section="ski"]) .card>:not(.stitle){display:none;}
-.ski-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;border-top:1px solid var(--border);cursor:pointer;text-decoration:none;color:inherit;}
-.ski-row:first-of-type{border-top:none;}
+.ski-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;cursor:pointer;text-decoration:none;color:inherit;}
+.ski-it+.ski-it{border-top:1px solid var(--border);}
+.ski-det{display:none;padding:0 14px 10px;font-size:0.72rem;color:var(--text2);line-height:1.6;}
+.ski-x .ski-det{display:block;}
+.ski-det a{color:var(--text2);}
 .ski-nm{font-weight:600;font-size:0.9rem;}
 .ski-sub{font-size:0.7rem;color:var(--text2);margin-top:1px;}
 .ski-v{display:flex;align-items:center;gap:10px;font-size:0.85rem;white-space:nowrap;}
@@ -462,7 +465,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   </div>
 </header>
 
-<script src="https://dvaosem.com/ski28/ski28-data.js?v=4"></script>
+<script src="https://dvaosem.com/ski28/ski28-data.js?v=5"></script>
 <main id="main-cards">
   <div data-section="cur">
     <div class="card" data-banner="current" id="cur" style="padding:0;"><div class="w28-skel"><div class="w28-sk" style="height:12px;width:45%;margin-bottom:16px"></div><div style="display:flex;align-items:center;gap:14px"><div class="w28-sk" style="height:70px;width:110px"></div><div class="w28-sk" style="height:56px;width:56px;border-radius:50%"></div></div><div style="display:flex;gap:10px;margin-top:18px"><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div></div></div></div>
@@ -2379,7 +2382,8 @@ function drawDailyGraf(d){
 }
 
 // SKI CARD (Ski28)
-let skiBusy=false,skiOps=null;
+let skiBusy=false,skiOps=null,skiX={};
+function skiTog(id){skiX[id]=!skiX[id];const e=document.getElementById('ski-it-'+id);if(e)e.classList.toggle('ski-x',!!skiX[id]);}
 function skiList(){
   const all=window.SKI_ALL||[];const f=window.skiFavGet?skiFavGet():[];
   return f.map(id=>all.find(r=>r.id===id)).filter(Boolean);
@@ -2392,13 +2396,19 @@ function skiPaint(list,arr){
   if(skiOps===null&&window.skiOpsLoad){skiOps=false;skiOpsLoad().then(j=>{skiOps=j||false;if(j)skiPaint(list,arr)});}
   const el=document.getElementById('ski-body');if(!el)return;
   const sk=S.lang==='sk';
-  el.innerHTML=list.map((r,i)=>{
-    const d=arr[i];if(!d)return '';
+  const rows=list.map((r,i)=>{
+    const d=arr[i];if(!d)return null;
     let idx=d.hourly.time.indexOf(d.current.time.slice(0,13)+':00');if(idx<0)idx=0;
     const snow=Math.round((d.hourly.snow_depth[idx]||0)*100);
-    const t=Math.round(d.current.temperature_2m);
-    const [lab,cls]=skiRate(snow,d.current.temperature_2m);
-    return `<a class="ski-row" href="https://dvaosem.com/ski28/"><div><div class="ski-nm">${r.n}</div><div class="ski-sub">${r.el} m${r.sl?' · '+r.sl+(sk?' zjazdoviek':' slopes'):''}</div>${(()=>{const o=window.skiOpsText&&skiOps?skiOpsText(r.id,skiOps,S.lang):null;return o?'<div class="ski-sub">'+o+'</div>':'';})()}</div><div class="ski-v"><span>${sk?'Sneh':'Snow'} <b>${snow} cm</b></span><span><b>${t}°</b></span><span class="ski-bd ${cls}">${lab}</span></div></a>`;
+    const s=skiState(r.id,skiOps||null,snow,d.current.temperature_2m,S.lang);
+    const n3=d.daily?skiNew3(d.daily.snowfall_sum):0;
+    return{r,snow,s,n3};
+  }).filter(Boolean).sort((a,b)=>a.s[2]-b.s[2]);
+  el.innerHTML=rows.map(({r,snow,s,n3})=>{
+    const ops=window.skiOpsText&&skiOps?skiOpsText(r.id,skiOps,S.lang):null;
+    const cnt=[r.sl?r.sl+(sk?' zjazdoviek':' slopes'):'',r.li?r.li+(sk?' vlekov/lanoviek':' lifts'):''].filter(Boolean).join(' · ');
+    const det=[ops,cnt,'<a href="https://dvaosem.com/ski28/">Ski28 &rsaquo;</a>'+(r.cam?' · <a href="'+r.cam+'" target="_blank" rel="noopener">'+(sk?'Webkamera':'Webcam')+'</a>':'')].filter(Boolean).join('<br>');
+    return `<div class="ski-it${skiX[r.id]?' ski-x':''}" id="ski-it-${r.id}"><div class="ski-row" onclick="skiTog('${r.id}')"><div><div class="ski-nm">${r.n}</div><div class="ski-sub">${r.el} m${n3>0?' · +'+n3+' cm / 3 '+(sk?'dni':'days'):''}</div></div><div class="ski-v"><b>${snow} cm</b><span class="ski-bd ski-${s[1]}">${s[0]}</span></div></div><div class="ski-det">${det}</div></div>`;
   }).join('')+`<div class="ski-ft"><span>${sk?'Modelový sneh (Open-Meteo)':'Modelled snow (Open-Meteo)'}</span><a href="https://dvaosem.com/ski28/">Ski28 &rsaquo;</a></div>`;
 }
 function skiMsg(txt){const el=document.getElementById('ski-body');if(el)el.innerHTML='<div class="ski-ft"><span>'+txt+'</span></div>';}
@@ -2410,12 +2420,12 @@ async function renderSki(){
   if(!window.SKI_ALL){skiMsg(sk?'Zoznam stredísk sa nenačítal.':'Resort list not loaded.');return;}
   const list=skiList();
   if(!list.length){skiMsg(sk?'Vyber strediská v nastaveniach.':'Choose resorts in settings.');return;}
-  const key=list.map(r=>r.id).join(',');
+  const key=list.map(r=>r.id).join(',')+'|v2';
   let c=null;try{c=JSON.parse(localStorage.getItem('w28ski'));}catch(e){}
   if(c&&c.k===key&&c.d){skiPaint(list,c.d);if(Date.now()-c.t<30*60*1000)return;}
   skiBusy=true;
   try{
-    const u='https://api.open-meteo.com/v1/forecast?latitude='+list.map(r=>r.lat).join()+'&longitude='+list.map(r=>r.lon).join()+'&elevation='+list.map(r=>r.el).join()+'&current=temperature_2m&hourly=snow_depth&timezone=Europe%2FBratislava&forecast_days=2';
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+list.map(r=>r.lat).join()+'&longitude='+list.map(r=>r.lon).join()+'&elevation='+list.map(r=>r.el).join()+'&current=temperature_2m&hourly=snow_depth&daily=snowfall_sum&timezone=Europe%2FBratislava&forecast_days=4';
     const r=await fetch(u);let d=await r.json();if(!Array.isArray(d))d=[d];
     try{localStorage.setItem('w28ski',JSON.stringify({t:Date.now(),k:key,d}));}catch(e){}
     skiPaint(list,d);
