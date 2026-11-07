@@ -149,7 +149,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 
 .rhdr{display:flex;align-items:flex-start;flex-direction:column;gap:8px;padding:12px 14px 7px;}
 .rlbl{display:flex;align-items:center;gap:6px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text2);}
-.ldot{width:6px;height:6px;border-radius:50%;background:var(--pink);animation:blink 1.4s infinite;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--text2);opacity:.5;}
+.ldot.on{background:#9fb58a;opacity:1;animation:blink 1.4s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 .lrow{display:flex;gap:5px;width:100%;}
 .lbtn{flex:1;padding:6px 4px;border:1px solid var(--border);background:var(--card2);border-radius:9px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);cursor:pointer;text-align:center;transition:all .2s;}
@@ -491,7 +492,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   <div class="card">
     <div class="rhdr" onclick="toggleRadar()" style="cursor:pointer;user-select:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-        <div class="rlbl"><div class="ldot"></div>Radar · Mapa</div>
+        <div class="rlbl"><div class="ldot" id="radar-dot"></div>Radar · Mapa</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span id="rhdrtime" style="font-size:0.68rem;color:var(--text2);font-weight:600;">--:--</span>
           <span id="radar-arrow" style="display:flex;color:var(--text2);transition:transform .25s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
@@ -2845,7 +2846,9 @@ function initMap(lat,lon){
   loadRadar();
 }
 
+function radarDot(on){const e=document.getElementById('radar-dot');if(e)e.classList.toggle('on',!!on);}
 async function loadRadar(){
+  radarDot(false);
   try{
     const r=await fetch('https://api.rainviewer.com/public/weather-maps.json');
     const d=await r.json();
@@ -2859,6 +2862,7 @@ async function loadRadar(){
       nowcastStart=past.length;
     }
     if(!radarFrames.length)return;
+    radarDot(true);
     radarIdx=Math.max(0,nowcastStart-1);
     const sl=document.getElementById('rsl');
     if(sl){sl.max=radarFrames.length-1;sl.value=radarIdx;}
