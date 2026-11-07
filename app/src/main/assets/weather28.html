@@ -178,6 +178,13 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .sov{display:none;position:fixed;inset:0;background:var(--bg);z-index:10000;flex-direction:column;overflow-y:auto;}
 .sov.open{display:flex;}
 .spnl{padding:var(--top-safe) 16px 40px;width:100%;max-width:480px;margin:0 auto;}
+.sg{border:1px solid var(--border);border-radius:14px;margin:0 0 10px;background:var(--card);overflow:hidden}
+.sgh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:0;color:var(--text);padding:14px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;text-align:left}
+.sgh svg{width:18px;height:18px;flex:none;color:var(--text2);transition:transform .2s}
+.sg.open .sgh svg{transform:rotate(180deg)}
+.sgb{display:none;padding:0 14px 6px}
+.sg.open .sgb{display:block}
+.sgb>.sr:last-child{border-bottom:0}
 .sttl{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:14px;}
 .sr{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
 .sr:last-of-type{border-bottom:none;}
@@ -633,11 +640,14 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nastavenia</div>
       <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
+    <div class="sg open" data-g="look"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Vzhľad a jednotky</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
     <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
     <div class="sr"><div><div class="sl2">Teplota</div></div><div class="tog"><button class="to on" id="tc" onclick="setTU('C')">°C</button><button class="to" id="tf" onclick="setTU('F')">°F</button></div></div>
     <div class="sr"><div><div class="sl2">Vietor</div></div><div class="tog"><button class="to on" id="wk" onclick="setWU('kmh')">km/h</button><button class="to" id="wm" onclick="setWU('mph')">mph</button></div></div>
     <div class="sr"><div><div class="sl2">Zrážky</div></div><div class="tog"><button class="to on" id="pm" onclick="setPU('mm')">mm</button><button class="to" id="pi" onclick="setPU('in')">inch</button></div></div>
+    </div></div>
+    <div class="sg" data-g="src"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Zdroje a presnosť</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
     <div class="sr" style="flex-direction:column;align-items:stretch;gap:8px;"><div><div class="sl2">Zdroj dát</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Minútový radar zrážok má len Open-Meteo a Best of</div></div><div class="tog"><button class="to on" id="srom" onclick="setSrc('openmeteo')">OM</button><button class="to" id="srmet" onclick="setSrc('metno')">Met.no</button><button class="to" id="srecm" onclick="setSrc('ecmwf')">ECMWF</button><button class="to" id="srbest" onclick="setSrc('best')">Best</button></div></div>
 
     <div style="padding:11px 0;border-bottom:1px solid var(--border);">
@@ -650,8 +660,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       </div>
     </div>
 
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-      <div class="sttl" id="sttl-notif">Upozornenia</div>
+        </div></div>
+    <div class="sg" data-g="notif"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Upozornenia</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
       <div id="notif-na" style="display:none;font-size:0.66rem;color:var(--text2);opacity:0.7;line-height:1.5;margin-bottom:8px;">Upozornenia fungujú len v Android aplikácii.</div>
       <div class="sr"><div><div class="sl2">Ranné zhrnutie</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Predpoveď na deň ráno</div></div><div class="tog"><button class="to on" id="mna" onclick="setMorningAlert(true)">Zap</button><button class="to" id="mnb" onclick="setMorningAlert(false)">Vyp</button></div></div>
       <div class="sr" id="mtime-row"><div><div class="sl2">Čas ranného</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">05:00 – 11:00</div></div><input type="time" id="mtime" min="05:00" max="11:00" onchange="setMorningTime(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:0.82rem;"/></div>
@@ -665,23 +675,19 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
       <div class="sr" id="upd-row" style="display:none;"><div><div class="sl2">Aktualizácia</div><div id="upd-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Verzia –</div></div><div class="tog"><button class="to" id="upd-btn" onclick="w28CheckUpdate()">Skontrolovať</button></div></div>
       <div class="sr" id="apk-row"><div><div class="sl2" id="apk-ttl">Android appka</div><div id="apk-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Widget, upozornenia a aktualizácie</div></div><div class="tog"><button class="to" id="apk-btn" onclick="w28ApkAction()">Stiahnuť</button></div></div>
-    </div>
+    </div></div>
 
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-      <div class="sttl" id="sttl-order">Poradie kariet</div>
-      <div id="card-order-list"></div>
-    </div>
+    <div class="sg" data-g="cards"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span id="sttl-order">Poradie kariet</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb"><div id="card-order-list"></div></div></div>
 
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-      <div class="sttl" id="sttl-ski">Lyžiarske strediská</div>
-      <div id="ski-fav-list"></div>
-    </div>
+    <div class="sg" data-g="ski"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span id="sttl-ski">Lyžiarske strediská</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb"><div id="ski-fav-list"></div></div></div>
 
   </div>
 </div>
 
 <script>
 // SETTINGS
+function sgToggle(b){const g=b.parentNode;g.classList.toggle('open');b.setAttribute('aria-expanded',g.classList.contains('open'));try{const o={};document.querySelectorAll('.sg').forEach(x=>o[x.dataset.g]=x.classList.contains('open')?1:0);localStorage.setItem('w28sg',JSON.stringify(o));}catch(e){}}
+(function(){let o=null;try{o=JSON.parse(localStorage.getItem('w28sg'));}catch(e){}document.querySelectorAll('.sg').forEach(g=>{if(o&&g.dataset.g in o)g.classList.toggle('open',!!o[g.dataset.g]);g.firstElementChild.setAttribute('aria-expanded',g.classList.contains('open'));});})();
 const DEFAULT_ORDER=['cur','station','ai','radar','ski','hourly','fcchart','fclist'];
 let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{},cardCollapsed:{}};
 function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('station')&&s.cardOrder.length===DEFAULT_ORDER.length-1){const i=s.cardOrder.indexOf('cur');s.cardOrder.splice(i+1,0,'station');}if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('ski')){const ri=s.cardOrder.indexOf('radar');s.cardOrder.splice(ri>=0?ri+1:s.cardOrder.length,0,'ski');}if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
@@ -1325,7 +1331,7 @@ const STATIC_EN={
  'Rozšírená mapa':'Extended map','← Späť':'← Back','Nastavenia':'Settings','Uložiť':'Save',
  'Téma':'Theme','Tmavá':'Dark','Svetlá':'Light','Šedá':'Gray','Jazyk':'Language','Teplota':'Temperature','Vietor':'Wind','Zrážky':'Precipitation',
  'Zdroj dát':'Data source','Minútový radar zrážok má len Open-Meteo a Best of':'Minute-by-minute rain is available only with Open-Meteo and Best of',
- 'Presnosť zdrojov':'Source accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
+ 'Presnosť zdrojov':'Source accuracy','Vzhľad a jednotky':'Appearance & units','Zdroje a presnosť':'Sources & accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
  'Vynulovať':'Reset','Upozornenia':'Notifications','Upozornenia fungujú len v Android aplikácii.':'Notifications work only in the Android app.',
  'Ranné zhrnutie':'Morning summary','Predpoveď na deň ráno':"Today's forecast every morning",'Zap':'On','Vyp':'Off',
  'Čas ranného':'Morning time','Chytrá predpoveď':'Smart forecast','Upozornenie na zmenu počasia v najbližších 2 dňoch':'Heads-up about weather changes in the next 2 days','Čas chytrej predpovede':'Smart forecast time','Vyskúšať upozornenie':'Try the notification','Pošle skúšobné upozornenie hneď':'Sends a test notification right now','Búrky a dážď':'Storms & rain','Výstraha pri zrážkach':'Alerts for storms, heavy rain and wind',
