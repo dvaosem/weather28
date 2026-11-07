@@ -440,6 +440,30 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .w28-flash{position:absolute;inset:0;background:var(--w28-snow);opacity:0;pointer-events:none;animation:w28fl 8s linear infinite;}
 @keyframes w28fl{0%,91%,100%{opacity:0}92%{opacity:.4}93%{opacity:0}94.5%{opacity:.28}96%{opacity:0}}
 .w28-pause .w28-scene *{animation-play-state:paused!important;}
+/* UX: brief, retry, pull-to-refresh, long-press sheet */
+.w28-brief{grid-column:1/-1;margin:0 0 10px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:var(--card);font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:10px;}
+.w28-brief:empty{display:none;}
+.w28-brief i{width:7px;height:7px;border-radius:50%;background:#9fb58a;flex:none;}
+.w28-brief.w i{background:var(--orange);}
+.w28-retry{margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;}
+#w28-ptr{position:fixed;left:50%;top:0;transform:translate(-50%,-44px);z-index:9990;padding:6px 14px;border-radius:99px;background:var(--card2);border:1px solid var(--border);color:var(--text2);font-size:.72rem;font-weight:600;pointer-events:none;opacity:0;}
+#w28-lp{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;}
+#w28-lp>div{width:100%;max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));}
+#w28-lp b{display:block;font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin:2px 4px 10px;}
+#w28-lp button{display:block;width:100%;text-align:left;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:8px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer;}
+#w28-lp small{display:block;color:var(--text2);font-size:.66rem;margin:2px 4px 0;}
+
+/* compact current card: tighter hourly strip, scene fades into the card */
+.w28-hours{margin:6px -14px 0;padding:0 8px 0;gap:0;position:relative;z-index:1;}
+.w28-h{min-width:50px;gap:2px;padding:4px 2px;}
+.w28-h svg{width:24px;height:24px;}
+.w28-hp{height:.55rem;line-height:.55rem;}
+.w28-temp{font-size:4rem;}
+.w28-temp sup{font-size:1.6rem;margin-top:.35rem;}
+.w28-scene{height:100px;margin:-20px -14px 0;background:none!important;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 66%,transparent 100%);}
+.w28-tabs{border-top:0;padding:0 14px 10px;margin-top:-16px;position:relative;z-index:1;}
+.w28-tab{padding:7px 4px 6px;gap:3px;}
+
 @media (prefers-reduced-motion:reduce){
   .w28-cl,.w28-rd,.w28-sn,.w28-fg,.w28-glow,.w28-star,.w28-flash{animation:none!important;}
   .w28-rd{opacity:.5!important;}.w28-sn{opacity:.8!important;}
@@ -468,6 +492,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 
 <script src="https://dvaosem.com/ski28/ski28-data.js?v=5"></script>
 <main id="main-cards">
+<div id="w28-brief" class="w28-brief"></div>
   <div data-section="cur">
     <div class="card" data-banner="current" id="cur" style="padding:0;"><div class="w28-skel"><div class="w28-sk" style="height:12px;width:45%;margin-bottom:16px"></div><div style="display:flex;align-items:center;gap:14px"><div class="w28-sk" style="height:70px;width:110px"></div><div class="w28-sk" style="height:56px;width:56px;border-radius:50%"></div></div><div style="display:flex;gap:10px;margin-top:18px"><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div><div class="w28-sk" style="height:84px;flex:1"></div></div></div></div>
   
@@ -1852,7 +1877,7 @@ async function loadW(lat,lon,name,country){
           cur.insertBefore(banner, cur.firstChild);
         }
       }else{
-        document.getElementById('cur').innerHTML=`<div class="ld">⚠️ ${e2.message} (${tx('zdroj','source')}: ${secondary})</div>`;
+        document.getElementById('cur').innerHTML=`<div class="ld">⚠️ ${tx('Počasie sa nepodarilo načítať','Could not load the weather')}<br><button class="w28-retry" onclick="loadW(clat,clon,ln,lc)">${tx('Skúsiť znova','Try again')}</button></div>`;
         document.getElementById('fccnt').innerHTML='';
       }
       return;
@@ -2091,7 +2116,7 @@ function renderCur(d,name,country){
   // keep banners (stale / fallback notes) that loadW inserted before first render
   el.innerHTML=`<div class="${first&&!W28_RM?'w28-enter':''}">
   <div class="w28-hero">
-    <div class="w28-meta"><span>${name} · ${country}${d._station&&!d._station.stale?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span>↻ ${updDate} ${updTime}</span></div>
+    <div class="w28-meta"><span>${name} · ${country}${d._station&&!d._station.stale?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span class="w28-upd" data-ts="${d._ts||Date.now()}" title="${updDate} ${updTime}">↻ ${w28Ago(d._ts||Date.now())}</span></div>
     <div class="w28-now">
       <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
       <div class="w28-nowM">${w28Wet(w28Icon(c.weathercode,w28Night(d,nowIso),64,true),c.weathercode,c.rainTier)}</div>
@@ -2102,6 +2127,7 @@ function renderCur(d,name,country){
   </div>
   <div class="w28-tabs" role="tablist">${tabs}</div>
   <div class="w28-det" id="w28-det">${w28Details(d,w28Sel)}</div></div>`;
+  try{w28BriefRender(d);}catch(e){}
 }
 
 
@@ -2967,6 +2993,92 @@ setInterval(()=>{
     loadW(clat,clon,ln||'Viničné',lc||'SK');
   }
 }, 30*60*1000);
+
+// ===== UX: relative update time, brief, refresh on return, pull-to-refresh, long-press =====
+function w28Ago(ts){const sk=S.lang==='sk';const m=Math.floor((Date.now()-ts)/60000);
+  if(m<1)return sk?'práve teraz':'just now';
+  if(m<60)return sk?'pred '+m+' min':m+' min ago';
+  const h=Math.floor(m/60);if(h<24)return sk?'pred '+h+' h':h+' h ago';
+  return new Date(ts).toLocaleDateString(loc(),{day:'2-digit',month:'2-digit'});}
+setInterval(()=>{document.querySelectorAll('.w28-upd').forEach(e=>{e.textContent='↻ '+w28Ago(+e.dataset.ts);});},30000);
+function w28BriefRender(d){
+  const el=document.getElementById('w28-brief');if(!el)return;
+  const sk=S.lang==='sk',h=d.hourly,c=d.current,dy=d.daily;
+  const RAIN=x=>(x>=51&&x<=67)||(x>=80&&x<=82)||x>=95,SNOW=x=>(x>=71&&x<=77)||x===85||x===86;
+  const now=Date.now();let start=0;
+  for(let i=0;i<h.time.length;i++){if(new Date(h.time[i]).getTime()>now-3600e3){start=i;break;}}
+  let txt='',warn=false;
+  const hh=i=>new Date(h.time[i]).getHours()+':00';
+  const wet=i=>{const x=h.weathercode[i];return RAIN(x)||SNOW(x)||(h.precipitation_probability&&(h.precipitation_probability[i]||0)>=60);};
+  const snowAt=i=>SNOW(h.weathercode[i]);
+  const nowWet=RAIN(c.weathercode)||SNOW(c.weathercode);
+  let first=-1;for(let i=start;i<Math.min(start+12,h.time.length);i++){if(wet(i)){first=i;break;}}
+  if(nowWet){let end=-1;for(let i=start+1;i<Math.min(start+12,h.time.length);i++){if(!wet(i)){end=i;break;}}
+    const sn=SNOW(c.weathercode);
+    txt=(sn?(sk?'Teraz sneží':'Snowing now'):(sk?'Teraz prší':'Raining now'))+(end>0?(sk?' · do '+hh(end):' · until '+hh(end)):(sk?' · aj počas najbližších hodín':' · for the next hours'));warn=true;
+  }else if(first>=0){const sn=snowAt(first);
+    txt=(sn?(sk?'Sneženie od ':'Snow from '):(sk?'Dážď od ':'Rain from '))+hh(first)+(sn?'':(sk?' · vezmi dáždnik':' · take an umbrella'));warn=true;
+  }else{
+    txt=(sk?'Dnes bez zrážok · ':'No rain today · ')+w28T(dy.temperature_2m_min[0])+'° – '+w28T(dy.temperature_2m_max[0])+'°';
+  }
+  el.className='w28-brief'+(warn?' w':'');
+  el.innerHTML='<i></i><span>'+txt+'</span>';
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&typeof ld!=='undefined'&&ld&&Date.now()-(ld._ts||0)>10*60*1000&&typeof loadW==='function')loadW(clat,clon,ln||'Viničné',lc||'SK');
+});
+(function(){
+  let sy=0,dy=0,on=false,bar=null;
+  function bar_(){if(!bar){bar=document.createElement('div');bar.id='w28-ptr';document.body.appendChild(bar);}return bar;}
+  document.addEventListener('touchstart',e=>{
+    on=false;if(e.touches.length!==1)return;
+    if((window.scrollY||document.documentElement.scrollTop)>0)return;
+    if(e.target.closest&&e.target.closest('#radar-map,.sov,.w28-hours,.w28-tabs,input,select,textarea,#w28-lp'))return;
+    sy=e.touches[0].clientY;dy=0;on=true;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!on)return;dy=e.touches[0].clientY-sy;
+    if(dy<=10){bar_().style.opacity=0;return;}
+    const b=bar_(),sk=S.lang==='sk',p=Math.min(dy/2,70);
+    b.textContent=dy>110?(sk?'Pusti pre obnovenie':'Release to refresh'):(sk?'Potiahni pre obnovenie':'Pull to refresh');
+    b.style.opacity=Math.min(1,dy/80);b.style.transform='translate(-50%,'+(p-30)+'px)';
+  },{passive:true});
+  document.addEventListener('touchend',()=>{
+    if(!on)return;on=false;
+    const b=bar_();b.style.opacity=0;b.style.transform='translate(-50%,-44px)';
+    if(dy>110){try{localStorage.removeItem('w28ski');}catch(e){}loadW(clat,clon,ln||'Viničné',lc||'SK');try{renderSki();}catch(e){}}
+  },{passive:true});
+})();
+(function(){
+  let tm=null,sx=0,sy=0,fired=false;
+  const cancel=()=>{if(tm){clearTimeout(tm);tm=null;}};
+  document.addEventListener('pointerdown',e=>{
+    cancel();fired=false;
+    const el=e.target.closest&&e.target.closest('#main-cards [data-section]');if(!el)return;
+    if(e.target.closest('button,a,input,select,.w28-hours,.w28-tabs,#radar-map'))return;
+    if(e.clientY-el.getBoundingClientRect().top>48)return;
+    const id=el.dataset.section;sx=e.clientX;sy=e.clientY;
+    tm=setTimeout(()=>{tm=null;fired=true;w28CardSheet(id);},550);
+  });
+  document.addEventListener('pointermove',e=>{if(tm&&(Math.abs(e.clientX-sx)>8||Math.abs(e.clientY-sy)>8))cancel();});
+  ['pointerup','pointercancel'].forEach(t=>document.addEventListener(t,cancel));
+  document.addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault();}},true);
+  document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('#main-cards [data-section]')&&fired)e.preventDefault();});
+})();
+function w28CardSheet(id){
+  const sk=S.lang==='sk';
+  const old=document.getElementById('w28-lp');if(old)old.remove();
+  const nm=(typeof CARD_NAMES!=='undefined'&&CARD_NAMES[S.lang]&&CARD_NAMES[S.lang][id])||id;
+  const o=document.createElement('div');o.id='w28-lp';
+  const close=()=>o.remove();
+  o.innerHTML='<div><b>'+(typeof nm==='string'?nm:id)+'</b><button data-a="up">'+(sk?'Presunúť vyššie':'Move up')+'</button><button data-a="dn">'+(sk?'Presunúť nižšie':'Move down')+'</button><button data-a="hide">'+(sk?'Skryť kartu':'Hide card')+'</button><small>'+(sk?'Skryté karty vrátiš v Nastaveniach → Poradie kariet.':'Bring hidden cards back in Settings → Card order.')+'</small></div>';
+  o.addEventListener('click',e=>{
+    const a=e.target.dataset&&e.target.dataset.a;
+    if(a==='up')moveCard(id,-1);else if(a==='dn')moveCard(id,1);else if(a==='hide')toggleCardVisibility(id);
+    close();
+  });
+  document.body.appendChild(o);
+}
 
 // INFO MODAL
 function openInfoModal(type, val, val2) {
