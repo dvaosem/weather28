@@ -2711,7 +2711,7 @@ function openDayModal(date,dayIdx){
     <div class="day-summary">
       <div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx])}</div>
       <div>
-        <div class="day-maxmin" style="color:${tempColor(maxT)}"><span style="font-size:.7rem;opacity:.6;letter-spacing:.08em;text-transform:uppercase">Max</span> ${fT(maxT)} <span style="font-size:.7rem;opacity:.6;letter-spacing:.08em;text-transform:uppercase;margin-left:.5rem;color:var(--text)">Min</span> <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div>
+        <div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div>
         <div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div>
       </div>
     </div>
@@ -2964,7 +2964,7 @@ function openDayModal(date,dayIdx){
     <div style="text-align:right;"><div class="hour-temp" style="color:${tempColor(hh.temp)}">${fT(hh.temp)}</div>${hh.feel!=null?`<div class="hour-feel">${tx("pocit","feels")} ${fT(hh.feel)}</div>`:''}</div>
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
-    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}"><span style="font-size:.7rem;opacity:.6;letter-spacing:.08em;text-transform:uppercase">Max</span> ${fT(maxT)} <span style="font-size:.7rem;opacity:.6;letter-spacing:.08em;text-transform:uppercase;margin-left:.5rem;color:var(--text)">Min</span> <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
+    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
     <div class="day-stats"><div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${prob}% · ${fP(prec,prob)}</div></div><div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div></div>
     <div class="hour-title">${tx('Hodinový priebeh','Hour by hour')}</div>
     ${hourRows||'<div style="color:var(--text2);text-align:center;padding:20px;">'+tx('Dáta nedostupné','No data available')+'</div>'}`;
@@ -3019,7 +3019,7 @@ function w28BriefRender(d){
   }else if(first>=0){const sn=snowAt(first);
     txt=(sn?(sk?'Sneženie od ':'Snow from '):(sk?'Dážď od ':'Rain from '))+hh(first)+(sn?'':(sk?' · vezmi dáždnik':' · take an umbrella'));warn=true;
   }else{
-    txt=(sk?'Dnes bez zrážok · ':'No rain today · ')+w28T(dy.temperature_2m_min[0])+'° – '+w28T(dy.temperature_2m_max[0])+'°';
+    txt=(sk?'Dnes bez zrážok · ':'No rain today · ')+'Min '+w28T(dy.temperature_2m_min[0])+'° · Max '+w28T(dy.temperature_2m_max[0])+'°';
   }
   el.className='w28-brief'+(warn?' w':'');
   el.innerHTML='<i></i><span>'+txt+'</span>';
