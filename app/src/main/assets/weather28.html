@@ -2101,9 +2101,10 @@ function renderCur(d,name,country){
   const updDate=_ut.toLocaleDateString(loc(),{weekday:'short',day:'2-digit',month:'2-digit'});
   // hourly strip: Now + next 11 hours
   const cols=[{lbl:sk?'Teraz':'Now',temp:c.temperature_2m,code:c.weathercode,night:w28Night(d,nowIso),prob:0,now:true}];
-  for(let i=0;i<h.time.length&&cols.length<12;i++){
+  for(let i=0;i<h.time.length&&cols.length<48;i++){
     const tm=new Date(h.time[i]);
     if(tm<=now)continue;
+    if(cols.length>=12&&tm.toDateString()!==now.toDateString())break;
     cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),tier:(h.rainTier||[])[i],prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
   }
   const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Wet(w28Icon(x.code,x.night,30),x.code,x.tier)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
