@@ -1799,7 +1799,7 @@ function renderStation(d){
   const dn=s.winddir!=null?(sk?dirs:dirsE)[Math.round(s.winddir/22.5)%16]:'';
   const cell=(l,v,m)=>`<div onclick="w28HistOpen('${m}')" role="button" style="background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0;cursor:pointer"><div style="font-size:.68rem;color:var(--text2);margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:600">${v}</div></div>`;
   const n=(v,u,dg)=>v==null?'–':(+v).toFixed(dg==null?0:dg)+u;
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-weight:600;line-height:1.25" title="${stt}"><span title="${stt}">${w28StIco(16,stc)}</span> ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"><div style="min-width:0"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text2);line-height:1.25;display:flex;align-items:center;gap:6px" title="${stt}"><span title="${stt}">${w28StIco(16,stc)}</span> ${sk?'Stanica Viničné':'Viničné station'}</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px;white-space:nowrap">${s.ageMin<=1?(sk?'práve teraz':'just now'):(sk?'pred ':'')+s.ageMin+' min'+(sk?'':' ago')}</div></div></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
     ${cell(sk?'Teplota':'Temp',w28T(s.temp)+'°','temp')}
     ${cell(sk?'Vlhkosť':'Humidity',n(s.humidity,' %'),'hum')}
@@ -2052,6 +2052,10 @@ function w28Pick(i){
   document.querySelectorAll('#cur .w28-tab').forEach((b,k)=>{b.classList.toggle('on',k===i);b.setAttribute('aria-selected',k===i?'true':'false');});
   const el=document.getElementById('w28-det');if(!el)return;
   el.innerHTML=w28Details(ld,i);
+  try{const hp=w28HeroParts(ld,i);
+    const q=sel=>document.querySelector('#cur '+sel);
+    const a=q('.w28-now'),b=q('.w28-hours'),c2=q('.w28-scene');
+    if(a)a.outerHTML=hp.now;if(b)b.outerHTML=hp.hours;if(c2)c2.outerHTML=hp.scene;}catch(e){console.warn('hero day',e);}
   if(!W28_RM){el.classList.remove('w28-in-l','w28-in-r');void el.offsetWidth;el.classList.add(dir>0?'w28-in-r':'w28-in-l');}
   const tb=document.querySelectorAll('#cur .w28-tab')[i];
   if(tb&&tb.scrollIntoView)tb.scrollIntoView({inline:'center',block:'nearest',behavior:W28_RM?'auto':'smooth'});
@@ -2083,13 +2087,49 @@ function w28Scene(code,night){
   return `<div class="w28-scene${night?' n':''}${dark?' w':''}" aria-hidden="true"><svg viewBox="0 0 400 100" preserveAspectRatio="xMidYMax slice">${s}</svg>${k==='storm'?'<div class="w28-flash"></div>':''}</div>`;
 }
 try{document.addEventListener('visibilitychange',()=>document.documentElement.classList.toggle('w28-pause',document.hidden));}catch(e){}
-function w28Mini(d){
-  const dy=d.daily,h=d.hourly,sk=S.lang==='sk';
-  const prob=(dy.precipitation_probability_max&&dy.precipitation_probability_max[0])||0;
-  let wv=[];if(h&&h.time&&h.windspeed_10m){for(let k=0;k<h.time.length;k++)if(h.time[k].slice(0,10)===dy.time[0])wv.push(h.windspeed_10m[k]||0);}
+function w28Mini(d,di){
+  const dy=d.daily,h=d.hourly,sk=S.lang==='sk';di=di||0;
+  const prob=(dy.precipitation_probability_max&&dy.precipitation_probability_max[di])||0;
+  let wv=[];if(h&&h.time&&h.windspeed_10m){for(let k=0;k<h.time.length;k++)if(h.time[k].slice(0,10)===dy.time[di])wv.push(h.windspeed_10m[k]||0);}
   const wavg=wv.length?wv.reduce((a,b)=>a+b,0)/wv.length:d.current.windspeed_10m;
   const sm=x=>x.replace('width="24" height="24"','width="12" height="12"');
   return `<div class="w28-mini"><span title="${sk?'Šanca zrážok dnes (predpoveď)':'Chance of rain today (forecast)'}">${sm(W28_I_RAIN)}${prob} %</span><span title="${sk?'Priemerný vietor za deň':'Average wind today'}">${sm(W28_I_WIND)}Ø ${fW(wavg)}</span></div>`;
+}
+function w28HeroParts(d,di){
+  const c=d.current,dy=d.daily,h=d.hourly,sk=S.lang==='sk';
+  di=di||0;
+  const now=new Date(),nowIso=w28Iso(now);
+  let cols=[],label,temp,code,night,sub;
+  if(di===0){
+    label=sk?'Teraz':'Now';temp=c.temperature_2m;code=c.weathercode;night=w28Night(d,nowIso);
+    sub=(sk?'Pocitovo':'Feels like')+' '+w28T(c.apparent_temperature)+'°';
+    cols=[{lbl:sk?'Teraz':'Now',temp:c.temperature_2m,code:c.weathercode,night:night,prob:0,now:true}];
+    for(let i=0;i<h.time.length&&cols.length<48;i++){
+      const tm=new Date(h.time[i]);
+      if(tm<=now)continue;
+      if(cols.length>=12&&tm.toDateString()!==now.toDateString())break;
+      cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
+    }
+  }else{
+    const dt=new Date(dy.time[di]+'T12:00:00');
+    label=dt.toLocaleDateString(loc(),{weekday:'long'});label=label.charAt(0).toUpperCase()+label.slice(1);
+    temp=dy.temperature_2m_max[di];code=dy.weathercode[di];night=false;
+    sub=dt.toLocaleDateString(loc(),{day:'numeric',month:'numeric'});
+    for(let i=0;i<h.time.length;i++){
+      if(h.time[i].slice(0,10)!==dy.time[di])continue;
+      cols.push({lbl:h.time[i].slice(11,13)+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
+    }
+  }
+  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Icon(x.code,x.night,30)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
+  return {
+    now:`<div class="w28-now">
+      <div><div class="w28-lbl">${label}</div><div class="w28-temp">${w28T(temp)}<sup>°</sup></div></div>
+      <div class="w28-nowM">${w28Icon(code,night,64,true)}</div>
+      <div class="w28-nowR"><div class="w28-cond">${wdesc(code)}</div><div class="w28-feel">${sub}</div><div class="w28-hl">↑ ${w28T(dy.temperature_2m_max[di])}° · ↓ ${w28T(dy.temperature_2m_min[di])}°</div>${w28Mini(d,di)}</div>
+    </div>`,
+    hours:`<div class="w28-hours">${hours}</div>`,
+    scene:w28Scene(code,night)
+  };
 }
 function renderCur(d,name,country){
   const c=d.current,dy=d.daily,h=d.hourly,sk=S.lang==='sk';
@@ -2099,15 +2139,7 @@ function renderCur(d,name,country){
   const _ut=new Date(d._ts||Date.now());
   const updTime=_ut.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'});
   const updDate=_ut.toLocaleDateString(loc(),{weekday:'short',day:'2-digit',month:'2-digit'});
-  // hourly strip: Now + next 11 hours
-  const cols=[{lbl:sk?'Teraz':'Now',temp:c.temperature_2m,code:c.weathercode,night:w28Night(d,nowIso),prob:0,now:true}];
-  for(let i=0;i<h.time.length&&cols.length<48;i++){
-    const tm=new Date(h.time[i]);
-    if(tm<=now)continue;
-    if(cols.length>=12&&tm.toDateString()!==now.toDateString())break;
-    cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),tier:(h.rainTier||[])[i],prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
-  }
-  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Wet(w28Icon(x.code,x.night,30),x.code,x.tier)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
+  const hp=w28HeroParts(d,w28Sel);
   const tabs=dy.time.map((date,i)=>{
     const dt=new Date(date+'T12:00:00');
     const dn=i===0?(sk?'Dnes':'Today'):dsA()[dt.getDay()];
@@ -2118,13 +2150,9 @@ function renderCur(d,name,country){
   el.innerHTML=`<div class="${first&&!W28_RM?'w28-enter':''}">
   <div class="w28-hero">
     <div class="w28-meta"><span>${name} · ${country}${d._station&&!d._station.stale?' · '+w28StIco(11)+' '+(sk?'stanica':'station'):''}</span><span class="w28-upd" data-ts="${d._ts||Date.now()}" title="${updDate} ${updTime}">↻ ${w28Ago(d._ts||Date.now())}</span></div>
-    <div class="w28-now">
-      <div><div class="w28-lbl">${sk?'Teraz':'Now'}</div><div class="w28-temp">${w28T(c.temperature_2m)}<sup>°</sup></div></div>
-      <div class="w28-nowM">${w28Wet(w28Icon(c.weathercode,w28Night(d,nowIso),64,true),c.weathercode,c.rainTier)}</div>
-      <div class="w28-nowR"><div class="w28-cond">${wdesc(c.weathercode)}</div><div class="w28-feel">${sk?'Pocitovo':'Feels like'} ${w28T(c.apparent_temperature)}°</div><div class="w28-hl">↑ ${w28T(dy.temperature_2m_max[0])}° · ↓ ${w28T(dy.temperature_2m_min[0])}°</div>${w28Mini(d)}</div>
-    </div>
-    <div class="w28-hours">${hours}</div>
-    ${w28Scene(c.weathercode,w28Night(d,nowIso))}
+    ${hp.now}
+    ${hp.hours}
+    ${hp.scene}
   </div>
   <div class="w28-tabs" role="tablist">${tabs}</div>
   <div class="w28-det" id="w28-det">${w28Details(d,w28Sel)}</div></div>`;
