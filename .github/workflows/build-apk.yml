@@ -2,7 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, test-we28 ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -45,7 +45,13 @@ jobs:
           NOTES: ${{ github.event.head_commit.message }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk weather28.apk
+          if [ "${GITHUB_REF_NAME}" = "test-we28" ]; then
+            gh release create "we28-test-${GITHUB_RUN_NUMBER}" weather28.apk \
+              --title "We28 test ${GITHUB_RUN_NUMBER}" --notes "Icon cache test" \
+              --prerelease --latest=false --target "${GITHUB_SHA}"
+          else
           gh release create "build-${GITHUB_RUN_NUMBER}" weather28.apk \
             --title "Weather28 build ${GITHUB_RUN_NUMBER}" \
             --notes "${NOTES:-Manual build}" \
             --latest
+          fi

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Weather28</string>
+    <string name="app_name">We28</string>
     <string name="widget_name">Weather28 Widget</string>
     <string name="cfg_city">MESTO</string>
     <string name="cfg_search_hint">Hľadaj mesto…</string>
