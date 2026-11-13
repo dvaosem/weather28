@@ -587,6 +587,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div class="faction" id="btn-refresh" onclick="location.reload()">Obnoviť</div>
       <div class="faction" id="btn-share" onclick="w28ShareLink()">Zdieľať</div>
     </div>
+    <div class="footer-credit"><a href="https://github.com/dvaosem/weather28/releases/latest/download/weather28.apk" id="apk-dl">Stiahnuť APK (Android)</a></div>
     <div class="footer-credit">Made by <a href="https://dvaosem.com/info.html">dvaosem.com</a> &nbsp;·&nbsp; Open-Meteo &nbsp;·&nbsp; Windy</div>
   </div>
 </main>
@@ -1399,6 +1400,7 @@ function applyLang(lang){
   const sb=document.querySelector('.sbtn');if(sb)sb.textContent=t('searchBtn');
   const ref=document.getElementById('btn-refresh');if(ref)ref.textContent=t('refresh');
   const shr=document.getElementById('btn-share');if(shr)shr.textContent=t('share');
+  const apk=document.getElementById('apk-dl');if(apk)apk.textContent=S.lang==='sk'?'Stiahnuť APK (Android)':'Download APK (Android)';
   const also=document.getElementById('also-label');if(also)also.textContent=t('alsoCheck');
   // Update layer buttons
   const lb={rain:t('radar'),clouds:t('clouds'),wind:t('windL'),temp:t('temp')};
@@ -2617,15 +2619,20 @@ function renderAI(d,name){
     if(kmh<60)return en?'strong wind':'silný vietor';
     return en?'very strong wind':'veľmi silný vietor';
   }
-  function rainDesc(prob,sum,afternoonH,eveningH){
+  function rainDesc(prob,sum,afternoonH,eveningH,rainingNow){
     const avgProb=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
     const aftP=avgProb(afternoonH);const eveP=avgProb(eveningH);
+    if(rainingNow){
+      const mm0=sum>0?` ${sum.toFixed(1)}mm`:'';
+      return(en?'raining now':'teraz prší')+mm0;
+    }
     if(prob>60){
       const mm=sum>0?` ${sum.toFixed(1)}mm`:'';
       const when=eveP>aftP?(en?'evening':'večer'):(en?'afternoon':'popoludní');
       return(en?'rain ':'dážď ')+when+' '+Math.max(eveP,prob)+'%'+mm;
     }
     if(prob>30)return(en?'rain possible ':'možný dážď ')+prob+'%';
+    if(sum>=0.2)return(en?'light rain ':'slabý dážď ')+sum.toFixed(1)+'mm';
     return en?'no rain':'bez zrážok';
   }
 
@@ -2639,10 +2646,10 @@ function renderAI(d,name){
     if(hr>=18&&hr<=23)eveH.push(h.precipitation_probability[i]||0);
   }
   const todayParts=[
-    skyDesc(c.weathercode),
+    ((c.precipitation||0)>=0.1&&![51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99].includes(c.weathercode))?(en?'rainy':'daždivo'):skyDesc(c.weathercode),
     `max ${Math.round(dy.temperature_2m_max[0])}° / min ${Math.round(dy.temperature_2m_min[0])}°`,
     windDesc(Math.round(dy.windspeed_10m_max[0]||0))+' '+Math.round(dy.windspeed_10m_max[0]||0)+' km/h',
-    rainDesc(dy.precipitation_probability_max?.[0]||0, parseFloat(dy.precipitation_sum[0]||0), aftH, eveH)
+    rainDesc(dy.precipitation_probability_max?.[0]||0, parseFloat(dy.precipitation_sum[0]||0), aftH, eveH, (c.precipitation||0)>=0.1||[51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(c.weathercode))
   ];
 
   // TOMORROW
@@ -3038,9 +3045,9 @@ function w28BriefRender(d){
   for(let i=0;i<h.time.length;i++){if(new Date(h.time[i]).getTime()>now-3600e3){start=i;break;}}
   let txt='',warn=false;
   const hh=i=>new Date(h.time[i]).getHours()+':00';
-  const wet=i=>{const x=h.weathercode[i];return RAIN(x)||SNOW(x)||(h.precipitation_probability&&(h.precipitation_probability[i]||0)>=60);};
+  const wet=i=>{const x=h.weathercode[i];return RAIN(x)||SNOW(x)||(h.precipitation_probability&&(h.precipitation_probability[i]||0)>=60)||((h.precipitation&&(h.precipitation[i]||0))>=0.2);};
   const snowAt=i=>SNOW(h.weathercode[i]);
-  const nowWet=RAIN(c.weathercode)||SNOW(c.weathercode);
+  const nowWet=RAIN(c.weathercode)||SNOW(c.weathercode)||(c.precipitation||0)>=0.1;
   let first=-1;for(let i=start;i<Math.min(start+12,h.time.length);i++){if(wet(i)){first=i;break;}}
   if(nowWet){let end=-1;for(let i=start+1;i<Math.min(start+12,h.time.length);i++){if(!wet(i)){end=i;break;}}
     const sn=SNOW(c.weathercode);
