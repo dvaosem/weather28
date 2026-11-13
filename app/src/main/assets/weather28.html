@@ -686,7 +686,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div id="acc-list"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
         <div id="acc-days" style="font-size:0.62rem;color:var(--text2);"></div>
-        <div style="display:flex;gap:6px;"><button id="acc-check" onclick="accCheckNow()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Skontrolovať</button><button onclick="accReset()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Vynulovať</button></div>
+        <div style="display:flex;gap:6px;"><button id="acc-check" onclick="accCheckNow()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Skontrolovať</button><button onclick="accExport()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">CSV</button><button onclick="accReset()" style="font-size:0.62rem;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Vynulovať</button></div>
       </div>
     </div>
 
@@ -1240,9 +1240,11 @@ async function accEvaluate(lat,lon){
     }
     if(aTmax==null)continue;
     const aRain=aPsum>=ACC_RAIN_THR;
+    if(!acc.log)acc.log=[];
     for(const s of ['openmeteo','metno','ecmwf','best']){
       const f=acc.pending[day][s];
       if(!f)continue;
+      acc.log.push({d:day,s:s,ftx:f.tmax,ftn:f.tmin,fp:f.psum,atx:aTmax,atn:aTmin,ap:aPsum,t:fromSt?'station':'model'});
       if(!acc.stats[s])acc.stats[s]={n:0,tErrSum:0,rainHit:0,rainN:0,mmErrSum:0,mmN:0};
       const st=acc.stats[s];
       st.n++;if(fromSt)st.nSt=(st.nSt||0)+1;
@@ -1253,6 +1255,7 @@ async function accEvaluate(lat,lon){
     }
     delete acc.pending[day];changed=true;
   }
+  if(acc.log&&acc.log.length>1500)acc.log=acc.log.slice(-1500);
   if(changed)accSave(acc);
 }
 
@@ -1300,6 +1303,18 @@ async function accCheckNow(){
   try{if(typeof clat!=='undefined')await accTick(clat,clon);}catch(e){}
   renderAccUI();
   if(b){b.disabled=false;b.style.opacity='1';}
+}
+function accExport(){
+  const all=accAll(),q=v=>v==null?'':String(v).replace('.',',');
+  const rows=['location;date;source;truth;fc_tmax;fc_tmin;fc_precip_mm;act_tmax;act_tmin;act_precip_mm;err_temp;err_precip_mm'];
+  Object.keys(all).forEach(k=>{(all[k].log||[]).forEach(r=>{
+    const et=(Math.abs(r.ftx-r.atx)+Math.abs(r.ftn-r.atn))/2;
+    rows.push([k,r.d,r.s,r.t,q(r.ftx),q(r.ftn),q(r.fp),q(r.atx),q(r.atn),q(r.ap),q(+et.toFixed(2)),r.fp!=null?q(+Math.abs(r.fp-r.ap).toFixed(2)):''].join(';'));
+  });});
+  if(rows.length===1){alert(tx('Zatiaľ nie sú denné záznamy – zbierajú sa od tejto verzie, prvé zajtra.','No daily records yet – collected from this version on, first ones tomorrow.'));return;}
+  const csv='\ufeff'+rows.join('\r\n'),name='weather28-accuracy-'+accDay(0)+'.csv';
+  if(window.AndroidBridge&&typeof AndroidBridge.shareFile==='function'){try{AndroidBridge.shareFile(name,'text/csv',csv);return;}catch(e){}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
 }
 function accReset(){
   const k=accLocKey();if(!k)return;

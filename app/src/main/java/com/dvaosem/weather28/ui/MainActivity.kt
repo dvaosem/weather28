@@ -115,6 +115,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        @JavascriptInterface
+        fun shareFile(name: String, mime: String, text: String) {
+            runOnUiThread {
+                try {
+                    val dir = java.io.File(cacheDir, "shared").apply { mkdirs() }
+                    val file = java.io.File(dir, name.replace(Regex("[^A-Za-z0-9._-]"), "_"))
+                    file.writeText(text, Charsets.UTF_8)
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        this@MainActivity, "$packageName.fileprovider", file
+                    )
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = mime
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(send, name))
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+        }
+
         private fun maybeAskNotifPerm() {
             if (android.os.Build.VERSION.SDK_INT >= 33 &&
                 ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS)
