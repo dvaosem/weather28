@@ -147,7 +147,7 @@ class WeatherAlertWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, p
 
         val first = fresh[0]
         val body2 = if (fresh.size == 1) (if (en) "See the full forecast for $city" else "Pozrite si úplnú predpoveď pre $city")
-                    else fresh.joinToString("\n") { "${it.icon} ${it.text}" }
+                    else fresh.drop(1).joinToString("\n") { "${it.icon} ${it.text}" } // first signal is already the title
         notify(ctx, 1003, "${first.icon} ${first.text}", body2, "smart")
     }
 
