@@ -90,6 +90,26 @@ class WeatherWidget : AppWidgetProvider() {
                     light, shadow, stack, font, d != null && WeatherFetcher.wantsDrop(code, tier))
             }
 
+            /** Duo: same composition and the very same bitmap size for today and tomorrow, so both are scaled identically. */
+            fun pair(cw: Float, ch: Float): Pair<android.graphics.Bitmap, android.graphics.Bitmap> {
+                fun common(stack: Boolean): Triple<android.graphics.Bitmap, android.graphics.Bitmap, Float> {
+                    val a = get(false, stack); val b = get(true, stack)
+                    val w = maxOf(a.width, b.width); val h = maxOf(a.height, b.height)
+                    val sc = minOf(cw / w, ch / h)
+                    return Triple(padTo(a, w, h), padTo(b, w, h), sc)
+                }
+                val side = common(false); val stack = common(true)
+                val pick = if (stack.third > side.third * 1.1f) stack else side
+                return Pair(pick.first, pick.second)
+            }
+
+            private fun padTo(b: android.graphics.Bitmap, w: Int, h: Int): android.graphics.Bitmap {
+                if (b.width == w && b.height == h) return b
+                val out = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+                android.graphics.Canvas(out).drawBitmap(b, (w - b.width) / 2f, (h - b.height) / 2f, null)
+                return out
+            }
+
             /** Pick the composition whose temperature ends up larger in a cw x ch box. */
             fun best(tomorrow: Boolean, cw: Float, ch: Float): android.graphics.Bitmap {
                 val side = get(tomorrow, false); val stack = get(tomorrow, true)
@@ -164,11 +184,12 @@ class WeatherWidget : AppWidgetProvider() {
             val cw = if (duo) (size.width - 12f - 7f) / 2f else size.width - 12f
             val ch = (size.height - 12f) * (if (showRain) 0.78f else 1f)
 
-            views.setImageViewBitmap(R.id.today_img, days.best(false, cw, ch))
+            val duoPair = if (duo) days.pair(cw, ch) else null
+            views.setImageViewBitmap(R.id.today_img, duoPair?.first ?: days.best(false, cw, ch))
             views.setContentDescription(R.id.today_img,
                 data?.let { "${if (en) "Today" else "Dnes"} ${it.todayTemp}°, max ${it.todayMax}°, min ${it.todayMin}°" } ?: "Weather28")
             if (duo) {
-                views.setImageViewBitmap(R.id.tomorrow_img, days.best(true, cw, ch))
+                views.setImageViewBitmap(R.id.tomorrow_img, duoPair?.second ?: days.best(true, cw, ch))
                 views.setContentDescription(R.id.tomorrow_img,
                     data?.let { "${if (en) "Tomorrow" else "Zajtra"} max ${it.tomorrowMax}°, min ${it.tomorrowMin}°" } ?: "")
                 views.setInt(R.id.widget_divider, "setBackgroundColor", if (light) 0x1F16202C else 0x2EFFFFFF)
