@@ -468,6 +468,48 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   .w28-cl,.w28-rd,.w28-sn,.w28-fg,.w28-glow,.w28-star,.w28-flash{animation:none!important;}
   .w28-rd{opacity:.5!important;}.w28-sn{opacity:.8!important;}
 }
+
+/* ===== FRESH theme – aurora gradient, glass cards, vivid accents ===== */
+:root[data-theme="fresh"]{--bg:#0a0e24;--card:rgba(255,255,255,.065);--card2:rgba(255,255,255,.085);--border:rgba(255,255,255,.12);--text:#f4f6ff;--text2:#a5acd0;--inp:rgba(255,255,255,.08);
+  --green:#22d3ee;--g1:#22d3ee;--g2:#c084fc;--g3:#f472b6;--blue:#7dd3fc;--pink:#f472b6;--purple:#a78bfa;--orange:#fbbf24;--cyan:#67e8f9;
+  --w28-cloud:#e4e8ff;--w28-cloud2:#aab2e0;--w28-sun:#fcd34d;--w28-moon:#f1edff;--w28-drop:#38bdf8;--w28-snow:#f4f6ff;--w28-bolt:#fde047;
+  --w28-h1:rgba(124,58,237,.28);--w28-h2:rgba(56,189,248,.22);--w28-h3:rgba(244,114,182,.22);
+  --fr-grad:linear-gradient(120deg,#22d3ee 0%,#818cf8 45%,#f472b6 100%);color-scheme:dark;}
+[data-theme="fresh"] body{background:var(--bg);}
+[data-theme="fresh"] body::before{content:'';position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 35% at 15% 10%,rgba(34,211,238,.35),transparent 70%),
+             radial-gradient(45% 40% at 90% 25%,rgba(168,85,247,.38),transparent 70%),
+             radial-gradient(50% 40% at 30% 85%,rgba(244,114,182,.26),transparent 70%),
+             radial-gradient(40% 35% at 85% 90%,rgba(59,130,246,.30),transparent 70%);
+  filter:blur(10px);animation:frAur 26s ease-in-out infinite alternate;}
+@keyframes frAur{0%{transform:translate3d(0,0,0) rotate(0)}50%{transform:translate3d(-4%,3%,0) rotate(8deg) scale(1.06)}100%{transform:translate3d(3%,-3%,0) rotate(-6deg)}}
+[data-theme="fresh"] :is(.card,.mcast,.w28-brief,#w28-lp>div,.srow){background:var(--card);border-color:var(--border);border-radius:22px;
+  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+  box-shadow:0 10px 30px -12px rgba(5,8,30,.7),inset 0 1px 0 rgba(255,255,255,.09);}
+[data-theme="fresh"] .srow{background:rgba(20,24,56,.82);}
+[data-theme="fresh"] .suggs{background:rgba(20,24,56,.95);}
+[data-theme="fresh"] .logo{background:var(--fr-grad);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:frShift 8s ease-in-out infinite alternate;}
+@keyframes frShift{from{background-position:0 0}to{background-position:100% 0}}
+[data-theme="fresh"] .hbtn{background:rgba(255,255,255,.07);border-color:var(--border);color:var(--text);border-radius:14px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .15s,background .2s;}
+[data-theme="fresh"] .hbtn:active{transform:scale(.92);background:rgba(255,255,255,.14);}
+[data-theme="fresh"] :is(.sbtn,.to.on){background:var(--fr-grad);color:#fff;box-shadow:0 4px 14px -4px rgba(129,140,248,.7);}
+[data-theme="fresh"] .tog{background:rgba(255,255,255,.06);border-radius:12px;}
+[data-theme="fresh"] .to{border-radius:9px;}
+[data-theme="fresh"] .w28-temp{background:linear-gradient(180deg,#ffffff 20%,#a5b4fc 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:200;}
+[data-theme="fresh"] .w28-h.now{background:linear-gradient(180deg,rgba(34,211,238,.22),rgba(129,140,248,.12));box-shadow:inset 0 0 0 1px rgba(125,211,252,.3);}
+[data-theme="fresh"] .w28-tab{background:rgba(255,255,255,.06);border-radius:18px;transition:transform .15s,background .2s,box-shadow .2s;}
+[data-theme="fresh"] .w28-tab.on{border-color:transparent;background:linear-gradient(rgba(23,27,62,.92),rgba(23,27,62,.92)) padding-box,var(--fr-grad) border-box;box-shadow:0 6px 20px -8px rgba(192,132,252,.8);}
+[data-theme="fresh"] .w28-xi{background:linear-gradient(135deg,rgba(34,211,238,.18),rgba(192,132,252,.18));color:var(--cyan);border-radius:14px;}
+[data-theme="fresh"] .w28-bar{background:linear-gradient(180deg,#38bdf8,#818cf8);}
+[data-theme="fresh"] .w28-bar.w{background:linear-gradient(180deg,#f472b6,#a78bfa);opacity:.9;}
+[data-theme="fresh"] .w28-brief i{background:#34d399;box-shadow:0 0 10px #34d399;}
+[data-theme="fresh"] .w28-brief.w i{background:var(--orange);box-shadow:0 0 10px var(--orange);}
+[data-theme="fresh"] .stitle{color:var(--cyan);opacity:.85;}
+[data-theme="fresh"] .w28-scene.n .w28-hills{filter:none;}
+[data-theme="fresh"] #w28-lp{background:rgba(5,8,30,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+[data-theme="fresh"] #w28-lp button{background:rgba(255,255,255,.07);}
+[data-theme="fresh"] .favchip.active{border-color:var(--g2);color:var(--g2);}
+@media (prefers-reduced-motion:reduce){[data-theme="fresh"] body::before,[data-theme="fresh"] .logo{animation:none!important;}}
 </style>
 </head>
 <body>
@@ -671,7 +713,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
     <div class="sg open" data-g="look"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Vzhľad a jednotky</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
-    <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button></div></div>
+    <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button><button class="to" id="tfr" onclick="setTheme('fresh')">Fresh</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
     <div class="sr"><div><div class="sl2">Teplota</div></div><div class="tog"><button class="to on" id="tc" onclick="setTU('C')">°C</button><button class="to" id="tf" onclick="setTU('F')">°F</button></div></div>
     <div class="sr"><div><div class="sl2">Vietor</div></div><div class="tog"><button class="to on" id="wk" onclick="setWU('kmh')">km/h</button><button class="to" id="wm" onclick="setWU('mph')">mph</button></div></div>
@@ -748,12 +790,12 @@ function renderFavbar(){
   bar.innerHTML=html;
 }
 
-const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918'};
+const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918',fresh:'#0a0e24'};
 function applyT(t){
   if(!THEME_BG[t])t='dark';
   document.documentElement.setAttribute('data-theme',t);
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',THEME_BG[t]);
-  ['dark','light','gray'].forEach(k=>{const b=document.getElementById('t'+k[0]);if(b)b.classList.toggle('on',k===t);});
+  Object.entries({dark:'td',light:'tl',gray:'tg',fresh:'tfr'}).forEach(([k,id])=>{const b=document.getElementById(id);if(b)b.classList.toggle('on',k===t);});
 }
 function setTheme(t){if(!THEME_BG[t])t='dark';S.theme=t;saveS();applyT(t);}
 function setTU(u){S.tu=u;saveS();document.getElementById('tc').classList.toggle('on',u==='C');document.getElementById('tf').classList.toggle('on',u==='F');if(ld){renderCur(ld,ln,lc);renderH(ld);renderF(ld);}}
