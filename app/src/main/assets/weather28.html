@@ -469,47 +469,75 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
   .w28-rd{opacity:.5!important;}.w28-sn{opacity:.8!important;}
 }
 
-/* ===== FRESH theme – aurora gradient, glass cards, vivid accents ===== */
-:root[data-theme="fresh"]{--bg:#0a0e24;--card:rgba(255,255,255,.065);--card2:rgba(255,255,255,.085);--border:rgba(255,255,255,.12);--text:#f4f6ff;--text2:#a5acd0;--inp:rgba(255,255,255,.08);
-  --green:#22d3ee;--g1:#22d3ee;--g2:#c084fc;--g3:#f472b6;--blue:#7dd3fc;--pink:#f472b6;--purple:#a78bfa;--orange:#fbbf24;--cyan:#67e8f9;
-  --w28-cloud:#e4e8ff;--w28-cloud2:#aab2e0;--w28-sun:#fcd34d;--w28-moon:#f1edff;--w28-drop:#38bdf8;--w28-snow:#f4f6ff;--w28-bolt:#fde047;
-  --w28-h1:rgba(124,58,237,.28);--w28-h2:rgba(56,189,248,.22);--w28-h3:rgba(244,114,182,.22);
-  --fr-grad:linear-gradient(120deg,#22d3ee 0%,#818cf8 45%,#f472b6 100%);color-scheme:dark;}
+/* ===== FRESH theme – palette-driven aurora, glass cards, vivid accents ===== */
+:root[data-theme="fresh"]{--bg:#170a1c;--card:rgba(255,255,255,.065);--card2:rgba(255,255,255,.085);--border:rgba(255,255,255,.12);--text:#fff6f2;--text2:#c9aebd;--inp:rgba(255,255,255,.08);
+  --a1:rgba(251,146,60,.42);--a2:rgba(244,63,94,.36);--a3:rgba(168,85,247,.34);--a4:rgba(245,158,11,.26);
+  --c1:#fb923c;--c2:#f43f5e;--c3:#c084fc;--tabbg:rgba(40,14,38,.92);--tmp2:#fdba74;
+  --green:var(--c1);--g1:var(--c1);--g2:var(--c2);--blue:#fda4af;--pink:#fb7185;--purple:#c084fc;--orange:#fbbf24;--cyan:var(--c1);
+  --w28-cloud:#fde7e1;--w28-cloud2:#d6aab4;--w28-sun:#fcd34d;--w28-moon:#fff1e6;--w28-drop:#7dd3fc;--w28-snow:#fff6f2;--w28-bolt:#fde047;
+  --w28-h1:color-mix(in srgb,var(--c3) 30%,transparent);--w28-h2:color-mix(in srgb,var(--c2) 24%,transparent);--w28-h3:color-mix(in srgb,var(--c1) 24%,transparent);
+  --fr-grad:linear-gradient(120deg,var(--c1) 0%,var(--c2) 50%,var(--c3) 100%);color-scheme:dark;}
+:root[data-theme="fresh"][data-pal="ocean"]{--bg:#04131d;--text:#effbff;--text2:#9dbccb;--a1:rgba(20,184,166,.40);--a2:rgba(14,165,233,.36);--a3:rgba(99,102,241,.32);--a4:rgba(52,211,153,.24);
+  --c1:#2dd4bf;--c2:#38bdf8;--c3:#818cf8;--tabbg:rgba(6,30,44,.92);--tmp2:#99f6e4;--blue:#7dd3fc;--pink:#f9a8d4;--w28-cloud:#e0f2fe;--w28-cloud2:#94b8cc;--w28-moon:#ecfeff;--w28-snow:#effbff;}
+:root[data-theme="fresh"][data-pal="lime"]{--bg:#07140f;--text:#f3fff6;--text2:#a3c2ae;--a1:rgba(163,230,53,.34);--a2:rgba(16,185,129,.36);--a3:rgba(34,211,238,.28);--a4:rgba(250,204,21,.20);
+  --c1:#a3e635;--c2:#34d399;--c3:#22d3ee;--tabbg:rgba(8,32,22,.92);--tmp2:#bef264;--blue:#67e8f9;--pink:#f9a8d4;--w28-cloud:#ecfdf5;--w28-cloud2:#9cc2ad;--w28-moon:#f7fee7;--w28-snow:#f3fff6;}
+:root[data-theme="fresh"][data-pal="aurora"]{--bg:#0a0e24;--text:#f4f6ff;--text2:#a5acd0;--a1:rgba(34,211,238,.35);--a2:rgba(168,85,247,.38);--a3:rgba(244,114,182,.26);--a4:rgba(59,130,246,.30);
+  --c1:#22d3ee;--c2:#818cf8;--c3:#f472b6;--tabbg:rgba(23,27,62,.92);--tmp2:#a5b4fc;--blue:#7dd3fc;--pink:#f472b6;--w28-cloud:#e4e8ff;--w28-cloud2:#aab2e0;--w28-moon:#f1edff;--w28-snow:#f4f6ff;}
 [data-theme="fresh"] body{background:var(--bg);}
 [data-theme="fresh"] body::before{content:'';position:fixed;inset:-20%;z-index:-1;pointer-events:none;
-  background:radial-gradient(40% 35% at 15% 10%,rgba(34,211,238,.35),transparent 70%),
-             radial-gradient(45% 40% at 90% 25%,rgba(168,85,247,.38),transparent 70%),
-             radial-gradient(50% 40% at 30% 85%,rgba(244,114,182,.26),transparent 70%),
-             radial-gradient(40% 35% at 85% 90%,rgba(59,130,246,.30),transparent 70%);
+  background:radial-gradient(40% 35% at 15% 10%,var(--a1),transparent 70%),radial-gradient(45% 40% at 90% 25%,var(--a2),transparent 70%),
+             radial-gradient(50% 40% at 30% 85%,var(--a3),transparent 70%),radial-gradient(40% 35% at 85% 90%,var(--a4),transparent 70%);
   filter:blur(10px);animation:frAur 26s ease-in-out infinite alternate;}
 @keyframes frAur{0%{transform:translate3d(0,0,0) rotate(0)}50%{transform:translate3d(-4%,3%,0) rotate(8deg) scale(1.06)}100%{transform:translate3d(3%,-3%,0) rotate(-6deg)}}
-[data-theme="fresh"] :is(.card,.mcast,.w28-brief,#w28-lp>div,.srow){background:var(--card);border-color:var(--border);border-radius:22px;
+[data-theme="fresh"] :is(.card,.mcast,.w28-brief,#w28-lp>div,.srow,.sg){background:var(--card);border-color:var(--border);border-radius:22px;
   -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
-  box-shadow:0 10px 30px -12px rgba(5,8,30,.7),inset 0 1px 0 rgba(255,255,255,.09);}
-[data-theme="fresh"] .srow{background:rgba(20,24,56,.82);}
-[data-theme="fresh"] .suggs{background:rgba(20,24,56,.95);}
+  box-shadow:0 10px 30px -12px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.09);}
+[data-theme="fresh"] .sov{background:radial-gradient(60% 40% at 10% 0%,var(--a1),transparent 70%),radial-gradient(60% 40% at 100% 30%,var(--a2),transparent 70%),radial-gradient(70% 45% at 20% 100%,var(--a3),transparent 70%),var(--bg);background-attachment:fixed;}
+[data-theme="fresh"] .srow,[data-theme="fresh"] .suggs{background:color-mix(in srgb,var(--bg) 88%,#fff 4%);}
 [data-theme="fresh"] .logo{background:var(--fr-grad);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:frShift 8s ease-in-out infinite alternate;}
 @keyframes frShift{from{background-position:0 0}to{background-position:100% 0}}
 [data-theme="fresh"] .hbtn{background:rgba(255,255,255,.07);border-color:var(--border);color:var(--text);border-radius:14px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .15s,background .2s;}
 [data-theme="fresh"] .hbtn:active{transform:scale(.92);background:rgba(255,255,255,.14);}
-[data-theme="fresh"] :is(.sbtn,.to.on){background:var(--fr-grad);color:#fff;box-shadow:0 4px 14px -4px rgba(129,140,248,.7);}
+[data-theme="fresh"] :is(.sbtn,.to.on){background:var(--fr-grad);color:#fff;box-shadow:0 4px 14px -4px color-mix(in srgb,var(--c2) 70%,transparent);}
 [data-theme="fresh"] .tog{background:rgba(255,255,255,.06);border-radius:12px;}
 [data-theme="fresh"] .to{border-radius:9px;}
-[data-theme="fresh"] .w28-temp{background:linear-gradient(180deg,#ffffff 20%,#a5b4fc 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:200;}
-[data-theme="fresh"] .w28-h.now{background:linear-gradient(180deg,rgba(34,211,238,.22),rgba(129,140,248,.12));box-shadow:inset 0 0 0 1px rgba(125,211,252,.3);}
+[data-theme="fresh"] .w28-temp{background:linear-gradient(180deg,#ffffff 20%,var(--tmp2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:200;}
+[data-theme="fresh"] .w28-h.now{background:linear-gradient(180deg,color-mix(in srgb,var(--c1) 24%,transparent),color-mix(in srgb,var(--c2) 12%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c1) 35%,transparent);}
 [data-theme="fresh"] .w28-tab{background:rgba(255,255,255,.06);border-radius:18px;transition:transform .15s,background .2s,box-shadow .2s;}
-[data-theme="fresh"] .w28-tab.on{border-color:transparent;background:linear-gradient(rgba(23,27,62,.92),rgba(23,27,62,.92)) padding-box,var(--fr-grad) border-box;box-shadow:0 6px 20px -8px rgba(192,132,252,.8);}
-[data-theme="fresh"] .w28-xi{background:linear-gradient(135deg,rgba(34,211,238,.18),rgba(192,132,252,.18));color:var(--cyan);border-radius:14px;}
-[data-theme="fresh"] .w28-bar{background:linear-gradient(180deg,#38bdf8,#818cf8);}
-[data-theme="fresh"] .w28-bar.w{background:linear-gradient(180deg,#f472b6,#a78bfa);opacity:.9;}
-[data-theme="fresh"] .w28-brief i{background:#34d399;box-shadow:0 0 10px #34d399;}
+[data-theme="fresh"] .w28-tab.on{border-color:transparent;background:linear-gradient(var(--tabbg),var(--tabbg)) padding-box,var(--fr-grad) border-box;box-shadow:0 6px 20px -8px color-mix(in srgb,var(--c3) 80%,transparent);}
+[data-theme="fresh"] .w28-xi{background:linear-gradient(135deg,color-mix(in srgb,var(--c1) 20%,transparent),color-mix(in srgb,var(--c3) 20%,transparent));color:var(--c1);border-radius:14px;}
+[data-theme="fresh"] .w28-bar{background:linear-gradient(180deg,var(--c1),var(--c2));}
+[data-theme="fresh"] .w28-bar.w{background:linear-gradient(180deg,var(--c2),var(--c3));opacity:.9;}
+[data-theme="fresh"] .w28-brief i{background:var(--c1);box-shadow:0 0 10px var(--c1);}
 [data-theme="fresh"] .w28-brief.w i{background:var(--orange);box-shadow:0 0 10px var(--orange);}
-[data-theme="fresh"] .stitle{color:var(--cyan);opacity:.85;}
+[data-theme="fresh"] .stitle{color:var(--c1);opacity:.9;}
 [data-theme="fresh"] .w28-scene.n .w28-hills{filter:none;}
-[data-theme="fresh"] #w28-lp{background:rgba(5,8,30,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+[data-theme="fresh"] #w28-lp{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
 [data-theme="fresh"] #w28-lp button{background:rgba(255,255,255,.07);}
-[data-theme="fresh"] .favchip.active{border-color:var(--g2);color:var(--g2);}
+[data-theme="fresh"] .favchip.active{border-color:var(--c2);color:var(--c2);}
 @media (prefers-reduced-motion:reduce){[data-theme="fresh"] body::before,[data-theme="fresh"] .logo{animation:none!important;}}
+/* settings: theme tiles + palette chips */
+.sr-col{flex-direction:column;align-items:stretch!important;gap:10px;}
+.thg{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:7px;}
+.thg .to{display:flex;flex-direction:column;align-items:center;gap:6px;padding:5px 3px 7px;font-size:.7rem;min-width:0;border-radius:14px;background:var(--card2);border:1.5px solid transparent;color:var(--text2);box-shadow:none!important;}
+.thg .to.on{background:var(--card2)!important;border-color:var(--green);color:var(--text);}
+.thg .to i{display:block;width:100%;height:34px;border-radius:10px;border:1px solid rgba(128,128,128,.25);}
+.th-dark{background:linear-gradient(135deg,#000 0 55%,#2a2a2a 55%);}
+.th-light{background:linear-gradient(135deg,#f4f1ea 0 55%,#fff 55%);}
+.th-gray{background:linear-gradient(135deg,#1a1918 0 55%,#d97757 55%);}
+.th-fresh{background:linear-gradient(120deg,#fb923c,#f43f5e,#a855f7);}
+.th-auto{background:linear-gradient(90deg,#000 50%,#f4f1ea 50%);}
+.palg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.palg button{display:flex;align-items:center;gap:7px;padding:4px 6px 4px 4px;border-radius:99px;min-width:0;white-space:nowrap;overflow:hidden;border:1.5px solid var(--border);background:var(--card2);color:var(--text2);font:inherit;font-size:.76rem;font-weight:600;cursor:pointer;}
+.palg button i{width:20px;height:20px;border-radius:50%;display:block;flex:none;}
+.palg button.on{border-color:var(--text);color:var(--text);}
+.pal-sunset{background:linear-gradient(135deg,#fb923c,#f43f5e,#c084fc);}
+.pal-ocean{background:linear-gradient(135deg,#2dd4bf,#38bdf8,#818cf8);}
+.pal-lime{background:linear-gradient(135deg,#a3e635,#34d399,#22d3ee);}
+.pal-aurora{background:linear-gradient(135deg,#22d3ee,#818cf8,#f472b6);}
+#pal-row{display:none;}
+[data-theme="fresh"] .smchip.on{background:var(--fr-grad);color:#fff;}
+[data-theme="fresh"] #pal-row{display:flex;}
 </style>
 </head>
 <body>
@@ -712,9 +740,12 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nastavenia</div>
       <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
-    <div class="sg open" data-g="look"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Vzhľad a jednotky</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
-    <div class="sr"><div><div class="sl2">Téma</div></div><div class="tog"><button class="to on" id="td" onclick="setTheme('dark')">Tmavá</button><button class="to" id="tl" onclick="setTheme('light')">Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')">Šedá</button><button class="to" id="tfr" onclick="setTheme('fresh')">Fresh</button></div></div>
+    <div class="sg open" data-g="look"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Vzhľad</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
+    <div class="sr sr-col"><div><div class="sl2">Téma</div></div><div class="thg"><button class="to on" id="td" onclick="setTheme('dark')"><i class="th-dark"></i>Tmavá</button><button class="to" id="tl" onclick="setTheme('light')"><i class="th-light"></i>Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')"><i class="th-gray"></i>Šedá</button><button class="to" id="tfr" onclick="setTheme('fresh')"><i class="th-fresh"></i>Fresh</button></div></div>
+    <div class="sr sr-col" id="pal-row"><div><div class="sl2">Farby</div></div><div class="palg"><button id="pal-sunset" onclick="setPal('sunset')"><i class="pal-sunset"></i>Západ</button><button id="pal-ocean" onclick="setPal('ocean')"><i class="pal-ocean"></i>Oceán</button><button id="pal-lime" onclick="setPal('lime')"><i class="pal-lime"></i>Limetka</button><button id="pal-aurora" onclick="setPal('aurora')"><i class="pal-aurora"></i>Žiara</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
+    </div></div>
+    <div class="sg" data-g="units"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Jednotky</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
     <div class="sr"><div><div class="sl2">Teplota</div></div><div class="tog"><button class="to on" id="tc" onclick="setTU('C')">°C</button><button class="to" id="tf" onclick="setTU('F')">°F</button></div></div>
     <div class="sr"><div><div class="sl2">Vietor</div></div><div class="tog"><button class="to on" id="wk" onclick="setWU('kmh')">km/h</button><button class="to" id="wm" onclick="setWU('mph')">mph</button></div></div>
     <div class="sr"><div><div class="sl2">Zrážky</div></div><div class="tog"><button class="to on" id="pm" onclick="setPU('mm')">mm</button><button class="to" id="pi" onclick="setPU('in')">inch</button></div></div>
@@ -744,6 +775,8 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
         <div class="smchips" id="smart-chips"></div>
         <div class="sr"><div><div class="sl2">Vyskúšať upozornenie</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Pošle skúšobné upozornenie hneď</div></div><div class="tog"><button class="to" onclick="testSmartAlert()">Test</button></div></div>
       </div>
+    </div></div>
+    <div class="sg" data-g="app"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Aplikácia</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
       <div class="sr" id="widget-cfg-row" style="display:none;"><div><div class="sl2">Widget</div><div style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Nastavenie home-screen widgetu</div></div><div class="tog"><button class="to" onclick="openWidgetCfg()">Nastaviť</button></div></div>
       <div class="sr" id="upd-row" style="display:none;"><div><div class="sl2">Aktualizácia</div><div id="upd-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Verzia –</div></div><div class="tog"><button class="to" id="upd-btn" onclick="w28CheckUpdate()">Skontrolovať</button></div></div>
       <div class="sr" id="apk-row"><div><div class="sl2" id="apk-ttl">Android appka</div><div id="apk-sub" style="font-size:0.62rem;opacity:0.55;margin-top:2px;">Widget, upozornenia a aktualizácie</div></div><div class="tog"><button class="to" id="apk-btn" onclick="w28ApkAction()">Stiahnuť</button></div></div>
@@ -790,14 +823,18 @@ function renderFavbar(){
   bar.innerHTML=html;
 }
 
-const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918',fresh:'#0a0e24'};
+const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918',fresh:'#170a1c'};
 function applyT(t){
   if(!THEME_BG[t])t='dark';
   document.documentElement.setAttribute('data-theme',t);
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',THEME_BG[t]);
   Object.entries({dark:'td',light:'tl',gray:'tg',fresh:'tfr'}).forEach(([k,id])=>{const b=document.getElementById(id);if(b)b.classList.toggle('on',k===t);});
+  try{applyPal();}catch(e){}
 }
 function setTheme(t){if(!THEME_BG[t])t='dark';S.theme=t;saveS();applyT(t);}
+const PAL_BG={sunset:'#170a1c',ocean:'#04131d',lime:'#07140f',aurora:'#0a0e24'};
+function applyPal(){const p=PAL_BG[S.pal]?S.pal:'sunset';document.documentElement.setAttribute('data-pal',p);if(document.documentElement.getAttribute('data-theme')==='fresh'){const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',PAL_BG[p]);}Object.keys(PAL_BG).forEach(k=>{const b=document.getElementById('pal-'+k);if(b)b.classList.toggle('on',k===p);});}
+function setPal(p){S.pal=p;saveS();applyPal();}
 function setTU(u){S.tu=u;saveS();document.getElementById('tc').classList.toggle('on',u==='C');document.getElementById('tf').classList.toggle('on',u==='F');if(ld){renderCur(ld,ln,lc);renderH(ld);renderF(ld);}}
 function setWU(u){S.wu=u;saveS();document.getElementById('wk').classList.toggle('on',u==='kmh');document.getElementById('wm').classList.toggle('on',u==='mph');if(ld){renderCur(ld,ln,lc);renderF(ld);}}
 function setPU(u){S.pu=u;saveS();document.getElementById('pm').classList.toggle('on',u==='mm');document.getElementById('pi').classList.toggle('on',u==='in');if(ld){renderCur(ld,ln,lc);renderH(ld);renderF(ld);}}
@@ -1418,7 +1455,7 @@ const STATIC_EN={
  'Rozšírená mapa':'Extended map','← Späť':'← Back','Nastavenia':'Settings','Uložiť':'Save',
  'Téma':'Theme','Tmavá':'Dark','Svetlá':'Light','Šedá':'Gray','Jazyk':'Language','Teplota':'Temperature','Vietor':'Wind','Zrážky':'Precipitation',
  'Zdroj dát':'Data source','Minútový radar zrážok má len Open-Meteo a Best of':'Minute-by-minute rain is available only with Open-Meteo and Best of',
- 'Presnosť zdrojov':'Source accuracy','Vzhľad a jednotky':'Appearance & units','Zdroje a presnosť':'Sources & accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
+ 'Presnosť zdrojov':'Source accuracy','Vzhľad a jednotky':'Appearance & units','Vzhľad':'Appearance','Jednotky':'Units','Aplikácia':'App','Farby':'Colors','Západ':'Sunset','Oceán':'Ocean','Limetka':'Lime','Žiara':'Aurora','Auto':'Auto','Zdroje a presnosť':'Sources & accuracy','Každý deň sa porovná včerajšia predpoveď so skutočnosťou.':"Every day, yesterday's forecast is compared with what actually happened.",
  'Vynulovať':'Reset','Upozornenia':'Notifications','Upozornenia fungujú len v Android aplikácii.':'Notifications work only in the Android app.',
  'Ranné zhrnutie':'Morning summary','Predpoveď na deň ráno':"Today's forecast every morning",'Zap':'On','Vyp':'Off',
  'Čas ranného':'Morning time','Chytrá predpoveď':'Smart forecast','Upozornenie na zmenu počasia v najbližších 2 dňoch':'Heads-up about weather changes in the next 2 days','Čas chytrej predpovede':'Smart forecast time','Vyskúšať upozornenie':'Try the notification','Pošle skúšobné upozornenie hneď':'Sends a test notification right now','Búrky a dážď':'Storms & rain','Výstraha pri zrážkach':'Alerts for storms, heavy rain and wind',
