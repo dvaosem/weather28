@@ -2536,13 +2536,14 @@ function skiPaint(list,arr){
   const el=document.getElementById('ski-body');if(!el)return;
   const sk=S.lang==='sk';
   const rows=list.map((r,i)=>{
-    const d=arr[i];if(!d)return null;
+    const d=arr[i];if(!d||!d.current||!d.hourly||!Array.isArray(d.hourly.time)||!Array.isArray(d.hourly.snow_depth))return null;
     let idx=d.hourly.time.indexOf(d.current.time.slice(0,13)+':00');if(idx<0)idx=0;
     const snow=Math.round((d.hourly.snow_depth[idx]||0)*100);
     const s=skiState(r.id,skiOps||null,snow,d.current.temperature_2m,S.lang);
     const n3=d.daily?skiNew3(d.daily.snowfall_sum):0;
     return{r,snow,s,n3};
   }).filter(Boolean).sort((a,b)=>a.s[2]-b.s[2]);
+  if(!rows.length){skiMsg(sk?'Dáta sa nepodarilo načítať.':'Could not load data.');return false;}
   el.innerHTML=rows.map(({r,snow,s,n3})=>{
     const ops=window.skiOpsText&&skiOps?skiOpsText(r.id,skiOps,S.lang):null;
     const cnt=[r.sl?r.sl+(sk?' zjazdoviek':' slopes'):'',r.li?r.li+(sk?' vlekov/lanoviek':' lifts'):''].filter(Boolean).join(' · ');
@@ -2561,13 +2562,12 @@ async function renderSki(){
   if(!list.length){skiMsg(sk?'Vyber strediská v nastaveniach.':'Choose resorts in settings.');return;}
   const key=list.map(r=>r.id).join(',')+'|v2';
   let c=null;try{c=JSON.parse(localStorage.getItem('w28ski'));}catch(e){}
-  if(c&&c.k===key&&c.d){skiPaint(list,c.d);if(Date.now()-c.t<30*60*1000)return;}
+  if(c&&c.k===key&&c.d){let ok=false;try{ok=skiPaint(list,c.d)!==false;}catch(e){}if(ok&&Date.now()-c.t<30*60*1000)return;if(!ok){try{localStorage.removeItem('w28ski');}catch(e){}c=null;}}
   skiBusy=true;
   try{
     const u='https://api.open-meteo.com/v1/forecast?latitude='+list.map(r=>r.lat).join()+'&longitude='+list.map(r=>r.lon).join()+'&elevation='+list.map(r=>r.el).join()+'&current=temperature_2m&hourly=snow_depth&daily=snowfall_sum&timezone=Europe%2FBratislava&forecast_days=4';
-    const r=await fetch(u);let d=await r.json();if(!Array.isArray(d))d=[d];
-    try{localStorage.setItem('w28ski',JSON.stringify({t:Date.now(),k:key,d}));}catch(e){}
-    skiPaint(list,d);
+    const r=await fetch(u);if(!r.ok)throw new Error('http '+r.status);let d=await r.json();if(!Array.isArray(d))d=[d];
+    if(skiPaint(list,d)!==false){try{localStorage.setItem('w28ski',JSON.stringify({t:Date.now(),k:key,d}));}catch(e){}}
   }catch(e){if(!(c&&c.k===key))skiMsg(sk?'Dáta sa nepodarilo načítať.':'Could not load data.');}
   skiBusy=false;
 }
@@ -2622,6 +2622,9 @@ function w28ToggleCollapse(id){
   saveS();w28ApplyCollapse();
   if(!S.cardCollapsed[id]&&ld){ // grafy sa kreslia podľa šírky – po rozbalení prekresli
     try{if(id==='hourly')renderH(ld);if(id==='fcchart')renderFcChart(ld);}catch(e){}
+  }
+  if(id==='ski'&&!S.cardCollapsed[id]){
+    const sb=document.getElementById('ski-body');if(sb&&!sb.querySelector('.ski-it')){try{localStorage.removeItem('w28ski');}catch(e){}skiBusy=false;try{renderSki();}catch(e){}}
   }
 }
 function applyCardOrder(){
