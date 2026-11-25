@@ -1587,8 +1587,8 @@ function dsA(){return S.lang==='en'?DS_EN:DS_SK;}
 const WD_EN={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Rime fog',51:'Light drizzle',53:'Drizzle',55:'Dense drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Heavy showers',82:'Violent showers',95:'Thunderstorm',96:'Thunderstorm + hail',99:'Severe thunderstorm'};
 function wdesc(c){return (S.lang==='en'?WD_EN[c]:WD[c])||WD[c]||'—';}
 // drop badge = rain tier >= 1 on a dry-looking icon (rule: see RAIN below)
-function w28Wet(html,code,tier){return `<span class="w28-ic">${html}${((tier||0)>=1&&isDryCode(code))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span>`;}
-function wico(c,sz,tier){const ic=(typeof w28Icon==='function')?w28Icon(c,false,sz||28):(WI[c]||'—');return tier==null?ic:w28Wet(ic,c,tier);}
+function w28Wet(html,code,tier,snow){if(snow&&!isSnowCode(code))return `<span class="w28-ic">${html}<svg class="w28-dr" viewBox="0 0 12 12" width="10" height="10"><g stroke="var(--w28-drop)" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1.7" y1="3.5" x2="10.3" y2="8.5"/><line x1="1.7" y1="8.5" x2="10.3" y2="3.5"/></g></svg></span>`;return `<span class="w28-ic">${html}${((tier||0)>=1&&isDryCode(code))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span>`;}
+function wico(c,sz,tier,snow){const ic=(typeof w28Icon==='function')?w28Icon(c,false,sz||28):(WI[c]||'—');return (tier==null&&!snow)?ic:w28Wet(ic,c,tier,snow);}
 function wdir(d){return(S.lang==='en'?['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']:['S','SSV','SV','VSV','V','VJV','JV','JJV','J','JJZ','JZ','ZJZ','Z','ZSZ','SZ','SSZ'])[Math.round((d||0)/22.5)%16];}
 function warr(d){return`<span style="display:inline-block;transform:rotate(${((d||0)+180)%360}deg)">↑</span>`;}
 
@@ -1661,8 +1661,12 @@ let ld=null,ln='',lc='',clat=48.2086,clon=17.2736;
           thresholds 40 % + 0.3 mm (rain) / 10 % or 0.05 mm (possible); unknown chance: 0.5 mm / 0.1 mm.
    Icons: rain/drizzle code below tier 2 -> cloud; dry code at tier 2 (and above +1 °C) -> drizzle (< 0.5 mm) or rain.
           Snow, sleet, thunder, fog codes are never rewritten. The drop shows on dry-looking icons at tier >= 1.
-   Day icon: thunder > snow/sleet > rain > most common of the rest (not "highest code", one foggy hour no longer wins). */
+   Day icon: thunder > snow/sleet > rain > most common of the rest (not "highest code", one foggy hour no longer wins).
+   Snow  : the day shows snow only with >= 3 snow hours (night counts half) or >= 1 mm in snow hours;
+           less (e.g. a bit at 23:00) -> icon of the rest of the day + a small snowflake. */
 const RAIN={hP2:40,hMm2:0.1,hP1:10,hMm1:0.05,hMmOnly2:0.2,hMmOnly1:0.05,dP2:40,dMm2:0.3,dP1:10,dMm1:0.05,dMmOnly2:0.5,night:0.5};
+const SNOW_DAY={h:3,mm:1};
+const isSnowCode=c=>(c>=66&&c<=77)||(c>=83&&c<=86);
 const isRainCode=c=>(c>=51&&c<=57)||(c>=61&&c<=65)||(c>=80&&c<=82);
 const isDryCode=c=>c<=3||c===45||c===48;
 function hourTier(p,mm){mm=mm||0;
@@ -1712,9 +1716,9 @@ function fixPrecipProb(d){
     }
     // days (today = only hours still ahead)
     const today=nowKey.slice(0,10);
-    dl.rainTier=new Array(dl.time.length);
+    dl.rainTier=new Array(dl.time.length); dl.snowMinor=new Array(dl.time.length).fill(false);
     for(let k=0;k<dl.time.length;k++){
-      let pm=null,sum=0,rawSum=0,rawPm=null,cnt=0; const codes=[];
+      let pm=null,sum=0,rawSum=0,rawPm=null,cnt=0,snH=0,snMm=0; const codes=[];
       for(let i=0;i<n;i++){
         if(String(h.time[i]).slice(0,10)!==dl.time[k]) continue;
         if(dl.time[k]===today&&new Date(h.time[i])<n0) continue;
@@ -1722,6 +1726,7 @@ function fixPrecipProb(d){
         const p=R.hp[i], mm=mmA[i]||0;
         if(p!=null){pm=Math.max(pm??0,p*w);rawPm=Math.max(rawPm??0,p);}
         sum+=mm*w; rawSum+=mm; cnt++; codes.push(R.hc[i]);
+        if(isSnowCode(R.hc[i])){snH+=w;snMm+=mm*w;}
       }
       if(!cnt){ // no hourly coverage -> model's daily values
         pm=R.dp[k]; sum=R.ds[k]||0; dl.rainTier[k]=dayTier(pm,sum);
@@ -1729,7 +1734,11 @@ function fixPrecipProb(d){
       }
       const t=dayTier(pm,sum); dl.rainTier[k]=t;
       if(dl.time[k]===today){ dl.precipitation_sum[k]=+rawSum.toFixed(2); dl.precipitation_probability_max[k]=rawPm; }
-      dl.weathercode[k]=tierCode(dayBaseCode(codes),t,dl.temperature_2m_max?dl.temperature_2m_max[k]:null,sum);
+      // a little snow (few hours / tiny amount) does not make it a snow day: base icon from the other hours + small flake
+      const minorSnow=snH>0&&snH<SNOW_DAY.h&&snMm<SNOW_DAY.mm&&!codes.some(c=>c>=95);
+      dl.snowMinor[k]=minorSnow;
+      const base=minorSnow?dayBaseCode(codes.filter(c=>!isSnowCode(c)).length?codes.filter(c=>!isSnowCode(c)):[3]):dayBaseCode(codes);
+      dl.weathercode[k]=tierCode(base,minorSnow?Math.min(t,1):t,dl.temperature_2m_max?dl.temperature_2m_max[k]:null,sum);
     }
     // display: amount > 0 never shows 0 %; unknown chance (Met.no) shows a rough estimate from the amount
     for(let i=0;i<n;i++){const p=h.precipitation_probability[i],mm=mmA[i]||0;
@@ -2226,7 +2235,7 @@ function renderCur(d,name,country){
   const tabs=dy.time.map((date,i)=>{
     const dt=new Date(date+'T12:00:00');
     const dn=i===0?(sk?'Dnes':'Today'):dsA()[dt.getDay()];
-    return `<button class="w28-tab${i===w28Sel?' on':''}" role="tab" aria-selected="${i===w28Sel}" onclick="w28Pick(${i})"><span class="d">${dn}</span>${w28Wet(w28Icon(dy.weathercode[i],false,28),dy.weathercode[i],(dy.rainTier||[])[i])}<span class="t">${w28T(dy.temperature_2m_max[i])}°<i>/${w28T(dy.temperature_2m_min[i])}°</i></span></button>`;
+    return `<button class="w28-tab${i===w28Sel?' on':''}" role="tab" aria-selected="${i===w28Sel}" onclick="w28Pick(${i})"><span class="d">${dn}</span>${w28Wet(w28Icon(dy.weathercode[i],false,28),dy.weathercode[i],(dy.rainTier||[])[i],(dy.snowMinor||[])[i])}<span class="t">${w28T(dy.temperature_2m_max[i])}°<i>/${w28T(dy.temperature_2m_min[i])}°</i></span></button>`;
   }).join('');
   const el=document.getElementById('cur');
   // keep banners (stale / fallback notes) that loadW inserted before first render
@@ -2408,7 +2417,7 @@ function renderF(d){
     const fm=d.daily.apparent_temperature_max?d.daily.apparent_temperature_max[i]:null;
     return`<div class="fcr" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <div class="fday">${dn}<br><span>${dt.getDate()}.${dt.getMonth()+1}.</span></div>
-      <div class="fic">${wico(d.daily.weathercode[i],36,(d.daily.rainTier||[])[i])}</div>
+      <div class="fic">${wico(d.daily.weathercode[i],36,(d.daily.rainTier||[])[i],(d.daily.snowMinor||[])[i])}</div>
       <div class="fmeta"><div class="fra"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${prob}% · ${fP(prec,prob)}</div><div class="fwi">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div>
       <div class="fts"><span class="fmx">${fT(d.daily.temperature_2m_max[i])}</span><span class="fmn">${fT(d.daily.temperature_2m_min[i])}</span>${fm!==null?`<span class="ffl">${sk?'pocit':'feels'} ${fT(fm)}</span>`:''}</div>
     </div>`;
@@ -2427,7 +2436,7 @@ function renderFcChart(d){
     return`<div class="dcol" onclick="openDayModal('${date}',${i})" style="cursor:pointer;">
       <span class="dcday">${dn}</span>
       <span class="dcdt">${dt.getDate()}.${dt.getMonth()+1}.</span>
-      <span class="dcic">${wico(dy.weathercode[i],32,(dy.rainTier||[])[i])}</span>
+      <span class="dcic">${wico(dy.weathercode[i],32,(dy.rainTier||[])[i],(dy.snowMinor||[])[i])}</span>
       <span class="dcmx" style="color:${tempColor(dy.temperature_2m_max[i])}">${fT(dy.temperature_2m_max[i]).replace('°C','°').replace('°F','°')}</span>
       <span class="dcmn">${fT(dy.temperature_2m_min[i]).replace('°C','°').replace('°F','°')}</span>
       <div class="dcbg"><div class="dcb" style="height:${bh}px"></div></div>
@@ -2829,7 +2838,7 @@ function openDayModal(date,dayIdx){
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
     <div class="day-summary">
-      <div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx])}</div>
+      <div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx],(d.snowMinor||[])[dayIdx])}</div>
       <div>
         <div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div>
         <div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div>
@@ -3084,7 +3093,7 @@ function openDayModal(date,dayIdx){
     <div style="text-align:right;"><div class="hour-temp" style="color:${tempColor(hh.temp)}">${fT(hh.temp)}</div>${hh.feel!=null?`<div class="hour-feel">${tx("pocit","feels")} ${fT(hh.feel)}</div>`:''}</div>
   </div>`).join('');
   document.getElementById('day-modal-content').innerHTML=`
-    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
+    <div class="day-summary"><div class="day-icon">${wico(d.weathercode[dayIdx],56,(d.rainTier||[])[dayIdx],(d.snowMinor||[])[dayIdx])}</div><div><div class="day-maxmin" style="color:${tempColor(maxT)}">${fT(maxT)} / <span style="color:${tempColor(minT)};font-size:1.1rem">${fT(minT)}</span></div><div class="day-desc">${wdesc(d.weathercode[dayIdx])}</div></div></div>
     <div class="day-stats"><div class="day-stat"><div class="day-stat-lbl">${tx('Zrážky','Precipitation')}</div><div class="day-stat-val cb2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg> ${prob}% · ${fP(prec,prob)}</div></div><div class="day-stat"><div class="day-stat-lbl">${tx('Vietor max','Max wind')}</div><div class="day-stat-val cpur">${warr(wdeg)} ${fW(ws)} ${wdir(wdeg)}</div></div></div>
     <div class="hour-title">${tx('Hodinový priebeh','Hour by hour')}</div>
     ${hourRows||'<div style="color:var(--text2);text-align:center;padding:20px;">'+tx('Dáta nedostupné','No data available')+'</div>'}`;
