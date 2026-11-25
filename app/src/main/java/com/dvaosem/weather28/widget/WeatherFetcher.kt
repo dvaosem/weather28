@@ -62,6 +62,10 @@ object WeatherFetcher {
         const val nowMm = 0.05   // "rain in X min" from 15-min data, same as the app's minutecast
     }
     private fun isRainCode(c: Int) = c in 51..57 || c in 61..65 || c in 80..82
+    private fun isSnowCode(c: Int) = c in 66..77 || c in 83..86
+    /** A day is a snow day only with >= 3 snow hours (night half) or >= 1 mm in snow hours (same as the app). */
+    private const val SNOW_DAY_H = 3.0
+    private const val SNOW_DAY_MM = 1.0
     private fun isDryCode(c: Int) = c in 0..3 || c == 45 || c == 48
     private fun hourTier(p: Int?, mm: Double): Int =
         if (p == null) (if (mm >= RainCfg.hMmOnly2) 2 else if (mm >= RainCfg.hMmOnly1) 1 else 0)
@@ -84,7 +88,7 @@ object WeatherFetcher {
     private class DayRain(val tier: Int, val code: Int?, val sumW: Double)
     /** Rain tier + icon base for one date; fromKey = "yyyy-MM-ddTHH" to count only hours still ahead (today). */
     private fun dayRain(hours: List<Hour>, date: String, fromKey: String?): DayRain {
-        var pm: Double? = null; var sum = 0.0; var cnt = 0; val codes = ArrayList<Int>()
+        var pm: Double? = null; var sum = 0.0; var cnt = 0; val codes = ArrayList<Int>(); var snH = 0.0; var snMm = 0.0
         for (h in hours) {
             if (!h.time.startsWith(date)) continue
             if (fromKey != null && h.time.substring(0, 13) < fromKey) continue
@@ -92,9 +96,12 @@ object WeatherFetcher {
             val w = if (hr >= 22 || hr < 6) RainCfg.night else 1.0
             h.prob?.let { pm = maxOf(pm ?: 0.0, it * w) }
             sum += h.mm * w; cnt++; codes += h.code
+            if (isSnowCode(h.code)) { snH += w; snMm += h.mm * w }
         }
         if (cnt == 0) return DayRain(0, null, 0.0)
-        return DayRain(dayTier(pm, sum), dayBaseCode(codes), sum)
+        val minorSnow = snH > 0 && snH < SNOW_DAY_H && snMm < SNOW_DAY_MM && codes.none { it >= 95 }
+        val base = if (minorSnow) dayBaseCode(codes.filter { !isSnowCode(it) }.ifEmpty { listOf(3) }) else dayBaseCode(codes)
+        return DayRain(dayTier(pm, sum), base, sum)
     }
 
     fun fetch(lat: Double, lon: Double, cityName: String, source: String = "openmeteo", order: List<Int> = listOf(0, 1, 2), windowMin: Int = 60): WeatherData? {
