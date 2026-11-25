@@ -1588,6 +1588,25 @@ const WD_EN={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',
 function wdesc(c){return (S.lang==='en'?WD_EN[c]:WD[c])||WD[c]||'—';}
 // drop badge = rain tier >= 1 on a dry-looking icon (rule: see RAIN below)
 function w28Wet(html,code,tier,snow){if(snow&&!isSnowCode(code))return `<span class="w28-ic">${html}<svg class="w28-dr" viewBox="0 0 12 12" width="10" height="10"><g stroke="var(--w28-drop)" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1.7" y1="3.5" x2="10.3" y2="8.5"/><line x1="1.7" y1="8.5" x2="10.3" y2="3.5"/></g></svg></span>`;return `<span class="w28-ic">${html}${((tier||0)>=1&&isDryCode(code))?'<svg class="w28-dr" viewBox="0 0 10 14" width="8" height="11"><path d="M5 1C5 1 1 6.2 1 9a4 4 0 0 0 8 0C9 6.2 5 1 5 1z" fill="var(--w28-drop)"/></svg>':''}</span>`;}
+/* One source of truth for words about precipitation (brief, text forecast): the hour tiers above.
+   Returns {tier:0|1|2, when:'ráno'|'popoludní'|'večer'|'v noci', snow:bool, sum:mm, first:hourIndex} for day k (today = hours ahead). */
+function w28DayPrecip(d,k){
+  const h=d.hourly,dl=d.daily,out={tier:0,when:'',snow:false,sum:0,first:-1};
+  if(!h||!h.time||!dl||!dl.time||!dl.time[k])return out;
+  const n0=new Date();n0.setMinutes(0,0,0);const isToday=k===0;
+  let best=0,bi=-1;
+  for(let i=0;i<h.time.length;i++){
+    if(String(h.time[i]).slice(0,10)!==dl.time[k])continue;
+    if(isToday&&new Date(h.time[i])<n0)continue;
+    const t=(h.rainTier||[])[i]||0, sn=isSnowCode((d._raw&&d._raw.hc[i]!=null)?d._raw.hc[i]:h.weathercode[i]);
+    if(t>=1){out.sum+=(h.precipitation&&h.precipitation[i])||0;if(sn||(h.temperature_2m&&h.temperature_2m[i]<=0.5))out.snow=true;}
+    if(t>best){best=t;bi=i;}
+  }
+  out.tier=Math.max(best,(dl.rainTier||[])[k]||0);out.first=bi;
+  if(bi>=0){const hr=parseInt(String(h.time[bi]).slice(11,13),10),en=S.lang!=='sk';
+    out.when=hr<6?(en?'at night':'v noci'):hr<12?(en?'in the morning':'ráno'):hr<18?(en?'in the afternoon':'popoludní'):(en?'in the evening':'večer');}
+  return out;
+}
 function wico(c,sz,tier,snow){const ic=(typeof w28Icon==='function')?w28Icon(c,false,sz||28):(WI[c]||'—');return (tier==null&&!snow)?ic:w28Wet(ic,c,tier,snow);}
 function wdir(d){return(S.lang==='en'?['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']:['S','SSV','SV','VSV','V','VJV','JV','JJV','J','JJZ','JZ','ZJZ','Z','ZSZ','SZ','SSZ'])[Math.round((d||0)/22.5)%16];}
 function warr(d){return`<span style="display:inline-block;transform:rotate(${((d||0)+180)%360}deg)">↑</span>`;}
@@ -2195,12 +2214,12 @@ function w28HeroParts(d,di){
   if(di===0){
     label=sk?'Teraz':'Now';temp=c.temperature_2m;code=c.weathercode;night=w28Night(d,nowIso);
     sub=(sk?'Pocitovo':'Feels like')+' '+w28T(c.apparent_temperature)+'°';
-    cols=[{lbl:sk?'Teraz':'Now',temp:c.temperature_2m,code:c.weathercode,night:night,prob:0,now:true}];
+    cols=[{lbl:sk?'Teraz':'Now',temp:c.temperature_2m,code:c.weathercode,night:night,prob:0,now:true,tier:c.rainTier||0}];
     for(let i=0;i<h.time.length&&cols.length<48;i++){
       const tm=new Date(h.time[i]);
       if(tm<=now)continue;
       if(cols.length>=12&&tm.toDateString()!==now.toDateString())break;
-      cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
+      cols.push({lbl:String(tm.getHours()).padStart(2,'0')+':00',temp:h.temperature_2m[i],code:h.weathercode[i],tier:(h.rainTier||[])[i]||0,night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
     }
   }else{
     const dt=new Date(dy.time[di]+'T12:00:00');
@@ -2209,10 +2228,10 @@ function w28HeroParts(d,di){
     sub=dt.toLocaleDateString(loc(),{day:'numeric',month:'numeric'});
     for(let i=0;i<h.time.length;i++){
       if(h.time[i].slice(0,10)!==dy.time[di])continue;
-      cols.push({lbl:h.time[i].slice(11,13)+':00',temp:h.temperature_2m[i],code:h.weathercode[i],night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
+      cols.push({lbl:h.time[i].slice(11,13)+':00',temp:h.temperature_2m[i],code:h.weathercode[i],tier:(h.rainTier||[])[i]||0,night:w28Night(d,h.time[i]),prob:h.precipitation_probability?(h.precipitation_probability[i]||0):0});
     }
   }
-  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Icon(x.code,x.night,30)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
+  const hours=cols.map(x=>`<div class="w28-h${x.now?' now':''}"><span class="w28-ht">${w28T(x.temp)}°</span>${w28Wet(w28Icon(x.code,x.night,30),x.code,x.tier)}<span class="w28-hp">${x.prob>=20?x.prob+'%':''}</span><span class="w28-hl2">${x.lbl}</span></div>`).join('');
   return {
     now:`<div class="w28-now">
       <div><div class="w28-lbl">${label}</div><div class="w28-temp">${w28T(temp)}<sup>°</sup></div></div>
@@ -2712,20 +2731,11 @@ function renderAI(d,name){
     if(kmh<60)return en?'strong wind':'silný vietor';
     return en?'very strong wind':'veľmi silný vietor';
   }
-  function rainDesc(prob,sum,afternoonH,eveningH,rainingNow){
-    const avgProb=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
-    const aftP=avgProb(afternoonH);const eveP=avgProb(eveningH);
-    if(rainingNow){
-      const mm0=sum>0?` ${sum.toFixed(1)}mm`:'';
-      return(en?'raining now':'teraz prší')+mm0;
-    }
-    if(prob>60){
-      const mm=sum>0?` ${sum.toFixed(1)}mm`:'';
-      const when=eveP>aftP?(en?'evening':'večer'):(en?'afternoon':'popoludní');
-      return(en?'rain ':'dážď ')+when+' '+Math.max(eveP,prob)+'%'+mm;
-    }
-    if(prob>30)return(en?'rain possible ':'možný dážď ')+prob+'%';
-    if(sum>=0.2)return(en?'light rain ':'slabý dážď ')+sum.toFixed(1)+'mm';
+  function rainDesc(k,rainingNow){
+    const pi=w28DayPrecip(d,k), mm=pi.sum>=0.1?' '+pi.sum.toFixed(1)+' mm':'';
+    if(rainingNow) return (en?'raining now':'teraz prší')+mm;
+    if(pi.tier>=2) return (pi.snow?(en?'snow ':'sneženie '):(en?'rain ':'dážď '))+pi.when+mm;
+    if(pi.tier===1) return pi.snow?(en?'light snow possible ':'možné slabé sneženie ')+pi.when:(en?'light rain possible ':'možné slabé zrážky ')+pi.when;
     return en?'no rain':'bez zrážok';
   }
 
@@ -2739,10 +2749,10 @@ function renderAI(d,name){
     if(hr>=18&&hr<=23)eveH.push(h.precipitation_probability[i]||0);
   }
   const todayParts=[
-    ((c.precipitation||0)>=0.1&&![51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99].includes(c.weathercode))?(en?'rainy':'daždivo'):skyDesc(c.weathercode),
+    ((c.precipitation||0)>=0.1&&(c.rainTier||0)>=2&&!isRainCode(c.weathercode)&&!isSnowCode(c.weathercode)&&c.weathercode<95)?(en?'rainy':'daždivo'):skyDesc(c.weathercode),
     `max ${Math.round(dy.temperature_2m_max[0])}° / min ${Math.round(dy.temperature_2m_min[0])}°`,
     windDesc(Math.round(dy.windspeed_10m_max[0]||0))+' '+Math.round(dy.windspeed_10m_max[0]||0)+' km/h',
-    rainDesc(dy.precipitation_probability_max?.[0]||0, parseFloat(dy.precipitation_sum[0]||0), aftH, eveH, (c.precipitation||0)>=0.1||[51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(c.weathercode))
+    rainDesc(0, (c.rainTier||0)>=2||(c.precipitation||0)>=0.1)
   ];
 
   // TOMORROW
@@ -2758,7 +2768,7 @@ function renderAI(d,name){
     skyDesc(dy.weathercode[1]||0),
     `max ${Math.round(dy.temperature_2m_max[1]||0)}° / min ${Math.round(dy.temperature_2m_min[1]||0)}°`,
     windDesc(Math.round(dy.windspeed_10m_max[1]||0))+' '+Math.round(dy.windspeed_10m_max[1]||0)+' km/h',
-    rainDesc(dy.precipitation_probability_max?.[1]||0, parseFloat(dy.precipitation_sum[1]||0), aftH2, eveH2)
+    rainDesc(1)
   ];
 
   aiBody.innerHTML=`
@@ -3138,7 +3148,7 @@ function w28BriefRender(d){
   for(let i=0;i<h.time.length;i++){if(new Date(h.time[i]).getTime()>now-3600e3){start=i;break;}}
   let txt='',warn=false;
   const hh=i=>new Date(h.time[i]).getHours()+':00';
-  const wet=i=>{const x=h.weathercode[i];return RAIN(x)||SNOW(x)||(h.precipitation_probability&&(h.precipitation_probability[i]||0)>=60)||((h.precipitation&&(h.precipitation[i]||0))>=0.2);};
+  const wet=i=>{const x=h.weathercode[i];return ((h.rainTier||[])[i]||0)>=2||RAIN(x)||SNOW(x);};
   const snowAt=i=>SNOW(h.weathercode[i]);
   const nowWet=RAIN(c.weathercode)||SNOW(c.weathercode)||(c.precipitation||0)>=0.1;
   let first=-1;for(let i=start;i<Math.min(start+12,h.time.length);i++){if(wet(i)){first=i;break;}}
@@ -3148,7 +3158,9 @@ function w28BriefRender(d){
   }else if(first>=0){const sn=snowAt(first);
     txt=(sn?(sk?'Sneženie od ':'Snow from '):(sk?'Dážď od ':'Rain from '))+hh(first)+(sn?'':(sk?' · vezmi dáždnik':' · take an umbrella'));warn=true;
   }else{
-    txt=(sk?'Dnes bez zrážok · ':'No rain today · ')+'Min '+w28T(dy.temperature_2m_min[0])+'° · Max '+w28T(dy.temperature_2m_max[0])+'°';
+    const pi=w28DayPrecip(d,0), mm='Min '+w28T(dy.temperature_2m_min[0])+'° · Max '+w28T(dy.temperature_2m_max[0])+'°';
+    if(pi.tier>=1) txt=(pi.snow?(sk?'Dnes '+pi.when+' možno slabo sneží · ':'Light snow possible '+pi.when+' · '):(sk?'Dnes '+pi.when+' možné slabé zrážky · ':'Light rain possible '+pi.when+' · '))+mm;
+    else txt=(sk?'Dnes bez zrážok · ':'No rain today · ')+mm;
   }
   el.className='w28-brief'+(warn?' w':'');
   el.innerHTML='<i></i><span>'+txt+'</span>';
