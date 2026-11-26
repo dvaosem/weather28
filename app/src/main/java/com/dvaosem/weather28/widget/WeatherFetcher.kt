@@ -13,7 +13,7 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /** One rain-forecast slot (15 min from minutely data, 60 min from hourly data). */
-data class RainSlot(val start: Long, val minutes: Int, val wet: Boolean)
+data class RainSlot(val start: Long, val minutes: Int, val wet: Boolean, val snow: Boolean = false)
 
 data class WeatherData(
     val city: String,
@@ -260,16 +260,24 @@ object WeatherFetcher {
         val out = ArrayList<RainSlot>()
         fun epoch(t: String) = LocalDateTime.parse(t).atZone(zone).toInstant().toEpochMilli()
         var minutelyEnd = now
+        val byHour = hours.associateBy { it.time.take(13) }
+        // snow or rain: the hour's weather code, else temperature (<= 0.5 °C), same as the app
+        fun snowy(h: Hour?): Boolean {
+            if (h == null) return false
+            if (isSnowCode(h.code) || isRainCode(h.code) || h.code >= 95) return isSnowCode(h.code)
+            val t = h.temp
+            return t != null && t <= 0.5
+        }
         for ((t, mm) in minutely) {
             val s = epoch(t)
             if (s + 15 * 60_000 <= now || s > now + 2 * 3600_000) continue
-            out += RainSlot(s, 15, mm >= RainCfg.nowMm)
+            out += RainSlot(s, 15, mm >= RainCfg.nowMm, snowy(byHour[t.take(13)]))
             minutelyEnd = s + 15 * 60_000
         }
         for (h in hours) {
             val s = epoch(h.time)
             if (s + 3600_000 <= minutelyEnd || s > now + 24 * 3600_000) continue
-            out += RainSlot(maxOf(s, minutelyEnd), 60, hourTier(h.prob, h.mm) == 2)
+            out += RainSlot(maxOf(s, minutelyEnd), 60, hourTier(h.prob, h.mm) == 2, snowy(h))
         }
         return out.sortedBy { it.start }
     }
@@ -394,14 +402,16 @@ object WeatherFetcher {
         val first = slots[0]
         if (first.wet && first.start <= now) {
             val dry = slots.firstOrNull { !it.wet }
-            return (if (en) (if (dry != null) "Raining · until ${hm(dry.start)}" else "Raining")
-                    else (if (dry != null) "Prší · do ${hm(dry.start)}" else "Prší")) to true
+            val sn = first.snow
+            val w = if (en) (if (sn) "Snowing" else "Raining") else (if (sn) "Sneží" else "Prší")
+            return (if (dry != null) (if (en) "$w · until ${hm(dry.start)}" else "$w · do ${hm(dry.start)}") else w) to true
         }
         val wet = slots.firstOrNull { it.wet }
         if (wet != null) {
             val mins = ((wet.start - now) / 60_000L).toInt()
-            return (if (en) (if (mins in 1..59) "Rain in $mins min" else "Rain at ${hm(wet.start)}")
-                    else (if (mins in 1..59) "Dážď o $mins min" else "Dážď o ${hm(wet.start)}")) to true
+            val w = if (en) (if (wet.snow) "Snow" else "Rain") else (if (wet.snow) "Sneženie" else "Dážď")
+            return (if (en) (if (mins in 1..59) "$w in $mins min" else "$w at ${hm(wet.start)}")
+                    else (if (mins in 1..59) "$w o $mins min" else "$w o ${hm(wet.start)}")) to true
         }
         // Dry for the whole checked horizon (24 h). Say so, instead of a clock time that only marks the horizon end.
         return (if (en) "No rain next 24 h" else "Bez dažďa 24 h") to false
@@ -415,14 +425,14 @@ object WeatherFetcher {
         put("todayCode", d.todayCode); put("todayIsDay", d.todayIsDay); put("tomorrowCode", d.tomorrowCode)
         put("todayTier", d.todayTier); put("tomorrowTier", d.tomorrowTier)
         put("source", d.source)
-        put("rain", JSONArray().apply { d.rain.forEach { put(JSONArray().put(it.start).put(it.minutes).put(it.wet)) } })
+        put("rain", JSONArray().apply { d.rain.forEach { put(JSONArray().put(it.start).put(it.minutes).put(it.wet).put(it.snow)) } })
     }.toString()
 
     fun deserialize(s: String): WeatherData? = try {
         val j = JSONObject(s)
         val rain = ArrayList<RainSlot>()
         j.optJSONArray("rain")?.let { a ->
-            for (i in 0 until a.length()) a.getJSONArray(i).let { rain += RainSlot(it.getLong(0), it.getInt(1), it.getBoolean(2)) }
+            for (i in 0 until a.length()) a.getJSONArray(i).let { rain += RainSlot(it.getLong(0), it.getInt(1), it.getBoolean(2), it.optBoolean(3, false)) }
         }
         WeatherData(
             city = j.optString("city", ""),

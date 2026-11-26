@@ -2284,7 +2284,13 @@ function renderMinutecast(d){
   for(let i=0;i<m.time.length;i++){
     const t=new Date(m.time[i]).getTime();
     if(t<now-15*60000)continue;
-    slots.push({t,prec:m.precipitation[i]||0});
+    // snow or rain: the slot's own code, else the hour's code, else temperature (<= 0.5 °C)
+    const hk=String(m.time[i]).slice(0,13), hi=d.hourly?d.hourly.time.findIndex(x=>String(x).slice(0,13)===hk):-1;
+    const mc=m.weathercode?m.weathercode[i]:null, hc=hi>=0?((d._raw&&d._raw.hc[hi]!=null)?d._raw.hc[hi]:d.hourly.weathercode[hi]):null;
+    const tt=hi>=0&&d.hourly.temperature_2m?d.hourly.temperature_2m[hi]:null;
+    const wetC=c=>c!=null&&(isSnowCode(c)||isRainCode(c)||c>=95);
+    const snow=wetC(mc)?isSnowCode(mc):wetC(hc)?isSnowCode(hc):(tt!=null&&tt<=0.5);
+    slots.push({t,prec:m.precipitation[i]||0,snow});
     if(slots.length>=8)break;
   }
   if(!slots.length){el.classList.add('hidden');return;}
@@ -2295,15 +2301,16 @@ function renderMinutecast(d){
   let msg;
   const firstRainIdx=slots.findIndex(s=>s.prec>0.05);
   const rainingNow=slots[0].prec>0.05;
+  const wetS=slots.filter(s=>s.prec>0.05), snowy=wetS.filter(s=>s.snow).length*2>wetS.length;
+  const W=snowy?{now:sk?'Sneží — sneženie pokračuje najbližšiu hodinu':'Snowing — continues for the next hour',stop:sk?'Sneženie ustane približne o':'Snow stops in about',start:sk?'Sneženie začne približne o':'Snow starts in about',light:sk?'Slabé sneženie v najbližšej hodine':'Light snow within the hour'}
+                :{now:sk?'Prší — dážď pokračuje najbližšiu hodinu':'Raining — continues for the next hour',stop:sk?'Dážď ustane približne o':'Rain stops in about',start:sk?'Dážď začne približne o':'Rain starts in about',light:sk?'Slabé zrážky v najbližšej hodine':'Light precipitation within the hour'};
   if(rainingNow){
     const stopIdx=slots.findIndex((s,i)=>i>0&&s.prec<=0.05);
-    if(stopIdx>0){const mins=stopIdx*15;msg=sk?`Dážď ustane približne o ${mins} min`:`Rain stops in about ${mins} min`;}
-    else{msg=sk?'Prší — dážď pokračuje najbližšiu hodinu':'Raining — continues for the next hour';}
+    msg=stopIdx>0?`${W.stop} ${stopIdx*15} min`:W.now;
   }else if(firstRainIdx>0){
-    const mins=firstRainIdx*15;
-    msg=sk?`Dážď začne približne o ${mins} min`:`Rain starts in about ${mins} min`;
+    msg=`${W.start} ${firstRainIdx*15} min`;
   }else{
-    msg=sk?'Slabé zrážky v najbližšej hodine':'Light precipitation within the hour';
+    msg=W.light;
   }
   const maxP=Math.max(...slots.map(s=>s.prec),0.1);
   const startLbl=new Date(slots[0].t).toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'});
@@ -2314,7 +2321,7 @@ function renderMinutecast(d){
     <div class="mcast-bars">${slots.map(s=>{
       const h=Math.max(2,(s.prec/maxP)*40);
       const op=s.prec>0.05?(0.4+s.prec/maxP*0.6):0.25;
-      return `<div class="mcast-bar" style="height:${h}px;background:rgba(127,178,229,${op})"></div>`;
+      return `<div class="mcast-bar" style="height:${h}px;background:${s.snow&&s.prec>0.05?'rgba(215,225,240,'+op+')':'rgba(127,178,229,'+op+')'}"></div>`;
     }).join('')}</div>
     <div class="mcast-labels"><span>${startLbl}</span><span>${endLbl}</span></div>`;
   el.classList.remove('hidden');
