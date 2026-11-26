@@ -17,9 +17,9 @@
 <meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest-weather28.json">
-<link rel="icon" type="image/png" href="/icon-192.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="shortcut icon" href="/icon-192.png">
+<link rel="icon" type="image/png" href="/icons/icon-weather28-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-weather28-192.png">
+<link rel="shortcut icon" href="/icons/icon-weather28-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -526,7 +526,54 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 .pal-lavender{background:#6b57c0;}
 #pal-row{display:none;}
 [data-theme="fresh"] #pal-row{display:flex;}
+/* W28-DESKTOP: wide-screen layout, mobile untouched */
+@media (min-width:900px){
+  html,body{overflow-x:hidden;}
+  body{max-width:1080px;padding:0 24px;margin:0 auto;}
+  header{padding-left:0;padding-right:0;}
+  header .logo{font-size:1.9rem;}
+  .srow{left:auto;right:0;width:380px;}
+  main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;grid-auto-flow:row dense;padding:0 0 40px;}
+  main>[data-section="cur"],
+  main>[data-section="hourly"],
+  main>[data-section="fcchart"],
+  main>.footer,
+  main>#minutecast{grid-column:1 / -1;}
+  main>[data-section]{min-width:0;}
+  #radar-map{height:420px!important;}
+  .day-content{max-width:760px;}
+  .day-stats{grid-template-columns:repeat(4,1fr);}
+  .spnl{max-width:640px;}
+  .info-sheet{max-width:640px;border-radius:22px;}
+}
+/* W28-DESKTOP-FILL: stretch hourly strip and day tabs across the card on PC */
+@media (min-width:900px){
+  .w28-h{flex:1 1 0;}
+  .w28-tab{flex:1 1 0;width:auto;min-width:68px;}
+  .w28-tabs{gap:10px;padding:14px 24px;}
+  .w28-hours{padding-left:14px;padding-right:14px;}
+}
+/* W28-DESKTOP-CHARTS: hourly + 10-day columns fill the card, bigger graphs on PC */
+@media (min-width:900px){
+  .hscr{padding:0 20px 14px;gap:6px;}
+  .hcol,.dcol{flex:1 1 0;}
+  .dcol{min-width:60px;gap:5px;}
+  .dcday{font-size:0.72rem;}
+  .dcdt{font-size:0.62rem;}
+  .dcic svg{width:36px;height:36px;}
+  .dcmx{font-size:0.95rem;}
+  .dcmn{font-size:0.75rem;}
+  .dcbg{width:10px;height:48px;}
+  .dcpr{font-size:0.66rem;}
+  .htm{font-size:0.66rem;}
+  .htp{font-size:0.8rem;}
+  .hbg{width:9px;}
+  .stitle{padding:16px 20px 10px;font-size:0.64rem;}
+  [data-section="hourly"] .card>div:last-child,[data-section="fcchart"] .card>div:last-child{padding-left:20px!important;padding-right:20px!important;}
+}
 </style>
+<style id="nhl-bounce">button{-webkit-tap-highlight-color:transparent}button:active:not(:disabled){scale:.94}</style>
+<script id="nhl-bounce-js">(function(){if(!Element.prototype.animate)return;var rm=window.matchMedia?matchMedia('(prefers-reduced-motion:reduce)'):null;var cur=null;document.addEventListener('pointerdown',function(e){var b=e.target&&e.target.closest?e.target.closest('button'):null;cur=(b&&!b.disabled)?b:null},true);document.addEventListener('pointerup',function(){var b=cur;cur=null;if(!b||!b.isConnected||(rm&&rm.matches))return;try{b.animate([{scale:.94},{scale:1.06,offset:.45},{scale:.985,offset:.75},{scale:1}],{duration:380,easing:'ease-out'})}catch(_){}},true);document.addEventListener('pointercancel',function(){cur=null},true)})();</script>
 </head>
 <body>
 
@@ -729,7 +776,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
       <button onclick="closeS()" style="background:linear-gradient(135deg,var(--g1),var(--g2));border:none;color:#1d1b19;border-radius:10px;padding:8px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Uložiť</button>
     </div>
     <div class="sg open" data-g="look"><button class="sgh" onclick="sgToggle(this)" aria-expanded="false"><span>Vzhľad</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button><div class="sgb">
-    <div class="sr sr-col"><div><div class="sl2">Téma</div></div><div class="thg"><button class="to on" id="td" onclick="setTheme('dark')"><i class="th-dark"></i>Tmavá</button><button class="to" id="tl" onclick="setTheme('light')"><i class="th-light"></i>Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')"><i class="th-gray"></i>Šedá</button><button class="to" id="tfr" onclick="setTheme('fresh')"><i class="th-fresh"></i>Fresh</button></div></div>
+    <div class="sr sr-col"><div><div class="sl2">Téma</div></div><div class="thg"><button class="to on" id="td" onclick="setTheme('dark')"><i class="th-dark"></i>Tmavá</button><button class="to" id="tl" onclick="setTheme('light')"><i class="th-light"></i>Svetlá</button><button class="to" id="tg" onclick="setTheme('gray')"><i class="th-gray"></i>Šedá</button><button class="to" id="tfr" onclick="setTheme('fresh')"><i class="th-fresh"></i>Fresh</button><button class="to" id="ta" onclick="setTheme('auto')"><i class="th-auto"></i>Auto</button></div></div>
     <div class="sr sr-col" id="pal-row"><div><div class="sl2">Farby</div></div><div class="palg"><button id="pal-sky" onclick="setPal('sky')"><i class="pal-sky"></i>Obloha</button><button id="pal-sage" onclick="setPal('sage')"><i class="pal-sage"></i>Šalvia</button><button id="pal-sand" onclick="setPal('sand')"><i class="pal-sand"></i>Piesok</button><button id="pal-lavender" onclick="setPal('lavender')"><i class="pal-lavender"></i>Levanduľa</button></div></div>
     <div class="sr"><div><div class="sl2" id="sl-lang">Jazyk</div></div><div class="tog"><button class="to on" id="lsk" onclick="setLang('sk')">SK</button><button class="to" id="len" onclick="setLang('en')">EN</button></div></div>
     </div></div>
@@ -782,7 +829,7 @@ main{display:flex;flex-direction:column;gap:10px;padding:0 14px 32px;width:100%;
 function sgToggle(b){const g=b.parentNode;g.classList.toggle('open');b.setAttribute('aria-expanded',g.classList.contains('open'));try{const o={};document.querySelectorAll('.sg').forEach(x=>o[x.dataset.g]=x.classList.contains('open')?1:0);localStorage.setItem('w28sg',JSON.stringify(o));}catch(e){}}
 (function(){let o=null;try{o=JSON.parse(localStorage.getItem('w28sg'));}catch(e){}document.querySelectorAll('.sg').forEach(g=>{if(o&&g.dataset.g in o)g.classList.toggle('open',!!o[g.dataset.g]);g.firstElementChild.setAttribute('aria-expanded',g.classList.contains('open'));});})();
 const DEFAULT_ORDER=['cur','station','ai','radar','ski','hourly','fcchart','fclist'];
-let S={theme:'dark',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{},cardCollapsed:{}};
+let S={theme:'auto',tu:'C',wu:'kmh',pu:'mm',lang:'sk',src:'openmeteo',morningAlert:true,morningTime:'07:00',stormAlert:true,smartAlert:true,smartTime:'19:00',smartMask:31,cardOrder:[...DEFAULT_ORDER],cardHidden:{},cardCollapsed:{}};
 function loadS(){try{const s=JSON.parse(localStorage.getItem('w28s'));if(s){S={...S,...s};if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('station')&&s.cardOrder.length===DEFAULT_ORDER.length-1){const i=s.cardOrder.indexOf('cur');s.cardOrder.splice(i+1,0,'station');}if(Array.isArray(s.cardOrder)&&!s.cardOrder.includes('ski')){const ri=s.cardOrder.indexOf('radar');s.cardOrder.splice(ri>=0?ri+1:s.cardOrder.length,0,'ski');}if(!s.cardOrder||s.cardOrder.length!==DEFAULT_ORDER.length)S.cardOrder=[...DEFAULT_ORDER];if(!s.cardHidden||typeof s.cardHidden!=='object')S.cardHidden={};}}catch(e){}}
 function saveS(){localStorage.setItem('w28s',JSON.stringify(S));}
 // FAVORITES
@@ -811,15 +858,18 @@ function renderFavbar(){
   bar.innerHTML=html;
 }
 
-const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918',fresh:'#d6e0ef'};
+const THEME_BG={dark:'#000000',light:'#f4f1ea',gray:'#1a1918',fresh:'#d6e0ef',auto:'#000000'};
 function applyT(t){
-  if(!THEME_BG[t])t='dark';
-  document.documentElement.setAttribute('data-theme',t);
-  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',THEME_BG[t]);
-  Object.entries({dark:'td',light:'tl',gray:'tg',fresh:'tfr'}).forEach(([k,id])=>{const b=document.getElementById(id);if(b)b.classList.toggle('on',k===t);});
+  if(!THEME_BG[t])t='auto';
+  let r=t;
+  if(t==='auto'){try{r=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}catch(e){r='dark';}}
+  document.documentElement.setAttribute('data-theme',r);
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',THEME_BG[r]);
+  Object.entries({dark:'td',light:'tl',gray:'tg',fresh:'tfr',auto:'ta'}).forEach(([k,id])=>{const b=document.getElementById(id);if(b)b.classList.toggle('on',k===t);});
   try{applyPal();}catch(e){}
 }
-function setTheme(t){if(!THEME_BG[t])t='dark';S.theme=t;saveS();applyT(t);}
+function setTheme(t){if(!THEME_BG[t])t='auto';S.theme=t;saveS();applyT(t);}
+try{window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(S.theme==='auto')applyT('auto');});}catch(e){}
 const PAL_BG={sky:'#d6e0ef',sage:'#dbe6d8',sand:'#ebe0d0',lavender:'#e0dcf0'};
 function applyPal(){const p=PAL_BG[S.pal]?S.pal:'sky';document.documentElement.setAttribute('data-pal',p);if(document.documentElement.getAttribute('data-theme')==='fresh'){const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',PAL_BG[p]);}Object.keys(PAL_BG).forEach(k=>{const b=document.getElementById('pal-'+k);if(b)b.classList.toggle('on',k===p);});}
 function setPal(p){S.pal=p;saveS();applyPal();}
@@ -2344,7 +2394,7 @@ function drawWeatherGraf(cols){
   const ctx=canvas.getContext('2d');
   const dpr=window.devicePixelRatio||1;
   const W=canvas.parentElement.clientWidth;
-  const H=110;
+  const H=window.innerWidth>=900?170:110;
   canvas.width=W*dpr;
   canvas.height=H*dpr;
   canvas.style.width=W+'px';
@@ -2491,7 +2541,7 @@ function drawDailyGraf(d){
   const ctx=canvas.getContext('2d');
   const dpr=window.devicePixelRatio||1;
   const W=canvas.parentElement.clientWidth;
-  const H=120;
+  const H=window.innerWidth>=900?190:120;
   canvas.width=W*dpr;canvas.height=H*dpr;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
@@ -2741,7 +2791,7 @@ function renderAI(d,name){
   }
   function rainDesc(k,rainingNow){
     const pi=w28DayPrecip(d,k), mm=pi.sum>=0.1?' '+pi.sum.toFixed(1)+' mm':'';
-    if(rainingNow) return (en?'raining now':'teraz prší')+mm;
+    if(rainingNow) return (pi.snow?(en?'snowing now':'teraz sneží'):(en?'raining now':'teraz prší'))+mm;
     if(pi.tier>=2) return (pi.snow?(en?'snow ':'sneženie '):(en?'rain ':'dážď '))+pi.when+mm;
     if(pi.tier===1) return pi.snow?(en?'light snow possible ':'možné slabé sneženie ')+pi.when:(en?'light rain possible ':'možné slabé zrážky ')+pi.when;
     return en?'no rain':'bez zrážok';
@@ -3127,7 +3177,7 @@ function closeDayModal(){
 if('serviceWorker' in navigator){
   navigator.serviceWorker.getRegistrations().then(regs=>{
     regs.forEach(reg=>{
-      if(reg.scope.includes('weather28')||reg.active?.scriptURL.includes('sw.js')){
+      if(reg.active&&/\/sw\.js$/.test(reg.active.scriptURL)){
         reg.unregister();
       }
     });
